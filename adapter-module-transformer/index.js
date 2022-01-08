@@ -99,23 +99,22 @@ export default pipe(
         source,
       })
     }
-    for (const imp of node?.meta?.imports ?? []) {
-      switch (imp.meta.kind) {
+    for (const {
+      meta: { moduleName, kind, kindType, exports },
+    } of node?.meta?.imports ?? []) {
+      switch (kind) {
         case 'func':
-          imports[imp.meta.moduleName] = {
-            kind: imp.meta.kind,
-            kindType: imp.meta.kindType,
+          imports[moduleName] = {
+            kind: kind,
+            kindType: kindType,
           }
           break
         case 'module':
         case 'instance':
-          imports[imp.meta.moduleName] = {
-            kind: imp.meta.kind,
+          imports[moduleName] = {
+            kind: kind,
             exports: Object.fromEntries(
-              imp.meta.exports.map((exp) => [
-                exp.meta.name,
-                { kind: exp.meta.kind },
-              ])
+              exports.map(({ meta: { name, kind } }) => [name, { kind }])
             ),
           }
           break
@@ -124,7 +123,10 @@ export default pipe(
     const topInstances = node?.meta?.instances ?? []
     for (let index = 0; index < topInstances.length; index++) {
       const instance = topInstances[index]
-      if (instance.meta.moduleIdx) {
+      const {
+        meta: { moduleIdx, exports },
+      } = instance
+      if (moduleIdx) {
         instances.push({
           index,
           type: 'module',
@@ -136,17 +138,17 @@ export default pipe(
           type: 'instance',
           path: resolvePath(instance),
           exports: Object.fromEntries(
-            instance.meta.exports.map((exp) => [
-              exp.meta.name,
-              { kind: exp.meta.kind },
-            ])
+            exports.map(({ meta: { name, kind } }) => [name, { kind }])
           ),
         })
       }
     }
     for (const exp of node?.meta?.exports ?? []) {
-      exports[exp.meta.name] = {
-        kind: exp.meta.kind,
+      const {
+        meta: { name, kind },
+      } = exp
+      exports[name] = {
+        kind: kind,
         path: resolvePath(exp),
       }
     }
