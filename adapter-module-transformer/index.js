@@ -28,6 +28,63 @@ export default pipe(
     const imports = {}
     const instances = []
     const exports = {}
+
+    function resolvePath(node) {
+      const path = []
+      function walk(node) {
+        if (node.meta.alias) {
+          switch (node.meta.type) {
+            case 'instance-export':
+              path.push(
+                'instances',
+                instances.findIndex(
+                  ({ index }) => index === node.meta.instanceIdx
+                ),
+                'exports',
+                node.meta.name
+              )
+              break
+            default:
+              throw new Error(`missing alias type ${node.meta.type}`)
+          }
+          return walk(node.meta.aliased)
+        }
+        if (node.meta.import) {
+          path.push('imports', node.meta.moduleName)
+          return walk(node.meta.imported)
+        }
+        if (node.meta.module) {
+          if (node.meta.module.meta.import) {
+            return walk(node.meta.module)
+          }
+          path.push(
+            'modules',
+            modules.findIndex(({ index }) => index === node.meta.moduleIdx)
+          )
+        }
+        if (node.meta.exported) {
+          if (node.meta.kind === 'module') {
+            if (node.meta.exported.meta.import) {
+              return walk(node.meta.exported)
+            }
+            path.push(
+              'modules',
+              modules.findIndex(({ index }) => index === node.meta.kindIdx)
+            )
+          } else if (node.meta.kind === 'instance') {
+            path.push(
+              'instances',
+              instances.findIndex(({ index }) => index === node.meta.kindIdx)
+            )
+          } else {
+            return walk(node.meta.exported)
+          }
+        }
+      }
+      walk(node)
+      return path
+    }
+
     const topModules = node?.meta?.modules ?? []
     for (let index = 0; index < topModules.length; index++) {
       const {
@@ -42,14 +99,25 @@ export default pipe(
       })
     }
     for (const imp of node?.meta?.imports ?? []) {
-      imports[imp.meta.module] = {
-        kind: imp.meta.kind,
-        exports: Object.fromEntries(
-          imp.meta.exports.map((exp) => [
-            exp.meta.name,
-            { kind: exp.meta.kind },
-          ])
-        ),
+      switch (imp.meta.kind) {
+        case 'func':
+          imports[imp.meta.moduleName] = {
+            kind: imp.meta.kind,
+            kindType: imp.meta.kindType,
+          }
+          break
+        case 'module':
+        case 'instance':
+          imports[imp.meta.moduleName] = {
+            kind: imp.meta.kind,
+            exports: Object.fromEntries(
+              imp.meta.exports.map((exp) => [
+                exp.meta.name,
+                { kind: exp.meta.kind },
+              ])
+            ),
+          }
+          break
       }
     }
     const topInstances = node?.meta?.instances ?? []
@@ -59,15 +127,13 @@ export default pipe(
         instances.push({
           index,
           type: 'module',
-          path: [
-            'modules',
-            modules.findIndex(({ index }) => index === instance.meta.moduleIdx),
-          ],
+          path: resolvePath(instance),
         })
       } else {
         instances.push({
           index,
           type: 'instance',
+          path: resolvePath(instance),
           exports: Object.fromEntries(
             instance.meta.exports.map((exp) => [
               exp.meta.name,
@@ -78,43 +144,25 @@ export default pipe(
       }
     }
     for (const exp of node?.meta?.exports ?? []) {
-      switch (exp.meta.kind) {
-        case 'module':
-          exports[exp.meta.name] = {
-            kind: exp.meta.kind,
-            path: [
-              'modules',
-              modules.findIndex(({ index }) => index === exp.meta.kindIdx),
-            ],
-          }
-          break
-        case 'instance':
-          exports[exp.meta.name] = {
-            kind: exp.meta.kind,
-            path: [
-              'instances',
-              instances.findIndex(({ index }) => index === exp.meta.kindIdx),
-            ],
-          }
-          break
-        case 'func':
-          switch (exp.meta.exported.meta.type) {
-            case 'instance-export':
-              exports[exp.meta.name] = {
-                kind: exp.meta.exported.meta.kind,
-                path: [
-                  'instances',
-                  instances.findIndex(
-                    ({ index }) => index === exp.meta.exported.meta.instanceIdx
-                  ),
-                  'exports',
-                  exp.meta.exported.meta.name,
-                ],
-              }
-              break
-          }
-          break
+      exports[exp.meta.name] = {
+        kind: exp.meta.kind,
+        path: resolvePath(exp),
       }
+      // switch (exp.meta.exported.meta.type) {
+      //   case 'instance-export':
+      //     exports[exp.meta.name] = {
+      //       kind: exp.meta.exported.meta.kind,
+      //       path: [
+      //         'instances',
+      //         instances.findIndex(
+      //           ({ index }) => index === exp.meta.exported.meta.instanceIdx
+      //         ),
+      //         'exports',
+      //         exp.meta.exported.meta.name,
+      //       ],
+      //     }
+      //     break
+      // }
     }
     return {
       modules,

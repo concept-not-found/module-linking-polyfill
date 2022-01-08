@@ -5,39 +5,36 @@ describe('adapter-module-transformer', () => {
     test('export module func', () => {
       const adapterModule = `(adapter module (;0;)
         (module (;1;)
-          (func (;0;) (result i32)
-            (i32.const 42)
-          )
-          (export "answer" (func 0))
+          (func (;0;))
+          (export "f" (func 0))
         )
         (instance (;0;) (instantiate (;module;) 1))
-        (alias (;instance;) 0 "answer" (func (;0;)))
-        (export "exported_answer" (func 0))
+        (alias (;instance;) 0 "f" (func (;0;)))
+        (export "exp" (func 0))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
-      expect(modules).toMatchObject([
+      expect(modules).toEqual([
         {
           index: 1,
           source: `(module (;1;)
-          (func (;0;) (result i32)
-            (i32.const 42)
-          )
-          (export "answer" (func 0))
+          (func (;0;))
+          (export "f" (func 0))
         )`,
         },
       ])
-      expect(imports).toMatchObject({})
-      expect(instances).toMatchObject([
+      expect(imports).toEqual({})
+      expect(instances).toEqual([
         {
+          index: 0,
           type: 'module',
           path: ['modules', 0],
         },
       ])
-      expect(exports).toMatchObject({
-        exported_answer: {
+      expect(exports).toEqual({
+        exp: {
           kind: 'func',
-          path: ['instances', 0, 'exports', 'answer'],
+          path: ['instances', 0, 'exports', 'f'],
         },
       })
     })
@@ -45,20 +42,20 @@ describe('adapter-module-transformer', () => {
     test('export module', () => {
       const adapterModule = `(adapter module (;0;)
         (module (;1;))
-        (export "Y" (module 1))
+        (export "exp" (module 1))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
-      expect(modules).toMatchObject([
+      expect(modules).toEqual([
         {
           index: 1,
           source: `(module (;1;))`,
         },
       ])
-      expect(imports).toMatchObject({})
-      expect(instances).toMatchObject([])
-      expect(exports).toMatchObject({
-        Y: {
+      expect(imports).toEqual({})
+      expect(instances).toEqual([])
+      expect(exports).toEqual({
+        exp: {
           kind: 'module',
           path: ['modules', 0],
         },
@@ -69,26 +66,26 @@ describe('adapter-module-transformer', () => {
       const adapterModule = `(adapter module (;0;)
         (module (;1;))
         (instance (;0;) (instantiate (;module;) 1))
-        (export "Y" (instance 0))
+        (export "exp" (instance 0))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
-      expect(modules).toMatchObject([
+      expect(modules).toEqual([
         {
           index: 1,
           source: `(module (;1;))`,
         },
       ])
-      expect(imports).toMatchObject({})
-      expect(instances).toMatchObject([
+      expect(imports).toEqual({})
+      expect(instances).toEqual([
         {
           index: 0,
           type: 'module',
           path: ['modules', 0],
         },
       ])
-      expect(exports).toMatchObject({
-        Y: {
+      expect(exports).toEqual({
+        exp: {
           kind: 'instance',
           path: ['instances', 0],
         },

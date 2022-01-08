@@ -6,10 +6,10 @@ describe('adapter-module-transformer', () => {
       const adapterModule = `(adapter module (;0;))`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
-      expect(modules).toMatchObject([])
-      expect(imports).toMatchObject({})
-      expect(instances).toMatchObject([])
-      expect(exports).toMatchObject({})
+      expect(modules).toEqual([])
+      expect(imports).toEqual({})
+      expect(instances).toEqual([])
+      expect(exports).toEqual({})
     })
 
     test('no definitions', () => {
@@ -18,15 +18,15 @@ describe('adapter-module-transformer', () => {
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
-      expect(modules).toMatchObject([
+      expect(modules).toEqual([
         {
           index: 1,
           source: '(module (;1;))',
         },
       ])
-      expect(imports).toMatchObject({})
-      expect(instances).toMatchObject([])
-      expect(exports).toMatchObject({})
+      expect(imports).toEqual({})
+      expect(instances).toEqual([])
+      expect(exports).toEqual({})
     })
   })
 })
