@@ -44,7 +44,7 @@ describe('adapter-module-transformer', () => {
       expect(exports).toEqual({
         exp: {
           kind: 'instance',
-          path: ['instances', 0],
+          path: ['imports', 'imp'],
         },
       })
     })

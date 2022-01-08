@@ -61,24 +61,25 @@ export default pipe(
             'modules',
             modules.findIndex(({ index }) => index === node.meta.moduleIdx)
           )
+          return
         }
         if (node.meta.exported) {
-          if (node.meta.kind === 'module') {
-            if (node.meta.exported.meta.import) {
-              return walk(node.meta.exported)
+          if (!node.meta.exported.meta.import) {
+            if (node.meta.kind === 'module') {
+              path.push(
+                'modules',
+                modules.findIndex(({ index }) => index === node.meta.kindIdx)
+              )
+              return
+            } else if (node.meta.kind === 'instance') {
+              path.push(
+                'instances',
+                instances.findIndex(({ index }) => index === node.meta.kindIdx)
+              )
+              return
             }
-            path.push(
-              'modules',
-              modules.findIndex(({ index }) => index === node.meta.kindIdx)
-            )
-          } else if (node.meta.kind === 'instance') {
-            path.push(
-              'instances',
-              instances.findIndex(({ index }) => index === node.meta.kindIdx)
-            )
-          } else {
-            return walk(node.meta.exported)
           }
+          return walk(node.meta.exported)
         }
       }
       walk(node)
@@ -148,21 +149,6 @@ export default pipe(
         kind: exp.meta.kind,
         path: resolvePath(exp),
       }
-      // switch (exp.meta.exported.meta.type) {
-      //   case 'instance-export':
-      //     exports[exp.meta.name] = {
-      //       kind: exp.meta.exported.meta.kind,
-      //       path: [
-      //         'instances',
-      //         instances.findIndex(
-      //           ({ index }) => index === exp.meta.exported.meta.instanceIdx
-      //         ),
-      //         'exports',
-      //         exp.meta.exported.meta.name,
-      //       ],
-      //     }
-      //     break
-      // }
     }
     return {
       modules,
