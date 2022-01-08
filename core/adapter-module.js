@@ -253,6 +253,7 @@ const linkInstanceInstantiate = (adapterModuleNode) => {
   }
   return adapterModuleNode
 }
+
 const linkInstanceExports = (adapterModuleNode) => {
   for (const instance of adapterModuleNode.meta.instances ?? []) {
     if (instance.meta.import || instance.meta?.module?.meta?.import) {
@@ -286,10 +287,10 @@ const indexImports = (adapterModuleNode) => {
       }
       adapterModuleNode.meta.imports.push(node)
 
-      const [, module, imKind] = node
+      const [, moduleName, imKind] = node
       const [kind, ...kindType] = imKind
       Object.assign(node.meta, {
-        module: String(module),
+        moduleName: String(moduleName),
         kind,
         kindType,
         imported: imKind,

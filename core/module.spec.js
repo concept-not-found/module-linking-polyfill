@@ -116,7 +116,7 @@ describe('core', () => {
         ['import', '"mod"', '"im"', ['func']],
       ])
       expect(module.meta.imports[0].meta).toMatchObject({
-        module: 'mod',
+        moduleName: 'mod',
         name: 'im',
         kind: 'func',
         kindType: [],
@@ -170,7 +170,7 @@ describe('core', () => {
         ['import', '"mod"', '"im"', ['func']],
       ])
       expect(module.meta.imports[0].meta).toMatchObject({
-        module: 'mod',
+        moduleName: 'mod',
         name: 'im',
         kind: 'func',
         kindType: [],

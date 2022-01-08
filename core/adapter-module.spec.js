@@ -131,7 +131,7 @@ describe('plugin', () => {
         ['import', '"mod"', ['module']],
       ])
       expect(adapterModule.meta.imports[0].meta).toMatchObject({
-        module: 'mod',
+        moduleName: 'mod',
         kind: 'module',
         kindType: [],
       })
@@ -165,7 +165,7 @@ describe('plugin', () => {
         ['import', '"mod"', ['module']],
       ])
       expect(adapterModule.meta.imports[0].meta).toMatchObject({
-        module: 'mod',
+        moduleName: 'mod',
         kind: 'module',
         kindType: [],
       })

@@ -46,10 +46,10 @@ const indexImports = (moduleNode) => {
       }
       moduleNode.meta.imports.push(imp)
 
-      const [, module, name, imKind] = imp
+      const [, moduleName, name, imKind] = imp
       const [kind, ...kindType] = imKind
       Object.assign(imp.meta, {
-        module: String(module),
+        moduleName: String(moduleName),
         name: String(name),
         kind,
         kindType,
