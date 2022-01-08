@@ -38,17 +38,15 @@ const linkExports = (moduleNode) => {
 const indexImports = (moduleNode) => {
   moduleNode.meta.imports ??= []
   for (const collection of Object.values(kindCollection)) {
-    for (const {
-      meta: { import: imp },
-    } of moduleNode.meta[collection] ?? []) {
-      if (!imp) {
+    for (const node of moduleNode.meta[collection] ?? []) {
+      if (!node.meta.import) {
         continue
       }
-      moduleNode.meta.imports.push(imp)
+      moduleNode.meta.imports.push(node)
 
-      const [, moduleName, name, imKind] = imp
+      const [, moduleName, name, imKind] = node
       const [kind, ...kindType] = imKind
-      Object.assign(imp.meta, {
+      Object.assign(node.meta, {
         moduleName: String(moduleName),
         name: String(name),
         kind,
@@ -61,7 +59,9 @@ const indexImports = (moduleNode) => {
 }
 
 const indexFuncs = (moduleNode) => {
-  moduleNode.meta.funcs ??= []
+  const targetKind = 'func'
+  const collection = kindCollection[targetKind]
+  moduleNode.meta[collection] ??= []
 
   return MapChildren({
     func(node) {
@@ -72,10 +72,10 @@ const indexFuncs = (moduleNode) => {
     import(node) {
       const [, , , imKind] = node
       const [kind] = imKind
-      if (kind === 'func') {
-        moduleNode.meta.funcs.push(imKind)
+      if (kind === targetKind) {
+        moduleNode.meta[collection].push(node)
 
-        imKind.meta.import = node
+        node.meta.import = true
       }
       return node
     },

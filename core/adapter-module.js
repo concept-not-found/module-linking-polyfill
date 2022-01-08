@@ -249,7 +249,19 @@ const linkInstanceInstantiate = (adapterModuleNode) => {
       continue
     }
     const module = adapterModuleNode.meta?.modules?.[moduleIdx]
-    Object.assign(instance.meta, { module, exports: module.meta.exports })
+    // const instantiatedImports = module.meta.imports.map((moduleImport) => {
+    //   const { kind, kindIdx } = instance.meta.imports.find(
+    //     ({ name }) => name === moduleImport.meta.moduleName
+    //   )
+    //   const collection = kindCollection[kind]
+    //   const imp = adapterModuleNode.meta[collection][kindIdx]
+    //   return imp
+    // })
+    Object.assign(instance.meta, {
+      module,
+      // instantiatedImports,
+      exports: module.meta.exports,
+    })
   }
   return adapterModuleNode
 }

@@ -29,6 +29,7 @@ describe('adapter-module-transformer', () => {
           index: 0,
           type: 'module',
           path: ['modules', 0],
+          imports: {},
         },
       ])
       expect(exports).toEqual({
@@ -82,6 +83,7 @@ describe('adapter-module-transformer', () => {
           index: 0,
           type: 'module',
           path: ['modules', 0],
+          imports: {},
         },
       ])
       expect(exports).toEqual({

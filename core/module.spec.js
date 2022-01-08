@@ -105,13 +105,10 @@ describe('core', () => {
         'module',
         ['import', '"mod"', '"im"', ['func']],
       ])
-      expect(module.meta.funcs).toMatchTree([['func']])
-      expect(module.meta.funcs[0].meta.import).toMatchTree([
-        'import',
-        '"mod"',
-        '"im"',
-        ['func'],
+      expect(module.meta.funcs).toMatchTree([
+        ['import', '"mod"', '"im"', ['func']],
       ])
+      expect(module.meta.funcs[0].meta.imported).toMatchTree(['func'])
       expect(module.meta.imports).toMatchTree([
         ['import', '"mod"', '"im"', ['func']],
       ])
@@ -146,7 +143,10 @@ describe('core', () => {
         ['export', '"ex"', ['func', '1']],
         ['func', ['call', '0']],
       ])
-      expect(module.meta.funcs).toMatchTree([['func'], ['func', ['call', '0']]])
+      expect(module.meta.funcs).toMatchTree([
+        ['import', '"mod"', '"im"', ['func']],
+        ['func', ['call', '0']],
+      ])
 
       expect(module.meta.funcs[1].meta.calls).toMatchTree([['call', '0']])
       expect(module.meta.funcs[1].meta.calls[0].meta).toMatchObject({
@@ -157,15 +157,13 @@ describe('core', () => {
         ['call', '0'],
       ])
       expect(module.meta.funcs[1].meta.calls[0].meta.target).toMatchTree([
-        'func',
-      ])
-
-      expect(module.meta.funcs[0].meta.import).toMatchTree([
         'import',
         '"mod"',
         '"im"',
         ['func'],
       ])
+
+      expect(module.meta.funcs[0].meta.imported).toMatchTree(['func'])
       expect(module.meta.imports).toMatchTree([
         ['import', '"mod"', '"im"', ['func']],
       ])

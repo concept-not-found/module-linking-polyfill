@@ -37,7 +37,6 @@ describe('adapter-module-transformer', () => {
         {
           index: 0,
           type: 'instance',
-          path: ['imports', 'imp'],
           exports: {},
         },
       ])
@@ -94,7 +93,6 @@ describe('adapter-module-transformer', () => {
         {
           index: 0,
           type: 'instance',
-          path: ['imports', 'imp'],
           exports: {
             f: {
               kind: 'func',
@@ -137,12 +135,77 @@ describe('adapter-module-transformer', () => {
           index: 0,
           type: 'module',
           path: ['imports', 'imp'],
+          imports: {},
         },
       ])
       expect(exports).toEqual({
         exp: {
           kind: 'func',
           path: ['instances', 0, 'exports', 'f'],
+        },
+      })
+    })
+
+    test('re-export func through module', () => {
+      const adapterModule = `(adapter module (;0;)
+        (module (;1;)
+          (import "mimp" "f" (func (;0;)))
+          (export "mexp" (func 0))
+        )
+        (import "f" (func (;0;)))
+        (instance (;0;)
+          (export "f" (func 0))
+        )
+        (instance (;1;) (instantiate (;module;) 1
+          (import "mimp" (instance 0))
+        ))
+        (alias (;instance;) 1 "mexp" (func (;1;)))
+        (export "exp" (func 1))
+      )`
+      const { modules, imports, instances, exports } =
+        transformer(adapterModule)
+      expect(modules).toEqual([
+        {
+          index: 1,
+          source: `(module (;1;)
+          (import "mimp" "f" (func (;0;)))
+          (export "mexp" (func 0))
+        )`,
+        },
+      ])
+      expect(imports).toEqual({
+        f: {
+          kind: 'func',
+          kindType: [],
+        },
+      })
+      expect(instances).toEqual([
+        {
+          index: 0,
+          type: 'instance',
+          exports: {
+            f: {
+              kind: 'func',
+              path: ['imports', 'f'],
+            },
+          },
+        },
+        {
+          index: 1,
+          type: 'module',
+          path: ['modules', 0],
+          imports: {
+            mimp: {
+              kind: 'instance',
+              path: ['instances', 0],
+            },
+          },
+        },
+      ])
+      expect(exports).toEqual({
+        exp: {
+          kind: 'func',
+          path: ['instances', 1, 'exports', 'mexp'],
         },
       })
     })
