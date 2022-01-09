@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>module linking polyfill demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.skypack.dev/codemirror@v5.65.0/lib/codemirror.css"
+    />
+    <style>
+      html {
+        box-sizing: border-box;
+      }
+
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+
+      body {
+        background-color: lightgray;
+        font-family: monospace;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      main {
+        padding-left: 5px;
+        padding-right: 5px;
+        height: 100%;
+        width: 100%;
+        display: grid;
+
+        grid-template-rows: min-content min-content min-content minmax(25%, 1fr) min-content minmax(
+            25%,
+            1fr
+          );
+        grid-template-columns: 50% 50%;
+        grid-gap: 5px;
+      }
+
+      #header {
+        grid-row-start: 1;
+        grid-column-start: 1;
+
+        grid-row-end: 2;
+        grid-column-end: 3;
+      }
+
+      #blurb {
+        grid-row-start: 2;
+        grid-column-start: 1;
+
+        grid-row-end: 3;
+        grid-column-end: 3;
+      }
+
+      .CodeMirror {
+        height: 100%;
+      }
+
+      .subtitle {
+        margin-top: 10px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/wabt@1.0.25/index.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <h1 id="header">module linking polyfill demo</h1>
+      <p id="blurb">
+        This is a work in progress polyfill for
+        <a href="https://webassembly.org/">WebAssembly</a>
+        <a href="https://github.com/WebAssembly/module-linking"
+          >module linking</a
+        >.
+      </p>
+
+      <span class="subtitle">WebAssembly Text</span>
+      <span class="subtitle">WebAssembly console</span>
+      <div id="wat"></div>
+      <div id="wat-console"></div>
+      <span class="subtitle">JavaScript (only console.log() is supported)</span>
+      <span class="subtitle">JavaScript console</span>
+      <div id="js"></div>
+      <div id="js-console"></div>
+    </main>
+
+    <script type="module">
+      import CodeMirror from 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/lib/codemirror.js'
+      import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/wast/wast.js'
+      import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/javascript/javascript.js'
+      import debounce from 'https://cdn.skypack.dev/pin/debounce@v1.2.1-nsljQIXDuyHmm6xBMrgd/mode=imports,min/optimized/debounce.js'
+      import adapterModuleTransformer from '../adapter-module-transformer/index.js'
+      import moduleLinkingPolyfillRuntime from '../module-linking-polyfill-runtime/index.js'
+
+      const wat = CodeMirror(document.getElementById('wat'), {
+        value: `(adapter module (;0;)
+  (module (;1;)
+    (memory 1)
+    (func (;0;) (param (;0;) i32)
+      (i32.const (;address;) 0)
+      (local.get (;param;) 0)
+      (i32.store)
+    )
+    (func (;1;) (result i32)
+      (i32.const (;address;) 0)
+      (i32.load)
+    )
+    (export "store" (func 0))
+    (export "load" (func 1))
+  )
+  (instance (;0;) (instantiate (;module;) 1))
+  (instance (;1;) (instantiate (;module;) 1))
+  (alias (;instance;) 0 "store" (func (;0;)))
+  (alias (;instance;) 1 "store" (func (;1;)))
+  (export "store instance 0" (func 0))
+  (export "store instance 1" (func 1))
+  (alias (;instance;) 0 "load" (func (;2;)))
+  (alias (;instance;) 1 "load" (func (;3;)))
+  (export "load instance 0" (func 2))
+  (export "load instance 1" (func 3))
+)`,
+        mode: 'wast',
+        lineNumbers: true,
+        viewportMargin: Infinity,
+      })
+      const watConsole = CodeMirror(document.getElementById('wat-console'), {
+        value: ``,
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        readOnly: true,
+        cursorHeight: 0,
+      })
+      const js = CodeMirror(document.getElementById('js'), {
+        value: `const instance = moduleLinkingPolyfillRuntime(config)
+console.log("load instance 0:", instance["load instance 0"]())
+console.log("load instance 1:", instance["load instance 1"]())
+
+instance["store instance 1"](42)
+console.log("store instance 1 = 42")
+
+console.log("load instance 0:", instance["load instance 0"]())
+console.log("load instance 1:", instance["load instance 1"]())
+`,
+        mode: 'javascript',
+        lineNumbers: true,
+        viewportMargin: Infinity,
+      })
+      const jsConsole = CodeMirror(document.getElementById('js-console'), {
+        value: ``,
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        readOnly: true,
+        cursorHeight: 0,
+      })
+
+      const fakeConsole = {
+        log(...messages) {
+          jsConsole.replaceRange(
+            `${messages.join(' ')}\n`,
+            CodeMirror.Pos(jsConsole.lastLine())
+          )
+        },
+      }
+
+      const wabt = await WabtModule()
+      let config
+      function transformWat() {
+        try {
+          watConsole.setValue('')
+          config = adapterModuleTransformer(wat.getValue())
+          config.modules.forEach((module, index) => {
+            const { buffer, log } = wabt
+              .parseWat(`module ${index}.wat`, module.source)
+              .toBinary({ log: true })
+            module.binary = buffer
+            module.log = log
+          })
+          watConsole.setValue(JSON.stringify(config, null, 2))
+        } catch (error) {
+          watConsole.setValue(String(error))
+        }
+      }
+      transformWat()
+      wat.on('change', debounce(transformWat, 200))
+
+      function execJs() {
+        try {
+          jsConsole.setValue('')
+          const executable = new Function(
+            'console',
+            'moduleLinkingPolyfillRuntime',
+            'config',
+            js.getValue()
+          )
+          executable(fakeConsole, moduleLinkingPolyfillRuntime, config)
+        } catch (error) {
+          jsConsole.setValue(String(error))
+        }
+      }
+      execJs()
+
+      js.on('change', debounce(execJs, 200))
+    </script>
+  </body>
+</html>
