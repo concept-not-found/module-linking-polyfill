@@ -40,6 +40,30 @@ describe('adapter-module-transformer', () => {
       })
     })
 
+    test('export instance', () => {
+      const adapterModule = `(adapter module (;0;)
+        (instance (;0;))
+        (export "exp" (instance 0))
+      )`
+      const { modules, imports, instances, exports } =
+        transformer(adapterModule)
+      expect(modules).toEqual([])
+      expect(imports).toEqual({})
+      expect(instances).toEqual([
+        {
+          index: 0,
+          type: 'instance',
+          exports: {},
+        },
+      ])
+      expect(exports).toEqual({
+        exp: {
+          kind: 'instance',
+          path: ['instances', 0],
+        },
+      })
+    })
+
     test('export module', () => {
       const adapterModule = `(adapter module (;0;)
         (module (;1;))

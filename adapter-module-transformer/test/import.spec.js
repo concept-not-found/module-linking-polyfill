@@ -146,6 +146,44 @@ describe('adapter-module-transformer', () => {
       })
     })
 
+    test('re-export func through instance', () => {
+      const adapterModule = `(adapter module (;0;)
+        (import "imp" (func (;0;)))
+        (instance (;0;)
+          (export "f" (func 0))
+        )
+        (alias (;instance;) 0 "f" (func (;1;)))
+        (export "exp" (func 1))
+      )`
+      const { modules, imports, instances, exports } =
+        transformer(adapterModule)
+      expect(modules).toEqual([])
+      expect(imports).toEqual({
+        imp: {
+          kind: 'func',
+          kindType: [],
+        },
+      })
+      expect(instances).toEqual([
+        {
+          index: 0,
+          type: 'instance',
+          exports: {
+            f: {
+              kind: 'func',
+              path: ['imports', 'imp'],
+            },
+          },
+        },
+      ])
+      expect(exports).toEqual({
+        exp: {
+          kind: 'func',
+          path: ['instances', 0, 'exports', 'f'],
+        },
+      })
+    })
+
     test('re-export func through module', () => {
       const adapterModule = `(adapter module (;0;)
         (module (;1;)
