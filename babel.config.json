@@ -1,0 +1,24 @@
+{
+  "ignore": [".history/", "./node_modules/", "dist/"],
+  "comments": false,
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "targets": [
+          "last 1 chrome version",
+          "last 1 firefox version",
+          "last 1 safari version",
+          "last 1 edge version",
+          "last 1 ios version",
+          "last 1 android version",
+          "current node"
+        ],
+        "useBuiltIns": "usage",
+        "corejs": "3.20",
+        "bugfixes": true
+      }
+    ]
+  ]
+}

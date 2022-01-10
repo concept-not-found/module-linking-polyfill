@@ -81,12 +81,12 @@ export default ({ sourceTags = [] } = {}) =>
     const stack = [root]
 
     function create(next) {
-      stack.at(-1).add(next)
+      stack[stack.length - 1].add(next)
       stack.push(next)
     }
 
     function endLiteral() {
-      stack.at(-1).end = index
+      stack[stack.length - 1].end = index
       stack.pop()
     }
 
@@ -96,9 +96,9 @@ export default ({ sourceTags = [] } = {}) =>
           const blockComment =
             index < wat.length - 1 &&
             wat[index + 1] === ';' &&
-            !['string', 'line comment'].includes(stack.at(-1).type)
+            !['string', 'line comment'].includes(stack[stack.length - 1].type)
           if (blockComment) {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
               case 'value':
               case 'block comment fragment':
@@ -115,7 +115,7 @@ export default ({ sourceTags = [] } = {}) =>
                 break
             }
           } else {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
               case 'value':
                 endLiteral()
@@ -134,13 +134,13 @@ export default ({ sourceTags = [] } = {}) =>
           break
         }
         case ')':
-          switch (stack.at(-1).type) {
+          switch (stack[stack.length - 1].type) {
             case 'whitespace':
             case 'value':
               endLiteral()
             // fall-through
             case 'sexp':
-              stack.at(-1).end = index + 1
+              stack[stack.length - 1].end = index + 1
               stack.pop()
               break
             case 'string':
@@ -155,9 +155,9 @@ export default ({ sourceTags = [] } = {}) =>
           const escaped =
             index > 0 &&
             wat[index - 1] === '\\' &&
-            stack.at(-1).type === 'string'
+            stack[stack.length - 1].type === 'string'
           if (escaped) {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
               // fall-through
@@ -173,7 +173,7 @@ export default ({ sourceTags = [] } = {}) =>
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
               case 'value':
                 endLiteral()
@@ -197,9 +197,9 @@ export default ({ sourceTags = [] } = {}) =>
           const escaped =
             index > 0 &&
             wat[index - 1] === '\\' &&
-            stack.at(-1).type === 'value'
+            stack[stack.length - 1].type === 'value'
           if (escaped) {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
               // fall-through
@@ -215,7 +215,7 @@ export default ({ sourceTags = [] } = {}) =>
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'value':
                 endLiteral()
               // fall-through
@@ -234,7 +234,7 @@ export default ({ sourceTags = [] } = {}) =>
           break
         }
         case '\t':
-          switch (stack.at(-1).type) {
+          switch (stack[stack.length - 1].type) {
             case 'value':
               endLiteral()
             // fall-through
@@ -252,7 +252,7 @@ export default ({ sourceTags = [] } = {}) =>
           break
         case '\n':
         case '\r':
-          switch (stack.at(-1).type) {
+          switch (stack[stack.length - 1].type) {
             case 'line comment':
             case 'value':
               endLiteral()
@@ -274,21 +274,21 @@ export default ({ sourceTags = [] } = {}) =>
             index < wat.length - 1 &&
             wat[index + 1] === ';' &&
             !['string', 'line comment', 'block comment fragment'].includes(
-              stack.at(-1).type
+              stack[stack.length - 1].type
             )
           const closingBlockComment =
             index < wat.length - 1 &&
             wat[index + 1] === ')' &&
-            stack.at(-1).type === 'block comment fragment'
+            stack[stack.length - 1].type === 'block comment fragment'
           if (closingBlockComment) {
             endLiteral()
             stack.pop()
-            if (stack.at(-1).type === 'block comment') {
+            if (stack[stack.length - 1].type === 'block comment') {
               create(BlockCommentFragmentBuilder(index + 2))
             }
             index++
           } else if (lineComment) {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'value':
               case 'whitespace':
                 endLiteral()
@@ -305,7 +305,7 @@ export default ({ sourceTags = [] } = {}) =>
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack.at(-1).type) {
+            switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
               // fall-through
@@ -324,7 +324,7 @@ export default ({ sourceTags = [] } = {}) =>
           break
         }
         default: {
-          switch (stack.at(-1).type) {
+          switch (stack[stack.length - 1].type) {
             case 'whitespace':
               endLiteral()
             // fall-through
@@ -343,7 +343,7 @@ export default ({ sourceTags = [] } = {}) =>
       }
       index++
     }
-    switch (stack.at(-1).type) {
+    switch (stack[stack.length - 1].type) {
       case 'whitespace':
       case 'string':
       case 'value':
@@ -356,9 +356,11 @@ export default ({ sourceTags = [] } = {}) =>
       case 'block comment':
         throw new Error('dangling block comment')
     }
-    if (stack.at(-1) !== root) {
+    if (stack[stack.length - 1] !== root) {
       throw new Error(
-        `unclosed ast. expected root, but got ${JSON.stringify(stack.at(-1))}`
+        `unclosed ast. expected root, but got ${JSON.stringify(
+          stack[stack.length - 1]
+        )}`
       )
     }
     return root.build()
