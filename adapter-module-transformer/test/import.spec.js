@@ -9,7 +9,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           imp: { kind: 'func', kindType: [] },
@@ -31,12 +31,12 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: { imp: { kind: 'instance', exports: {} } },
         instances: [
           {
-            type: 'instance',
+            kind: 'instance',
             exports: {},
           },
         ],
@@ -56,7 +56,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           imp: { kind: 'module', exports: {} },
@@ -81,7 +81,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           imp: {
@@ -95,7 +95,7 @@ describe('adapter-module-transformer', () => {
         },
         instances: [
           {
-            type: 'instance',
+            kind: 'instance',
             exports: {
               f: {
                 kind: 'func',
@@ -123,7 +123,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           imp: {
@@ -137,7 +137,7 @@ describe('adapter-module-transformer', () => {
         },
         instances: [
           {
-            type: 'module',
+            kind: 'module',
             path: ['imports', 'imp'],
             imports: {},
           },
@@ -162,7 +162,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           imp: {
@@ -172,7 +172,7 @@ describe('adapter-module-transformer', () => {
         },
         instances: [
           {
-            type: 'instance',
+            kind: 'instance',
             exports: {
               f: {
                 kind: 'func',
@@ -208,9 +208,10 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [
           {
+            kind: 'module',
             source: `(module (;0;)
           (import "mimp" "f" (func (;0;)))
           (export "mexp" (func 0))
@@ -225,7 +226,7 @@ describe('adapter-module-transformer', () => {
         },
         instances: [
           {
-            type: 'instance',
+            kind: 'instance',
             exports: {
               f: {
                 kind: 'func',
@@ -234,7 +235,7 @@ describe('adapter-module-transformer', () => {
             },
           },
           {
-            type: 'module',
+            kind: 'module',
             path: ['modules', 0],
             imports: {
               mimp: {
@@ -262,7 +263,7 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {
           A: { kind: 'func', kindType: [] },

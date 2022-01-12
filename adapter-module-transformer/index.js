@@ -90,6 +90,7 @@ export default pipe(
         continue
       }
       modules.push({
+        kind: 'module',
         source,
       })
     }
@@ -121,7 +122,7 @@ export default pipe(
       } = instance
       if (moduleIdx !== undefined) {
         instances.push({
-          type: 'module',
+          kind: 'module',
           path: resolvePath(instance),
           imports: Object.fromEntries(
             imports.map((imp) => {
@@ -132,7 +133,7 @@ export default pipe(
         })
       } else if (instance.meta.import) {
         instances.push({
-          type: 'instance',
+          kind: 'instance',
           exports: Object.fromEntries(
             exports.map((exp) => {
               const {
@@ -144,7 +145,7 @@ export default pipe(
         })
       } else {
         instances.push({
-          type: 'instance',
+          kind: 'instance',
           exports: Object.fromEntries(
             exports.map((exp) => {
               const {
@@ -166,7 +167,7 @@ export default pipe(
       }
     }
     return {
-      type: 'adapter module',
+      kind: 'adapter module',
       modules,
       imports,
       instances,

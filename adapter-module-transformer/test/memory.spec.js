@@ -21,9 +21,10 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [
           {
+            kind: 'module',
             source: `(module (;0;)
           (func (;0;) (param (;0;) i32)
             (i32.const (;address;) 0)
@@ -37,12 +38,12 @@ describe('adapter-module-transformer', () => {
         imports: {},
         instances: [
           {
-            type: 'module',
+            kind: 'module',
             path: ['modules', 0],
             imports: {},
           },
           {
-            type: 'module',
+            kind: 'module',
             path: ['modules', 0],
             imports: {},
           },

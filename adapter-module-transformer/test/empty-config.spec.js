@@ -6,7 +6,7 @@ describe('adapter-module-transformer', () => {
       const wat = `(adapter module (;0;))`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [],
         imports: {},
         instances: [],
@@ -20,9 +20,10 @@ describe('adapter-module-transformer', () => {
       )`
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
-        type: 'adapter module',
+        kind: 'adapter module',
         modules: [
           {
+            kind: 'module',
             source: '(module (;0;))',
           },
         ],
