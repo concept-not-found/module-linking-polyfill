@@ -28,25 +28,17 @@ export default pipe(
       const path = []
       function walk(node) {
         if (node.kind === 'module') {
-          path.push(
-            'modules',
-            modules.findIndex(({ index }) => index === node.kindIdx)
-          )
+          path.push('modules', node.kindIdx)
           return
         } else if (node.kind === 'instance') {
-          path.push(
-            'instances',
-            instances.findIndex(({ index }) => index === node.kindIdx)
-          )
+          path.push('instances', node.kindIdx)
           return
         }
         if (node.meta.alias) {
           if (node.meta.type === 'instance-export') {
             path.push(
               'instances',
-              instances.findIndex(
-                ({ index }) => index === node.meta.instanceIdx
-              ),
+              node.meta.instanceIdx,
               'exports',
               node.meta.name
             )
@@ -63,41 +55,26 @@ export default pipe(
           if (node.meta.module.meta.import) {
             return walk(node.meta.module)
           }
-          path.push(
-            'modules',
-            modules.findIndex(({ index }) => index === node.meta.moduleIdx)
-          )
+          path.push('modules', node.meta.moduleIdx)
           return
         }
         if (node.meta.exported) {
           if (!node.meta.exported.meta.import) {
             if (node.meta.kind === 'module') {
-              path.push(
-                'modules',
-                modules.findIndex(({ index }) => index === node.meta.kindIdx)
-              )
+              path.push('modules', node.meta.kindIdx)
               return
             } else if (node.meta.kind === 'instance') {
-              path.push(
-                'instances',
-                instances.findIndex(({ index }) => index === node.meta.kindIdx)
-              )
+              path.push('instances', node.meta.kindIdx)
               return
             }
           }
           return walk(node.meta.exported)
         }
         if (node.meta.kind === 'module') {
-          path.push(
-            'modules',
-            modules.findIndex(({ index }) => index === node.meta.kindIdx)
-          )
+          path.push('modules', node.meta.kindIdx)
           return
         } else if (node.meta.kind === 'instance') {
-          path.push(
-            'instances',
-            instances.findIndex(({ index }) => index === node.meta.kindIdx)
-          )
+          path.push('instances', node.meta.kindIdx)
           return
         }
       }
