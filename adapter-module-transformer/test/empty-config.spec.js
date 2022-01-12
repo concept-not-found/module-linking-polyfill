@@ -14,14 +14,14 @@ describe('adapter-module-transformer', () => {
 
     test('no definitions', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;))
+        (module (;0;))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: '(module (;1;))',
+          index: 0,
+          source: '(module (;0;))',
         },
       ])
       expect(imports).toEqual({})

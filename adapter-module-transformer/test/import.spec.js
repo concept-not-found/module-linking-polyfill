@@ -50,8 +50,8 @@ describe('adapter-module-transformer', () => {
 
     test('re-export module', () => {
       const adapterModule = `(adapter module (;0;)
-        (import "imp" (module (;1;)))
-        (export "exp" (module 1))
+        (import "imp" (module (;0;)))
+        (export "exp" (module 0))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
@@ -110,10 +110,10 @@ describe('adapter-module-transformer', () => {
 
     test('export func from imported module', () => {
       const adapterModule = `(adapter module (;0;)
-        (import "imp" (module (;1;)
+        (import "imp" (module (;0;)
           (export "f" (func))
         ))
-        (instance (;0;) (instantiate (;module;) 1))
+        (instance (;0;) (instantiate (;module;) 0))
         (alias (;instance;) 0 "f" (func (;0;)))
         (export "exp" (func 0))
       )`
@@ -186,7 +186,7 @@ describe('adapter-module-transformer', () => {
 
     test('re-export func through module', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;)
+        (module (;0;)
           (import "mimp" "f" (func (;0;)))
           (export "mexp" (func 0))
         )
@@ -194,7 +194,7 @@ describe('adapter-module-transformer', () => {
         (instance (;0;)
           (export "f" (func 0))
         )
-        (instance (;1;) (instantiate (;module;) 1
+        (instance (;1;) (instantiate (;module;) 0
           (import "mimp" (instance 0))
         ))
         (alias (;instance;) 1 "mexp" (func (;1;)))
@@ -204,8 +204,8 @@ describe('adapter-module-transformer', () => {
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: `(module (;1;)
+          index: 0,
+          source: `(module (;0;)
           (import "mimp" "f" (func (;0;)))
           (export "mexp" (func 0))
         )`,

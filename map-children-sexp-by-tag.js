@@ -1,7 +1,4 @@
-import mergePlugins from './merge-plugins.js'
-
-export default (...plugins) => {
-  const pluginByTag = mergePlugins(plugins)
+export default (pluginByTag) => {
   return (node) => {
     const result = node.map((child, index, parent) => {
       if (child instanceof Array) {

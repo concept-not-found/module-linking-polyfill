@@ -4,11 +4,11 @@ describe('adapter-module-transformer', () => {
   describe('export', () => {
     test('export module func', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;)
+        (module (;0;)
           (func (;0;))
           (export "f" (func 0))
         )
-        (instance (;0;) (instantiate (;module;) 1))
+        (instance (;0;) (instantiate (;module;) 0))
         (alias (;instance;) 0 "f" (func (;0;)))
         (export "exp" (func 0))
       )`
@@ -16,8 +16,8 @@ describe('adapter-module-transformer', () => {
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: `(module (;1;)
+          index: 0,
+          source: `(module (;0;)
           (func (;0;))
           (export "f" (func 0))
         )`,
@@ -66,15 +66,15 @@ describe('adapter-module-transformer', () => {
 
     test('export module', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;))
-        (export "exp" (module 1))
+        (module (;0;))
+        (export "exp" (module 0))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: `(module (;1;))`,
+          index: 0,
+          source: `(module (;0;))`,
         },
       ])
       expect(imports).toEqual({})
@@ -89,16 +89,16 @@ describe('adapter-module-transformer', () => {
 
     test('export module instance', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;))
-        (instance (;0;) (instantiate (;module;) 1))
+        (module (;0;))
+        (instance (;0;) (instantiate (;module;) 0))
         (export "exp" (instance 0))
       )`
       const { modules, imports, instances, exports } =
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: `(module (;1;))`,
+          index: 0,
+          source: `(module (;0;))`,
         },
       ])
       expect(imports).toEqual({})

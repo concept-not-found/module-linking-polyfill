@@ -1,7 +1,6 @@
 import { toMatchTree } from '../matchers.js'
 import stripWasmWhitespace from './strip-wasm-whitespace.js'
 import pipe from '../pipe.js'
-import SexpToWasm from '../map-sexp-by-tag.js'
 import Parser from '../parser/index.js'
 
 import coreModule from './module.js'
@@ -16,10 +15,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const [module] = pipe(
-        parser,
-        stripWasmWhitespace,
-        SexpToWasm({ module: coreModule })
+      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
+        coreModule(node)
       )(wat)
 
       expect(module).toMatchTree(['module', ['func']])
@@ -33,10 +30,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const [module] = pipe(
-        parser,
-        stripWasmWhitespace,
-        SexpToWasm({ module: coreModule })
+      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
+        coreModule(node)
       )(wat)
 
       expect(module).toMatchTree([
@@ -65,10 +60,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const [module] = pipe(
-        parser,
-        stripWasmWhitespace,
-        SexpToWasm({ module: coreModule })
+      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
+        coreModule(node)
       )(wat)
 
       expect(module).toMatchTree([

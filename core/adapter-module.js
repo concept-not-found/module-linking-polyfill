@@ -1,5 +1,6 @@
 import pipe from '../pipe.js'
 import MapChildren from '../map-children-sexp-by-tag.js'
+import coreModule from './module.js'
 
 const indexAliases = (adapterModuleNode) => {
   adapterModuleNode.meta.aliases ??= []
@@ -76,17 +77,23 @@ const linkAliases = (adapterModuleNode) => {
 const indexModules = (adapterModuleNode) => {
   const targetKind = 'module'
   const collection = kindCollection[targetKind]
-  adapterModuleNode.meta[collection] = [adapterModuleNode]
+  adapterModuleNode.meta[collection] = []
   return MapChildren({
     adapter(node) {
       if (node[1] === 'module') {
         adapterModuleNode.meta[collection].push(node)
       }
+      Object.assign(node.meta, {
+        type: 'adapter',
+      })
       return node
     },
-    module(node) {
+    module(node, index, parent) {
       adapterModuleNode.meta[collection].push(node)
-      return node
+      Object.assign(node.meta, {
+        type: 'core',
+      })
+      return coreModule(node, index, parent)
     },
     import(node) {
       const [, , imKind] = node
@@ -95,6 +102,7 @@ const indexModules = (adapterModuleNode) => {
         adapterModuleNode.meta[collection].push(node)
 
         Object.assign(node.meta, {
+          type: 'adapter',
           import: true,
           exports: exports.map((exp) => {
             const [, name, [kind, ...kindType]] = exp
@@ -312,7 +320,16 @@ const indexImports = (adapterModuleNode) => {
   return adapterModuleNode
 }
 
-export default pipe(
+const recurseAdapterModules = (node, index, parent) => {
+  for (const module of node.meta.modules ?? []) {
+    if (module.meta.type === 'adapter' && !module.meta.import) {
+      adapterModule(module, index, parent)
+    }
+  }
+  return node
+}
+
+const adapterModule = pipe(
   indexModules,
   indexFuncs,
   indexInstances,
@@ -322,5 +339,8 @@ export default pipe(
   indexAliases,
   linkAliases,
   indexExports,
-  linkExports
+  linkExports,
+  recurseAdapterModules
 )
+
+export default adapterModule

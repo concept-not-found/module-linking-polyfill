@@ -109,7 +109,7 @@
 
       const wat = CodeMirror(document.getElementById('wat'), {
         value: `(adapter module (;0;)
-  (module (;1;)
+  (module (;0;)
     (memory 1)
     (func (;0;) (param (;0;) i32)
       (i32.const (;address;) 0)
@@ -123,8 +123,8 @@
     (export "store" (func 0))
     (export "load" (func 1))
   )
-  (instance (;0;) (instantiate (;module;) 1))
-  (instance (;1;) (instantiate (;module;) 1))
+  (instance (;0;) (instantiate (;module;) 0))
+  (instance (;1;) (instantiate (;module;) 0))
   (alias (;instance;) 0 "store" (func (;0;)))
   (alias (;instance;) 1 "store" (func (;1;)))
   (export "store instance 0" (func 0))

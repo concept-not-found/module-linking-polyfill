@@ -1,29 +1,24 @@
 import watParser from '../parser/index.js'
 import stripWasmComments from '../core/strip-wasm-comments.js'
 import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
-import coreModule from '../core/module.js'
 import coreAdapterModule from '../core/adapter-module.js'
 import pipe from '../pipe.js'
-import SexpToWasm from '../map-sexp-by-tag.js'
 
 export default pipe(
   watParser({ sourceTags: ['module'] }),
   stripWasmComments,
   stripWasmWhitespace,
-  SexpToWasm({
-    module(node, index, parent) {
-      if (parent?.[0] === 'import') {
-        return node
-      }
-      node.meta.type = 'core'
-      return coreModule(node, index, parent)
-    },
-    adapter(node, index, parent) {
-      node.meta.type = 'adapter'
-      return coreAdapterModule(node, index, parent)
-    },
-  }),
   ([node]) => {
+    const [adapterValue, moduleValue] = node
+    if (adapterValue !== 'adapter' || moduleValue !== 'module') {
+      throw new Error(
+        `expected top level sexp to be adapter module but got ${JSON.stringify(
+          node
+        )}`
+      )
+    }
+    node = coreAdapterModule(node)
+
     const modules = []
     const imports = {}
     const instances = []
@@ -150,7 +145,7 @@ export default pipe(
       const {
         meta: { moduleIdx, imports, exports },
       } = instance
-      if (moduleIdx) {
+      if (moduleIdx !== undefined) {
         instances.push({
           index,
           type: 'module',

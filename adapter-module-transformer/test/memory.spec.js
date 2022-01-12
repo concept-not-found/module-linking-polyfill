@@ -2,9 +2,9 @@ import transformer from '../index.js'
 
 describe('adapter-module-transformer', () => {
   describe('import', () => {
-    test('two instances of module that modifies same memory', () => {
+    test('two instances of same module with independent memory', () => {
       const adapterModule = `(adapter module (;0;)
-        (module (;1;)
+        (module (;0;)
           (func (;0;) (param (;0;) i32)
             (i32.const (;address;) 0)
             (local.get (;param;) 0)
@@ -12,8 +12,8 @@ describe('adapter-module-transformer', () => {
           )
           (export "store" (func 0))
         )
-        (instance (;0;) (instantiate (;module;) 1))
-        (instance (;1;) (instantiate (;module;) 1))
+        (instance (;0;) (instantiate (;module;) 0))
+        (instance (;1;) (instantiate (;module;) 0))
         (alias (;instance;) 0 "store" (func (;0;)))
         (alias (;instance;) 1 "store" (func (;1;)))
         (export "store instance 0" (func 0))
@@ -23,8 +23,8 @@ describe('adapter-module-transformer', () => {
         transformer(adapterModule)
       expect(modules).toEqual([
         {
-          index: 1,
-          source: `(module (;1;)
+          index: 0,
+          source: `(module (;0;)
           (func (;0;) (param (;0;) i32)
             (i32.const (;address;) 0)
             (local.get (;param;) 0)
