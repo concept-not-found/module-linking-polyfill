@@ -1,4 +1,3 @@
-import Map from '../map-sexp-by-tag.js'
 import pipe from '../pipe.js'
 import MapChildren from '../map-children-sexp-by-tag.js'
 
@@ -82,41 +81,4 @@ const indexFuncs = (moduleNode) => {
   })(moduleNode)
 }
 
-const indexCalls = (moduleNode) =>
-  MapChildren({
-    func(source) {
-      return Map({
-        call(node) {
-          const [, funcIdx] = node
-          source.meta.calls ??= []
-          source.meta.calls.push(node)
-          Object.assign(node.meta, {
-            source,
-            funcIdx: Number.parseInt(funcIdx),
-          })
-          return node
-        },
-      })(source)
-    },
-  })(moduleNode)
-
-const linkCalls = (moduleNode) => {
-  for (const func of moduleNode.meta.funcs ?? []) {
-    for (const call of func.meta.calls ?? []) {
-      const {
-        meta: { funcIdx },
-      } = call
-      call.meta.target = moduleNode.meta.funcs[funcIdx]
-    }
-  }
-  return moduleNode
-}
-
-export default pipe(
-  indexFuncs,
-  indexCalls,
-  linkCalls,
-  indexImports,
-  indexExports,
-  linkExports
-)
+export default pipe(indexFuncs, indexImports, indexExports, linkExports)
