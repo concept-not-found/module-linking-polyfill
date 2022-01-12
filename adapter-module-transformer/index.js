@@ -99,14 +99,14 @@ export default pipe(
       switch (kind) {
         case 'func':
           imports[moduleName] = {
-            kind: kind,
-            kindType: kindType,
+            kind,
+            kindType,
           }
           break
         case 'module':
         case 'instance':
           imports[moduleName] = {
-            kind: kind,
+            kind,
             exports: Object.fromEntries(
               exports.map(({ meta: { name, kind } }) => [name, { kind }])
             ),
@@ -130,32 +130,30 @@ export default pipe(
             })
           ),
         })
+      } else if (instance.meta.import) {
+        instances.push({
+          type: 'instance',
+          exports: Object.fromEntries(
+            exports.map((exp) => {
+              const {
+                meta: { name, kind },
+              } = exp
+              return [name, { kind }]
+            })
+          ),
+        })
       } else {
-        if (instance.meta.import) {
-          instances.push({
-            type: 'instance',
-            exports: Object.fromEntries(
-              exports.map((exp) => {
-                const {
-                  meta: { name, kind },
-                } = exp
-                return [name, { kind }]
-              })
-            ),
-          })
-        } else {
-          instances.push({
-            type: 'instance',
-            exports: Object.fromEntries(
-              exports.map((exp) => {
-                const {
-                  meta: { name, kind },
-                } = exp
-                return [name, { kind, path: resolvePath(exp) }]
-              })
-            ),
-          })
-        }
+        instances.push({
+          type: 'instance',
+          exports: Object.fromEntries(
+            exports.map((exp) => {
+              const {
+                meta: { name, kind },
+              } = exp
+              return [name, { kind, path: resolvePath(exp) }]
+            })
+          ),
+        })
       }
     }
     for (const exp of node?.meta?.exports ?? []) {
@@ -163,7 +161,7 @@ export default pipe(
         meta: { name, kind },
       } = exp
       exports[name] = {
-        kind: kind,
+        kind,
         path: resolvePath(exp),
       }
     }

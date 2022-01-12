@@ -6,12 +6,13 @@
   "main": "index.js",
   "scripts": {
     "start": "http-server -c-1",
+    "lint": "eslint .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "pretest-target-compatibility": "rm -rf dist/target-compatibility && mkdir -p dist/target-compatibility/original",
-    "test-target-compatibility:original": "find . -name '*.js' |egrep -v '^.\/.history\/|^.\/node_modules\/|^.\/dist\/' | xargs -I FILE -n 1 cp --parent -r FILE dist/target-compatibility/original/",
+    "test-target-compatibility:original": "find . -name '*.js' |egrep -v '^./.history/|^./node_modules/|^./dist/' | xargs -I FILE -n 1 cp --parent -r FILE dist/target-compatibility/original/",
     "test-target-compatibility:babel": "babel . --quiet --delete-dir-on-start --out-dir dist/target-compatibility/babeled",
     "test-target-compatibility:normalize": "prettier --loglevel silent --print-width 1 --write dist/target-compatibility",
-    "test-target-compatibility:diff": "diff -wBry --suppress-common-lines dist/target-compatibility/original dist/target-compatibility/babeled | egrep -v '^\\s*\/\/'",
+    "test-target-compatibility:diff": "diff -wBry --suppress-common-lines dist/target-compatibility/original dist/target-compatibility/babeled | egrep -v '^\\s*//'",
     "test-target-compatibility": "npm run test-target-compatibility:original && npm run test-target-compatibility:babel && npm run test-target-compatibility:normalize && npm run test-target-compatibility:diff"
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
@@ -25,6 +26,7 @@
     "@babel/cli": "7.16.7",
     "@babel/core": "7.16.7",
     "@babel/preset-env": "7.16.7",
+    "eslint": "8.6.0",
     "http-server": "14.0.0",
     "jest": "27.4.5",
     "prettier": "2.5.1"

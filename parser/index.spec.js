@@ -106,8 +106,7 @@ describe('parser', () => {
       sourceTags: ['module'],
     })
     const [adapterModule] = parser(wat)
-    const [adapterValue, , moduleValue, , blockComment, , module] =
-      adapterModule
+    const [, , , , , , module] = adapterModule
     expect(module.meta.source).toBe('(module (;1;))')
   })
 })

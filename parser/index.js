@@ -103,7 +103,7 @@ export default ({ sourceTags = [] } = {}) =>
               case 'value':
               case 'block comment fragment':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
               case 'block comment':
                 create(BlockCommentBuilder())
@@ -119,7 +119,7 @@ export default ({ sourceTags = [] } = {}) =>
               case 'whitespace':
               case 'value':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(SexpBuilder(index, wat, sourceTags))
                 break
@@ -138,7 +138,7 @@ export default ({ sourceTags = [] } = {}) =>
             case 'whitespace':
             case 'value':
               endLiteral()
-            // fall-through
+            // falls through
             case 'sexp':
               stack[stack.length - 1].end = index + 1
               stack.pop()
@@ -160,7 +160,7 @@ export default ({ sourceTags = [] } = {}) =>
             switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(ValueBuilder(index))
                 break
@@ -177,7 +177,7 @@ export default ({ sourceTags = [] } = {}) =>
               case 'whitespace':
               case 'value':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(StringBuilder(index + 1))
                 break
@@ -202,7 +202,7 @@ export default ({ sourceTags = [] } = {}) =>
             switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(ValueBuilder(index))
                 break
@@ -218,7 +218,7 @@ export default ({ sourceTags = [] } = {}) =>
             switch (stack[stack.length - 1].type) {
               case 'value':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(WhitespaceBuilder(index))
                 break
@@ -237,7 +237,7 @@ export default ({ sourceTags = [] } = {}) =>
           switch (stack[stack.length - 1].type) {
             case 'value':
               endLiteral()
-            // fall-through
+            // falls through
             case 'sexp':
               create(WhitespaceBuilder(index))
               break
@@ -256,7 +256,7 @@ export default ({ sourceTags = [] } = {}) =>
             case 'line comment':
             case 'value':
               endLiteral()
-            // fall-through
+            // falls through
             case 'sexp':
               create(WhitespaceBuilder(index))
               break
@@ -292,7 +292,7 @@ export default ({ sourceTags = [] } = {}) =>
               case 'value':
               case 'whitespace':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(LineCommentBuilder(index + 2))
                 index++
@@ -308,7 +308,7 @@ export default ({ sourceTags = [] } = {}) =>
             switch (stack[stack.length - 1].type) {
               case 'whitespace':
                 endLiteral()
-              // fall-through
+              // falls through
               case 'sexp':
                 create(ValueBuilder(index))
                 break
@@ -327,7 +327,7 @@ export default ({ sourceTags = [] } = {}) =>
           switch (stack[stack.length - 1].type) {
             case 'whitespace':
               endLiteral()
-            // fall-through
+            // falls through
             case 'sexp':
               create(ValueBuilder(index))
               break
