@@ -83,15 +83,13 @@ export default pipe(
     }
 
     const topModules = node?.meta?.modules ?? []
-    for (let index = 0; index < topModules.length; index++) {
-      const {
-        meta: { type, source },
-      } = topModules[index]
+    for (const {
+      meta: { type, source },
+    } of topModules) {
       if (type !== 'core') {
         continue
       }
       modules.push({
-        index,
         source,
       })
     }
@@ -117,14 +115,12 @@ export default pipe(
       }
     }
     const topInstances = node?.meta?.instances ?? []
-    for (let index = 0; index < topInstances.length; index++) {
-      const instance = topInstances[index]
+    for (const instance of topInstances) {
       const {
         meta: { moduleIdx, imports, exports },
       } = instance
       if (moduleIdx !== undefined) {
         instances.push({
-          index,
           type: 'module',
           path: resolvePath(instance),
           imports: Object.fromEntries(
@@ -137,7 +133,6 @@ export default pipe(
       } else {
         if (instance.meta.import) {
           instances.push({
-            index,
             type: 'instance',
             exports: Object.fromEntries(
               exports.map((exp) => {
@@ -150,7 +145,6 @@ export default pipe(
           })
         } else {
           instances.push({
-            index,
             type: 'instance',
             exports: Object.fromEntries(
               exports.map((exp) => {
@@ -174,6 +168,7 @@ export default pipe(
       }
     }
     return {
+      type: 'adapter module',
       modules,
       imports,
       instances,
