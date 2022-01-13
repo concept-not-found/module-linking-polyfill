@@ -37,6 +37,12 @@ console.log("store instance 1 = 42")
 console.log("load instance 0:", instance["load instance 0"]())
 console.log("load instance 1:", instance["load instance 1"]())
 `,
+    expectedJsConsole: `load instance 0: 0
+load instance 1: 0
+store instance 1 = 42
+load instance 0: 0
+load instance 1: 42
+`,
   },
   {
     name: 'module shares memory with another',
@@ -75,6 +81,10 @@ instance["store into module 1"](42)
 console.log("store into module 1 = 42")
 
 console.log("load from module 0:", instance["load from module 0"]())
+`,
+    expectedJsConsole: `load from module 0: 0
+store into module 1 = 42
+load from module 0: 42
 `,
   },
 ]

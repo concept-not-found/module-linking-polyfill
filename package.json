@@ -29,7 +29,8 @@
     "eslint": "8.6.0",
     "http-server": "14.0.0",
     "jest": "27.4.5",
-    "prettier": "2.5.1"
+    "prettier": "2.5.1",
+    "wabt": "1.0.25"
   },
   "jest": {
     "testPathIgnorePatterns": [
