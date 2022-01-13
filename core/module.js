@@ -1,10 +1,10 @@
 import pipe from '../pipe.js'
 import MapChildren from '../map-children-sexp-by-tag.js'
 
-const indexExports = (moduleNode) =>
-  MapChildren({
+const indexExports = (moduleNode) => {
+  moduleNode.meta.exports = []
+  return MapChildren({
     export(node) {
-      moduleNode.meta.exports ??= []
       moduleNode.meta.exports.push(node)
 
       const [, name, [kind, kindIdx]] = node
@@ -17,6 +17,7 @@ const indexExports = (moduleNode) =>
       return node
     },
   })(moduleNode)
+}
 
 const kindCollection = {
   func: 'funcs',
@@ -24,10 +25,10 @@ const kindCollection = {
 }
 
 const linkExports = (moduleNode) => {
-  for (const exp of moduleNode.meta.exports ?? []) {
+  for (const exp of moduleNode.meta.exports) {
     const { kind, kindIdx } = exp.meta
     const collection = kindCollection[kind]
-    const exported = moduleNode.meta[collection]?.[kindIdx]
+    const exported = moduleNode.meta[collection][kindIdx]
     exp.meta.exported = exported
     exported.meta.exportedBy ??= []
     exported.meta.exportedBy.push(exp)
@@ -36,9 +37,9 @@ const linkExports = (moduleNode) => {
 }
 
 const indexImports = (moduleNode) => {
-  moduleNode.meta.imports ??= []
+  moduleNode.meta.imports = []
   for (const collection of Object.values(kindCollection)) {
-    for (const node of moduleNode.meta[collection] ?? []) {
+    for (const node of moduleNode.meta[collection]) {
       if (!node.meta.import) {
         continue
       }
@@ -61,7 +62,7 @@ const indexImports = (moduleNode) => {
 const indexFuncs = (moduleNode) => {
   const targetKind = 'func'
   const collection = kindCollection[targetKind]
-  moduleNode.meta[collection] ??= []
+  moduleNode.meta[collection] = []
 
   return MapChildren({
     func(node) {
@@ -85,7 +86,7 @@ const indexFuncs = (moduleNode) => {
 const indexMemories = (moduleNode) => {
   const targetKind = 'memory'
   const collection = kindCollection[targetKind]
-  moduleNode.meta[collection] ??= []
+  moduleNode.meta[collection] = []
 
   return MapChildren({
     memory(node) {

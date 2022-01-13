@@ -10,9 +10,12 @@ const kindCollection = {
 }
 
 const indexAliases = (adapterModuleNode) => {
-  adapterModuleNode.meta.aliases ??= []
+  adapterModuleNode.meta.aliases = []
   for (const collection of Object.values(kindCollection)) {
-    for (const node of adapterModuleNode.meta[collection] ?? []) {
+    if (!adapterModuleNode.meta[collection]) {
+      continue
+    }
+    for (const node of adapterModuleNode.meta[collection]) {
       if (!node.meta.alias) {
         continue
       }
@@ -41,12 +44,15 @@ const indexAliases = (adapterModuleNode) => {
   return adapterModuleNode
 }
 const linkAliases = (adapterModuleNode) => {
-  for (const alias of adapterModuleNode.meta?.aliases ?? []) {
+  for (const alias of adapterModuleNode.meta.aliases) {
     switch (alias.meta.type) {
       case 'instance-export': {
         const { instanceIdx, name: aliasInstanceName } = alias.meta
-        const instance = adapterModuleNode.meta.instances?.[instanceIdx]
-        if (instance.meta.import || instance.meta?.module?.meta?.import) {
+        const instance = adapterModuleNode.meta.instances[instanceIdx]
+        if (
+          instance.meta.import ||
+          (instance.meta.module && instance.meta.module.meta.import)
+        ) {
           const aliased = instance.meta.exports.find(
             ({ meta: { name } }) => name === aliasInstanceName
           )
@@ -140,7 +146,7 @@ const indexModules = (adapterModuleNode) => {
 const indexFuncs = (adapterModuleNode) => {
   const targetKind = 'func'
   const collection = kindCollection[targetKind]
-  adapterModuleNode.meta[collection] ??= []
+  adapterModuleNode.meta[collection] = []
   return MapChildren({
     import(node) {
       const [, , imKind] = node
@@ -165,10 +171,10 @@ const indexFuncs = (adapterModuleNode) => {
   })(adapterModuleNode)
 }
 
-const indexExports = (adapterModuleNode) =>
-  MapChildren({
+const indexExports = (adapterModuleNode) => {
+  adapterModuleNode.meta.exports = []
+  return MapChildren({
     export(node) {
-      adapterModuleNode.meta.exports ??= []
       adapterModuleNode.meta.exports.push(node)
 
       const [, name, [kind, kindIdx]] = node
@@ -181,12 +187,13 @@ const indexExports = (adapterModuleNode) =>
       return node
     },
   })(adapterModuleNode)
+}
 
 const linkExports = (adapterModuleNode) => {
-  for (const exp of adapterModuleNode.meta.exports ?? []) {
+  for (const exp of adapterModuleNode.meta.exports) {
     const { kind, kindIdx } = exp.meta
     const collection = kindCollection[kind]
-    const exported = adapterModuleNode.meta[collection]?.[kindIdx]
+    const exported = adapterModuleNode.meta[collection][kindIdx]
     exp.meta.exported = exported
     exported.meta.exportedBy ??= []
     exported.meta.exportedBy.push(exp)
@@ -197,7 +204,7 @@ const linkExports = (adapterModuleNode) => {
 const indexInstances = (adapterModuleNode) => {
   const targetKind = 'instance'
   const collection = kindCollection[targetKind]
-  adapterModuleNode.meta[collection] ??= []
+  adapterModuleNode.meta[collection] = []
   return MapChildren({
     instance(node) {
       adapterModuleNode.meta[collection].push(node)
@@ -253,12 +260,12 @@ const indexInstances = (adapterModuleNode) => {
 }
 
 const linkInstanceInstantiate = (adapterModuleNode) => {
-  for (const instance of adapterModuleNode.meta.instances ?? []) {
+  for (const instance of adapterModuleNode.meta.instances) {
     const { moduleIdx } = instance.meta
     if (moduleIdx === undefined) {
       continue
     }
-    const module = adapterModuleNode.meta?.modules?.[moduleIdx]
+    const module = adapterModuleNode.meta.modules[moduleIdx]
     // const instantiatedImports = module.meta.imports.map((moduleImport) => {
     //   const { kind, kindIdx } = instance.meta.imports.find(
     //     ({ name }) => name === moduleImport.meta.moduleName
@@ -277,20 +284,24 @@ const linkInstanceInstantiate = (adapterModuleNode) => {
 }
 
 const linkInstanceExports = (adapterModuleNode) => {
-  for (const instance of adapterModuleNode.meta.instances ?? []) {
-    if (instance.meta.import || instance.meta?.module?.meta?.import) {
+  for (const instance of adapterModuleNode.meta.instances) {
+    if (
+      instance.meta.import ||
+      (instance.meta.module && instance.meta.module.meta.import) ||
+      instance.meta.moduleIdx !== undefined
+    ) {
       continue
     }
-    for (const exp of instance.meta.exports ?? []) {
+    for (const exp of instance.meta.exports) {
       const { kind, kindIdx } = exp.meta
       const collection = kindCollection[kind]
       if (instance.meta.module) {
-        const exported = instance.meta.module.meta[collection]?.[kindIdx]
+        const exported = instance.meta.module.meta[collection][kindIdx]
         exp.meta.exported = exported
         exported.meta.exportedBy ??= []
         exported.meta.exportedBy.push(exp)
       } else {
-        const exported = adapterModuleNode.meta[collection]?.[kindIdx]
+        const exported = adapterModuleNode.meta[collection][kindIdx]
         exp.meta.exported = exported
         exported.meta.exportedBy ??= []
         exported.meta.exportedBy.push(exp)
@@ -301,9 +312,12 @@ const linkInstanceExports = (adapterModuleNode) => {
 }
 
 const indexImports = (adapterModuleNode) => {
-  adapterModuleNode.meta.imports ??= []
+  adapterModuleNode.meta.imports = []
   for (const collection of Object.values(kindCollection)) {
-    for (const node of adapterModuleNode.meta[collection] ?? []) {
+    if (!adapterModuleNode.meta[collection]) {
+      continue
+    }
+    for (const node of adapterModuleNode.meta[collection]) {
       if (!node.meta.import) {
         continue
       }
@@ -334,7 +348,7 @@ const adapterModule = pipe(
   indexExports,
   linkExports,
   (node, index, parent) => {
-    for (const module of node.meta.modules ?? []) {
+    for (const module of node.meta.modules) {
       if (module.meta.type === 'adapter' && !module.meta.import) {
         adapterModule(module, index, parent)
       }

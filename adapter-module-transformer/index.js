@@ -4,6 +4,59 @@ import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
 import coreAdapterModule from '../core/adapter-module.js'
 import pipe from '../pipe.js'
 
+function resolvePath(node) {
+  const path = []
+  function walk(node) {
+    if (node.kind === 'module') {
+      path.push('modules', node.kindIdx)
+      return
+    } else if (node.kind === 'instance') {
+      path.push('instances', node.kindIdx)
+      return
+    }
+    if (node.meta.alias) {
+      if (node.meta.type === 'instance-export') {
+        path.push('instances', node.meta.instanceIdx, 'exports', node.meta.name)
+        return
+      } else {
+        throw new Error(`missing alias type ${node.meta.type}`)
+      }
+    }
+    if (node.meta.import) {
+      path.push('imports', node.meta.moduleName)
+      return walk(node.meta.imported)
+    }
+    if (node.meta.module) {
+      if (node.meta.module.meta.import) {
+        return walk(node.meta.module)
+      }
+      path.push('modules', node.meta.moduleIdx)
+      return
+    }
+    if (node.meta.exported) {
+      if (!node.meta.exported.meta.import) {
+        if (node.meta.kind === 'module') {
+          path.push('modules', node.meta.kindIdx)
+          return
+        } else if (node.meta.kind === 'instance') {
+          path.push('instances', node.meta.kindIdx)
+          return
+        }
+      }
+      return walk(node.meta.exported)
+    }
+    if (node.meta.kind === 'module') {
+      path.push('modules', node.meta.kindIdx)
+      return
+    } else if (node.meta.kind === 'instance') {
+      path.push('instances', node.meta.kindIdx)
+      return
+    }
+  }
+  walk(node)
+  return path
+}
+
 const createAdapterModuleConfig = (node) => {
   const [adapterValue, moduleValue] = node
   if (adapterValue !== 'adapter' || moduleValue !== 'module') {
@@ -15,111 +68,57 @@ const createAdapterModuleConfig = (node) => {
   }
   node = coreAdapterModule(node)
 
-  const modules = []
-  const imports = {}
-  const instances = []
-  const exports = {}
+  const modules = node.meta.modules
+    .filter((module) => module.meta.type === 'core' || !module.meta.import)
+    .map((module) => {
+      const {
+        meta: { type, source },
+      } = module
+      if (type === 'core') {
+        return {
+          kind: 'module',
+          source,
+        }
+      }
+      return createAdapterModuleConfig(module)
+    })
 
-  function resolvePath(node) {
-    const path = []
-    function walk(node) {
-      if (node.kind === 'module') {
-        path.push('modules', node.kindIdx)
-        return
-      } else if (node.kind === 'instance') {
-        path.push('instances', node.kindIdx)
-        return
-      }
-      if (node.meta.alias) {
-        if (node.meta.type === 'instance-export') {
-          path.push(
-            'instances',
-            node.meta.instanceIdx,
-            'exports',
-            node.meta.name
-          )
-          return
-        } else {
-          throw new Error(`missing alias type ${node.meta.type}`)
+  const imports = Object.fromEntries(
+    node.meta.imports.map(
+      ({ meta: { moduleName, kind, kindType, exports } }) => {
+        switch (kind) {
+          case 'func':
+            return [
+              moduleName,
+              {
+                kind,
+                kindType,
+              },
+            ]
+          case 'module':
+          case 'instance':
+            return [
+              moduleName,
+              {
+                kind,
+                exports: Object.fromEntries(
+                  exports.map(({ meta: { name, kind } }) => [name, { kind }])
+                ),
+              },
+            ]
+          default:
+            throw new Error(`import of type ${kind} not implemented`)
         }
       }
-      if (node.meta.import) {
-        path.push('imports', node.meta.moduleName)
-        return walk(node.meta.imported)
-      }
-      if (node.meta.module) {
-        if (node.meta.module.meta.import) {
-          return walk(node.meta.module)
-        }
-        path.push('modules', node.meta.moduleIdx)
-        return
-      }
-      if (node.meta.exported) {
-        if (!node.meta.exported.meta.import) {
-          if (node.meta.kind === 'module') {
-            path.push('modules', node.meta.kindIdx)
-            return
-          } else if (node.meta.kind === 'instance') {
-            path.push('instances', node.meta.kindIdx)
-            return
-          }
-        }
-        return walk(node.meta.exported)
-      }
-      if (node.meta.kind === 'module') {
-        path.push('modules', node.meta.kindIdx)
-        return
-      } else if (node.meta.kind === 'instance') {
-        path.push('instances', node.meta.kindIdx)
-        return
-      }
-    }
-    walk(node)
-    return path
-  }
+    )
+  )
 
-  const topModules = node?.meta?.modules ?? []
-  for (const module of topModules) {
-    const {
-      meta: { type, source },
-    } = module
-    if (type === 'core') {
-      modules.push({
-        kind: 'module',
-        source,
-      })
-    } else if (!module.meta.import) {
-      modules.push(createAdapterModuleConfig(module))
-    }
-  }
-  for (const {
-    meta: { moduleName, kind, kindType, exports },
-  } of node?.meta?.imports ?? []) {
-    switch (kind) {
-      case 'func':
-        imports[moduleName] = {
-          kind,
-          kindType,
-        }
-        break
-      case 'module':
-      case 'instance':
-        imports[moduleName] = {
-          kind,
-          exports: Object.fromEntries(
-            exports.map(({ meta: { name, kind } }) => [name, { kind }])
-          ),
-        }
-        break
-    }
-  }
-  const topInstances = node?.meta?.instances ?? []
-  for (const instance of topInstances) {
+  const instances = node.meta.instances.map((instance) => {
     const {
       meta: { moduleIdx, imports, exports },
     } = instance
     if (moduleIdx !== undefined) {
-      instances.push({
+      return {
         kind: 'module',
         path: resolvePath(instance),
         imports: Object.fromEntries(
@@ -128,9 +127,9 @@ const createAdapterModuleConfig = (node) => {
             return [name, { kind, path: resolvePath(imp) }]
           })
         ),
-      })
+      }
     } else if (instance.meta.import) {
-      instances.push({
+      return {
         kind: 'instance',
         exports: Object.fromEntries(
           exports.map((exp) => {
@@ -140,9 +139,9 @@ const createAdapterModuleConfig = (node) => {
             return [name, { kind }]
           })
         ),
-      })
+      }
     } else {
-      instances.push({
+      return {
         kind: 'instance',
         exports: Object.fromEntries(
           exports.map((exp) => {
@@ -152,18 +151,25 @@ const createAdapterModuleConfig = (node) => {
             return [name, { kind, path: resolvePath(exp) }]
           })
         ),
-      })
+      }
     }
-  }
-  for (const exp of node?.meta?.exports ?? []) {
-    const {
-      meta: { name, kind },
-    } = exp
-    exports[name] = {
-      kind,
-      path: resolvePath(exp),
-    }
-  }
+  })
+
+  const exports = Object.fromEntries(
+    node.meta.exports.map((exp) => {
+      const {
+        meta: { name, kind },
+      } = exp
+      return [
+        name,
+        {
+          kind,
+          path: resolvePath(exp),
+        },
+      ]
+    })
+  )
+
   return {
     kind: 'adapter module',
     modules,

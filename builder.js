@@ -80,7 +80,7 @@ export function SexpBuilder(start, wat, sourceTags = []) {
           return types.get(value) ?? 'value'
         },
       }
-      if (sourceTags.includes(values?.[0])) {
+      if (sourceTags.includes(values[0])) {
         values.meta.source = wat.slice(start, this.end)
       }
       return values
