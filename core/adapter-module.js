@@ -6,6 +6,7 @@ const kindCollection = {
   instance: 'instances',
   func: 'funcs',
   module: 'modules',
+  memory: 'memories',
 }
 
 const indexAliases = (adapterModuleNode) => {

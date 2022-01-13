@@ -20,6 +20,7 @@ const indexExports = (moduleNode) =>
 
 const kindCollection = {
   func: 'funcs',
+  memory: 'memories',
 }
 
 const linkExports = (moduleNode) => {
@@ -64,7 +65,7 @@ const indexFuncs = (moduleNode) => {
 
   return MapChildren({
     func(node) {
-      moduleNode.meta.funcs.push(node)
+      moduleNode.meta[collection].push(node)
 
       return node
     },
@@ -81,4 +82,34 @@ const indexFuncs = (moduleNode) => {
   })(moduleNode)
 }
 
-export default pipe(indexFuncs, indexImports, indexExports, linkExports)
+const indexMemories = (moduleNode) => {
+  const targetKind = 'memory'
+  const collection = kindCollection[targetKind]
+  moduleNode.meta[collection] ??= []
+
+  return MapChildren({
+    memory(node) {
+      moduleNode.meta[collection].push(node)
+
+      return node
+    },
+    import(node) {
+      const [, , , imKind] = node
+      const [kind] = imKind
+      if (kind === targetKind) {
+        moduleNode.meta[collection].push(node)
+
+        node.meta.import = true
+      }
+      return node
+    },
+  })(moduleNode)
+}
+
+export default pipe(
+  indexFuncs,
+  indexMemories,
+  indexImports,
+  indexExports,
+  linkExports
+)
