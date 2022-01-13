@@ -108,17 +108,8 @@
         document.getElementById('examples').add(option)
       }
 
-      document
-        .getElementById('examples')
-        .addEventListener('change', ({ target: { value } }) => {
-          const { watSource, jsSource } = examples.find(
-            ({ name }) => name === value
-          )
-          js.setValue(jsSource)
-          wat.setValue(watSource)
-        })
       const wat = CodeMirror(document.getElementById('wat'), {
-        value: examples[0].watSource,
+        value: '',
         mode: 'wast',
         lineNumbers: true,
         viewportMargin: Infinity,
@@ -131,7 +122,7 @@
         cursorHeight: 0,
       })
       const js = CodeMirror(document.getElementById('js'), {
-        value: examples[0].jsSource,
+        value: '',
         mode: 'javascript',
         lineNumbers: true,
         viewportMargin: Infinity,
@@ -143,6 +134,19 @@
         readOnly: true,
         cursorHeight: 0,
       })
+      function onChangeExample(example) {
+        const { watSource, jsSource } = examples.find(
+          ({ name }) => name === example
+        )
+        js.setValue(jsSource)
+        wat.setValue(watSource)
+      }
+      onChangeExample(examples[0].name)
+      document
+        .getElementById('examples')
+        .addEventListener('change', ({ target: { value } }) =>
+          onChangeExample(value)
+        )
 
       const fakeConsole = {
         log(...messages) {
@@ -156,7 +160,7 @@
       const wabt = await WabtModule()
       const { transformWat, execJs } = Index(wabt, fakeConsole)
       let config
-      function onWatChange() {
+      function onChangeWat() {
         try {
           watConsole.setValue('')
           config = transformWat(wat.getValue())
@@ -164,12 +168,12 @@
         } catch (error) {
           watConsole.setValue(String(error))
         }
-        onJsChange()
+        onChangeJs()
       }
-      onWatChange()
-      wat.on('change', debounce(onWatChange, 200))
+      onChangeWat()
+      wat.on('change', debounce(onChangeWat, 200))
 
-      function onJsChange() {
+      function onChangeJs() {
         try {
           jsConsole.setValue('')
           execJs(js.getValue(), config)
@@ -177,9 +181,9 @@
           jsConsole.setValue(String(error))
         }
       }
-      onJsChange()
+      onChangeJs()
 
-      js.on('change', debounce(onJsChange, 200))
+      js.on('change', debounce(onChangeJs, 200))
     </script>
   </body>
 </html>
