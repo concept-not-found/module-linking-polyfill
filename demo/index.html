@@ -148,17 +148,8 @@
           onChangeExample(value)
         )
 
-      const fakeConsole = {
-        log(...messages) {
-          jsConsole.replaceRange(
-            `${messages.join(' ')}\n`,
-            CodeMirror.Pos(jsConsole.lastLine())
-          )
-        },
-      }
-
       const wabt = await WabtModule()
-      const { transformWat, execJs } = Index(wabt, fakeConsole)
+      const { transformWat, execJs } = Index(wabt)
       let config
       function onChangeWat() {
         try {
@@ -176,7 +167,11 @@
       function onChangeJs() {
         try {
           jsConsole.setValue('')
-          execJs(js.getValue(), config)
+          const consoleOutput = execJs(js.getValue(), config)
+          jsConsole.replaceRange(
+            consoleOutput,
+            CodeMirror.Pos(jsConsole.lastLine())
+          )
         } catch (error) {
           jsConsole.setValue(String(error))
         }

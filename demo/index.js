@@ -1,7 +1,7 @@
 import adapterModuleTransformer from '../adapter-module-transformer/index.js'
 import moduleLinkingPolyfillRuntime from '../module-linking-polyfill-runtime/index.js'
 
-export default (wabt, fakeConsole) => {
+export default (wabt) => {
   return {
     transformWat(wat) {
       const config = adapterModuleTransformer(wat)
@@ -16,6 +16,13 @@ export default (wabt, fakeConsole) => {
     },
 
     execJs(js, config) {
+      const lines = []
+      const fakeConsole = {
+        log(...messages) {
+          lines.push(`${messages.join(' ')}\n`)
+        },
+      }
+
       const executable = new Function(
         'console',
         'moduleLinkingPolyfillRuntime',
@@ -23,6 +30,7 @@ export default (wabt, fakeConsole) => {
         js
       )
       executable(fakeConsole, moduleLinkingPolyfillRuntime, config)
+      return lines.join('')
     },
   }
 }
