@@ -87,4 +87,26 @@ store into module 1 = 42
 load from module 0: 42
 `,
   },
+  {
+    name: 're-export instance func',
+    watSource: `(adapter module (;0;)
+  (import "imp" (instance (;0;)
+    (export "f" (func (result i32)))
+  ))
+  (alias (;instance;) 0 "f" (func (;0;)))
+  (export "exp" (func 0))
+)`,
+    jsSource: `const imports = {
+  imp: {
+    f() {
+      return 42
+    }
+  }
+}
+const instance = moduleLinkingPolyfillRuntime(config, imports)
+console.log("exp() ===", instance.exp())
+`,
+    expectedJsConsole: `exp() === 42
+`,
+  },
 ]

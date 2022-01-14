@@ -13,7 +13,14 @@ function path(parts, object) {
 export default (config, imports) => {
   const live = {
     modules: config.modules,
-    imports,
+    imports: Object.fromEntries(
+      Object.entries(config.imports).map(([moduleName, imp]) => {
+        if (imp.kind === 'instance') {
+          return [moduleName, { exports: imports[moduleName] }]
+        }
+        return [moduleName, imports[moduleName]]
+      })
+    ),
     instances: [],
   }
 
@@ -33,6 +40,8 @@ export default (config, imports) => {
       live.instances.push(
         new WebAssembly.Instance(new WebAssembly.Module(module.binary), imports)
       )
+    } else if (instance.path) {
+      live.instances.push(path(instance.path, live))
     } else {
       live.instances.push(instance)
     }

@@ -37,6 +37,7 @@ describe('adapter-module-transformer', () => {
         instances: [
           {
             kind: 'instance',
+            path: ['imports', 'imp'],
             exports: {},
           },
         ],
@@ -71,10 +72,10 @@ describe('adapter-module-transformer', () => {
       })
     })
 
-    test('export func from imported instance', () => {
+    test('re-export instance func', () => {
       const wat = `(adapter module (;0;)
         (import "imp" (instance (;0;)
-          (export "f" (func))
+          (export "f" (func (result i32)))
         ))
         (alias (;instance;) 0 "f" (func (;0;)))
         (export "exp" (func 0))
@@ -96,6 +97,7 @@ describe('adapter-module-transformer', () => {
         instances: [
           {
             kind: 'instance',
+            path: ['imports', 'imp'],
             exports: {
               f: {
                 kind: 'func',

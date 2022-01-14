@@ -131,6 +131,7 @@ const createAdapterModuleConfig = (node) => {
     } else if (instance.meta.import) {
       return {
         kind: 'instance',
+        path: resolvePath(instance),
         exports: Object.fromEntries(
           exports.map((exp) => {
             const {
@@ -183,6 +184,11 @@ export default pipe(
   watParser({ sourceTags: ['module'] }),
   stripWasmComments,
   stripWasmWhitespace,
-  ([node]) => node,
+  (root) => {
+    if (root.length !== 1) {
+      throw new Error('expected a single adapter module')
+    }
+    return root[0]
+  },
   createAdapterModuleConfig
 )
