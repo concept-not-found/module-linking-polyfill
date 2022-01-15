@@ -249,11 +249,38 @@ describe('plugin', () => {
         ['alias', '0', '"ex"', ['module']],
       ])
       expect(adapterModule.meta.aliases[0].meta).toMatchObject({
-        type: 'instance-export',
         instanceIdx: 0,
         name: 'ex',
         kind: 'module',
       })
+    })
+
+    test('alias outer', () => {
+      const wat = `(adapter module
+        (module)
+        (adapter module
+          (alias 1 0 (module))
+        )
+      )`
+
+      const parser = Parser()
+      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
+        coreAdapterModule(node)
+      )(wat)
+
+      expect(adapterModule).toMatchTree([
+        'adapter',
+        'module',
+        ['module'],
+        ['adapter', 'module', ['alias', '1', '0', ['module']]],
+      ])
+      expect(adapterModule.meta.modules).toMatchTree([
+        ['module'],
+        ['adapter', 'module', ['alias', '1', '0', ['module']]],
+      ])
+      expect(adapterModule.meta.modules[1].meta.modules[0].meta.alias).toBe(
+        true
+      )
     })
   })
 })

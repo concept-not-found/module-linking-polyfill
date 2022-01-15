@@ -32,7 +32,6 @@ const indexAliases = (adapterModuleNode) => {
         instanceIdx = Number.parseInt(instanceIdx)
         name = String(name)
         Object.assign(node.meta, {
-          type: 'instance-export',
           instanceIdx,
           name,
           kind,
@@ -46,7 +45,6 @@ const indexAliases = (adapterModuleNode) => {
         kindIdx = Number.parseInt(kindIdx)
         const [, , [kind]] = aliasTarget
         Object.assign(node.meta, {
-          type: 'outer',
           outerIdx,
           kind,
           kindIdx,
@@ -162,7 +160,6 @@ const indexExports = (adapterModuleNode) => {
       kindIdx = Number.parseInt(kindIdx)
       const [, , [kind]] = node
       Object.assign(node.meta, {
-        export: true,
         name,
         kind,
         kindIdx,
@@ -228,7 +225,6 @@ const indexInstances = (adapterModuleNode) => {
           kindIdx = Number.parseInt(kindIdx)
           const [, , [kind]] = exp
           Object.assign(exp.meta, {
-            export: true,
             name,
             kind,
             kindIdx,

@@ -17,7 +17,6 @@ const indexExports = (moduleNode) => {
       kindIdx = Number.parseInt(kindIdx)
       const [, , [kind]] = node
       Object.assign(node.meta, {
-        export: true,
         name,
         kind,
         kindIdx,
