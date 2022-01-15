@@ -13,64 +13,54 @@ const kindCollection = {
 
 function resolvePath(node, ancestors) {
   const path = []
-  function walk(node) {
-    if (node.kind === 'module') {
-      path.push('modules', node.kindIdx)
-      return
-    } else if (node.kind === 'instance') {
-      path.push('instances', node.kindIdx)
-      return
-    }
-    if (node.meta.alias) {
-      if (node.meta.type === 'instance-export') {
-        path.push('instances', node.meta.instanceIdx, 'exports', node.meta.name)
+  function walk({ meta }) {
+    if (meta.alias) {
+      if (meta.type === 'instance-export') {
+        path.push('instances', meta.instanceIdx, 'exports', meta.name)
         return
       } else {
-        const outerModuleIdx = ancestors.length - 1 - node.meta.outerIdx
+        const outerModuleIdx = ancestors.length - 1 - meta.outerIdx
         const outerModule = ancestors[outerModuleIdx]
-        const collection = kindCollection[node.meta.kind]
+        const collection = kindCollection[meta.kind]
         path.push(
-          ...Array(node.meta.outerIdx).fill('..'),
-          ...resolvePath(
-            outerModule.meta[collection][node.meta.kindIdx],
-            ancestors
-          )
+          ...Array(meta.outerIdx).fill('..'),
+          ...resolvePath(outerModule.meta[collection][meta.kindIdx], ancestors)
         )
       }
     }
-    if (node.meta.import) {
-      path.push('imports', node.meta.moduleName)
+    if (meta.import) {
+      path.push('imports', meta.moduleName)
       return
     }
-    if (node.meta.moduleIdx !== undefined) {
+    if (meta.moduleIdx !== undefined) {
       const module =
-        ancestors[ancestors.length - 1].meta.modules[node.meta.moduleIdx]
+        ancestors[ancestors.length - 1].meta.modules[meta.moduleIdx]
       if (module.meta.import) {
         return walk(module)
       }
-      path.push('modules', node.meta.moduleIdx)
+      path.push('modules', meta.moduleIdx)
       return
     }
-    if (node.meta.export) {
-      const collection = kindCollection[node.meta.kind]
+    if (meta.export) {
+      const collection = kindCollection[meta.kind]
       const exported =
-        ancestors[ancestors.length - 1].meta[collection][node.meta.kindIdx]
+        ancestors[ancestors.length - 1].meta[collection][meta.kindIdx]
       if (!exported.meta.import) {
-        if (node.meta.kind === 'module') {
-          path.push('modules', node.meta.kindIdx)
+        if (meta.kind === 'module') {
+          path.push('modules', meta.kindIdx)
           return
-        } else if (node.meta.kind === 'instance') {
-          path.push('instances', node.meta.kindIdx)
+        } else if (meta.kind === 'instance') {
+          path.push('instances', meta.kindIdx)
           return
         }
       }
       return walk(exported)
     }
-    if (node.meta.kind === 'module') {
-      path.push('modules', node.meta.kindIdx)
+    if (meta.kind === 'module') {
+      path.push('modules', meta.kindIdx)
       return
-    } else if (node.meta.kind === 'instance') {
-      path.push('instances', node.meta.kindIdx)
+    } else if (meta.kind === 'instance') {
+      path.push('instances', meta.kindIdx)
       return
     }
   }
@@ -144,7 +134,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
         path: resolvePath(instance, ancestors),
         imports: Object.fromEntries(
           imports.map((imp) => {
-            const { name, kind } = imp
+            const { name, kind } = imp.meta
             return [name, { kind, path: resolvePath(imp, ancestors) }]
           })
         ),

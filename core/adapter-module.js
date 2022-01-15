@@ -164,13 +164,14 @@ const indexInstances = (adapterModuleNode) => {
         const [[, moduleIdx, ...imports]] = instanceExpr
         Object.assign(node.meta, {
           moduleIdx: Number.parseInt(moduleIdx),
-          imports: imports.map((node) => {
-            const [, name, [kind, kindIdx]] = node
-            return {
+          imports: imports.map((imp) => {
+            const [, name, [kind, kindIdx]] = imp
+            Object.assign(imp.meta, {
               name: String(name),
               kind,
               kindIdx: Number.parseInt(kindIdx),
-            }
+            })
+            return imp
           }),
         })
       } else {
