@@ -151,8 +151,7 @@ const indexExports = (adapterModuleNode) => {
         kindIdx,
         path(ancestors) {
           const collection = kindCollection[kind]
-          const exported =
-            ancestors[ancestors.length - 1].meta[collection][kindIdx]
+          const exported = adapterModuleNode.meta[collection][kindIdx]
           if (!exported.meta.import && !exported.meta.alias) {
             return [kindCollection[kind], kindIdx]
           }
@@ -194,8 +193,7 @@ const indexInstances = (adapterModuleNode) => {
             return imp
           }),
           path(ancestors) {
-            const module =
-              ancestors[ancestors.length - 1].meta.modules[moduleIdx]
+            const module = adapterModuleNode.meta.modules[moduleIdx]
             if (!module.meta.import && !module.meta.alias) {
               return ['modules', moduleIdx]
             }
@@ -214,8 +212,7 @@ const indexInstances = (adapterModuleNode) => {
             kindIdx,
             path(ancestors) {
               const collection = kindCollection[kind]
-              const exported =
-                ancestors[ancestors.length - 1].meta[collection][kindIdx]
+              const exported = adapterModuleNode.meta[collection][kindIdx]
               if (!exported.meta.import && !exported.meta.alias) {
                 return [kindCollection[kind], kindIdx]
               }
