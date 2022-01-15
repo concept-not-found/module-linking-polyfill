@@ -18,13 +18,19 @@ describe('demo', () => {
 
   const scenarios = [
     {
-      name: 'interleaving instance-export and outer alias',
+      name: 'chained outer alias',
       watSource: [
         '(adapter module (;0;)',
         '  (import "imp" (func (;0;) (result i32)))',
         '  (adapter module (;0;)',
+        '    (adapter module (;0;)',
+        '      (alias (;outer;) 1 (;func;) 0 (func (;0;)))',
+        '      (export "inner-inner-exp" (func 0))',
+        '    )',
         '    (alias (;outer;) 1 (;func;) 0 (func (;0;)))',
-        '    (export "inner-exp" (func 0))',
+        '    (instance (;0;) (instantiate (;module;) 0))',
+        '    (alias (;instance;) 0 "inner-inner-exp" (func (;1;)))',
+        '    (export "inner-exp" (func 1))',
         '  )',
         '  (instance (;0;) (instantiate (;module;) 0))',
         '  (alias (;instance;) 0 "inner-exp" (func (;1;)))',

@@ -48,7 +48,7 @@ const indexAliases = (adapterModuleNode) => {
             const aliased = outerModule.meta[collection][kindIdx]
             return [
               ...Array(outerIdx).fill('..'),
-              ...aliased.meta.path(ancestors),
+              ...aliased.meta.path(ancestors.slice(0, -outerIdx)),
             ]
           },
         })
