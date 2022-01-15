@@ -1,15 +1,10 @@
 import Visit from '../visit.js'
 import coreModule from './module.js'
+import kindCollection, { coreKindCollection } from './kind-collection.js'
 
 // declared empty to avoid no-use-before-define
 // eslint-disable-next-line prefer-const
 let adapterModule
-
-const kindCollection = {
-  instance: 'instances',
-  func: 'funcs',
-  module: 'modules',
-}
 
 const indexAliases = (adapterModuleNode) => {
   for (const collection of Object.values(kindCollection)) {
@@ -110,29 +105,30 @@ const indexModules = (adapterModuleNode) => {
   })(adapterModuleNode)
 }
 
-const indexFuncs = (adapterModuleNode) => {
-  const targetKind = 'func'
-  const collection = kindCollection[targetKind]
-  adapterModuleNode.meta[collection] = []
-  Visit({
-    import(node) {
-      const [, , imKind] = node
-      const [kind] = imKind
-      if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+const indexKinds = (adapterModuleNode) => {
+  for (const targetKind in coreKindCollection) {
+    const collection = kindCollection[targetKind]
+    adapterModuleNode.meta[collection] = []
+    Visit({
+      import(node) {
+        const [, , imKind] = node
+        const [kind] = imKind
+        if (kind === targetKind) {
+          adapterModuleNode.meta[collection].push(node)
 
-        node.meta.import = true
-      }
-    },
-    alias(node) {
-      const [, , , [kind]] = node
-      if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+          node.meta.import = true
+        }
+      },
+      alias(node) {
+        const [, , , [kind]] = node
+        if (kind === targetKind) {
+          adapterModuleNode.meta[collection].push(node)
 
-        node.meta.alias = true
-      }
-    },
-  })(adapterModuleNode)
+          node.meta.alias = true
+        }
+      },
+    })(adapterModuleNode)
+  }
 }
 
 const indexExports = (adapterModuleNode) => {
@@ -240,6 +236,14 @@ const indexInstances = (adapterModuleNode) => {
         })
       }
     },
+    alias(node) {
+      const [, , , [kind]] = node
+      if (kind === targetKind) {
+        adapterModuleNode.meta[collection].push(node)
+
+        node.meta.alias = true
+      }
+    },
   })(adapterModuleNode)
 }
 
@@ -269,8 +273,8 @@ const indexImports = (adapterModuleNode) => {
 
 adapterModule = (node) => {
   indexModules(node)
-  indexFuncs(node)
   indexInstances(node)
+  indexKinds(node)
   indexImports(node)
   indexAliases(node)
   indexExports(node)

@@ -1,9 +1,5 @@
 import Visit from '../visit.js'
-
-const kindCollection = {
-  func: 'funcs',
-  memory: 'memories',
-}
+import { coreKindCollection } from './kind-collection.js'
 
 const indexExports = (moduleNode) => {
   moduleNode.meta.exports = []
@@ -20,7 +16,7 @@ const indexExports = (moduleNode) => {
         kind,
         kindIdx,
         path() {
-          return [kindCollection[kind], kindIdx]
+          return [coreKindCollection[kind], kindIdx]
         },
       })
     },
@@ -29,7 +25,7 @@ const indexExports = (moduleNode) => {
 
 const indexImports = (moduleNode) => {
   moduleNode.meta.imports = []
-  for (const collection of Object.values(kindCollection)) {
+  for (const collection of Object.values(coreKindCollection)) {
     for (const node of moduleNode.meta[collection]) {
       if (!node.meta.import) {
         continue
@@ -47,51 +43,30 @@ const indexImports = (moduleNode) => {
   }
 }
 
-const indexFuncs = (moduleNode) => {
-  const targetKind = 'func'
-  const collection = kindCollection[targetKind]
-  moduleNode.meta[collection] = []
+const indexKinds = (moduleNode) => {
+  for (const targetKind in coreKindCollection) {
+    const collection = coreKindCollection[targetKind]
+    moduleNode.meta[collection] = []
 
-  Visit({
-    func(node) {
-      moduleNode.meta[collection].push(node)
-    },
-    import(node) {
-      const [, , , imKind] = node
-      const [kind] = imKind
-      if (kind === targetKind) {
+    Visit({
+      [targetKind]: (node) => {
         moduleNode.meta[collection].push(node)
+      },
+      import(node) {
+        const [, , , imKind] = node
+        const [kind] = imKind
+        if (kind === targetKind) {
+          moduleNode.meta[collection].push(node)
 
-        node.meta.import = true
-      }
-    },
-  })(moduleNode)
-}
-
-const indexMemories = (moduleNode) => {
-  const targetKind = 'memory'
-  const collection = kindCollection[targetKind]
-  moduleNode.meta[collection] = []
-
-  Visit({
-    memory(node) {
-      moduleNode.meta[collection].push(node)
-    },
-    import(node) {
-      const [, , , imKind] = node
-      const [kind] = imKind
-      if (kind === targetKind) {
-        moduleNode.meta[collection].push(node)
-
-        node.meta.import = true
-      }
-    },
-  })(moduleNode)
+          node.meta.import = true
+        }
+      },
+    })(moduleNode)
+  }
 }
 
 export default (node) => {
-  indexFuncs(node)
-  indexMemories(node)
+  indexKinds(node)
   indexImports(node)
   indexExports(node)
 }

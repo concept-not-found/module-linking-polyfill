@@ -35,6 +35,9 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
       ({ meta: { moduleName, kind, kindType, exports } }) => {
         switch (kind) {
           case 'func':
+          case 'table':
+          case 'memory':
+          case 'global':
             return [
               moduleName,
               {
