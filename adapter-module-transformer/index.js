@@ -4,57 +4,6 @@ import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
 import coreAdapterModule from '../core/adapter-module.js'
 import pipe from '../pipe.js'
 
-const kindCollection = {
-  instance: 'instances',
-  func: 'funcs',
-  module: 'modules',
-  memory: 'memories',
-}
-
-function resolvePath({ meta }, ancestors) {
-  if (meta.alias) {
-    if (meta.type === 'instance-export') {
-      return ['instances', meta.instanceIdx, 'exports', meta.name]
-    } else {
-      const outerModuleIdx = ancestors.length - 1 - meta.outerIdx
-      const outerModule = ancestors[outerModuleIdx]
-      const collection = kindCollection[meta.kind]
-      return [
-        ...Array(meta.outerIdx).fill('..'),
-        ...resolvePath(outerModule.meta[collection][meta.kindIdx], ancestors),
-      ]
-    }
-  }
-  if (meta.import) {
-    return ['imports', meta.moduleName]
-  }
-  if (meta.moduleIdx !== undefined) {
-    const module = ancestors[ancestors.length - 1].meta.modules[meta.moduleIdx]
-    if (module.meta.import) {
-      return resolvePath(module, ancestors)
-    }
-    return ['modules', meta.moduleIdx]
-  }
-  if (meta.export) {
-    const collection = kindCollection[meta.kind]
-    const exported =
-      ancestors[ancestors.length - 1].meta[collection][meta.kindIdx]
-    if (!exported.meta.import) {
-      if (meta.kind === 'module') {
-        return ['modules', meta.kindIdx]
-      } else if (meta.kind === 'instance') {
-        return ['instances', meta.kindIdx]
-      }
-    }
-    return resolvePath(exported, ancestors)
-  }
-  if (meta.kind === 'module') {
-    return ['modules', meta.kindIdx]
-  } else if (meta.kind === 'instance') {
-    return ['instances', meta.kindIdx]
-  }
-}
-
 const createAdapterModuleConfig = (node, ancestors = [node]) => {
   const [adapterValue, moduleValue] = node
   if (adapterValue !== 'adapter' || moduleValue !== 'module') {
@@ -113,23 +62,23 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
 
   const instances = node.meta.instances.map((instance) => {
     const {
-      meta: { moduleIdx, imports, exports },
+      meta: { instantiate, imports, exports },
     } = instance
-    if (moduleIdx !== undefined) {
+    if (instantiate) {
       return {
         kind: 'module',
-        path: resolvePath(instance, ancestors),
+        path: instance.meta.path(ancestors),
         imports: Object.fromEntries(
           imports.map((imp) => {
             const { name, kind } = imp.meta
-            return [name, { kind, path: resolvePath(imp, ancestors) }]
+            return [name, { kind, path: imp.meta.path(ancestors) }]
           })
         ),
       }
     } else if (instance.meta.import) {
       return {
         kind: 'instance',
-        path: resolvePath(instance, ancestors),
+        path: instance.meta.path(ancestors),
         exports: Object.fromEntries(
           exports.map((exp) => {
             const {
@@ -147,7 +96,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
             const {
               meta: { name, kind },
             } = exp
-            return [name, { kind, path: resolvePath(exp, ancestors) }]
+            return [name, { kind, path: exp.meta.path(ancestors) }]
           })
         ),
       }
@@ -163,7 +112,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
         name,
         {
           kind,
-          path: resolvePath(exp, ancestors),
+          path: exp.meta.path(ancestors),
         },
       ]
     })

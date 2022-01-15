@@ -1,28 +1,34 @@
 import pipe from '../pipe.js'
 import MapChildren from '../map-children-sexp-by-tag.js'
 
+const kindCollection = {
+  func: 'funcs',
+  memory: 'memories',
+}
+
 const indexExports = (moduleNode) => {
   moduleNode.meta.exports = []
   return MapChildren({
     export(node) {
       moduleNode.meta.exports.push(node)
 
-      const [, name, [kind, kindIdx]] = node
+      let [, name, [, kindIdx]] = node
+      name = String(name)
+      kindIdx = Number.parseInt(kindIdx)
+      const [, , [kind]] = node
       Object.assign(node.meta, {
         export: true,
-        name: String(name),
+        name,
         kind,
-        kindIdx: Number.parseInt(kindIdx),
+        kindIdx,
+        path() {
+          return [kindCollection[kind], kindIdx]
+        },
       })
 
       return node
     },
   })(moduleNode)
-}
-
-const kindCollection = {
-  func: 'funcs',
-  memory: 'memories',
 }
 
 const indexImports = (moduleNode) => {
@@ -94,9 +100,4 @@ const indexMemories = (moduleNode) => {
   })(moduleNode)
 }
 
-export default pipe(
-  indexFuncs,
-  indexMemories,
-  indexImports,
-  indexExports
-)
+export default pipe(indexFuncs, indexMemories, indexImports, indexExports)

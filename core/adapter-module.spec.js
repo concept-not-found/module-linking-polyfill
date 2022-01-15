@@ -254,10 +254,6 @@ describe('plugin', () => {
         name: 'ex',
         kind: 'module',
       })
-      expect(adapterModule.meta.aliases[0].meta.instance).toMatchTree([
-        'instance',
-        ['export', '"ex"', ['module', '0']],
-      ])
     })
   })
 })

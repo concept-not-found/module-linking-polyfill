@@ -27,21 +27,39 @@ const indexAliases = (adapterModuleNode) => {
 
       const [, ...aliasTarget] = node
       if (node.meta.typeOf(aliasTarget[1]) === 'string') {
-        const [instanceIdx, name, [kind]] = aliasTarget
+        let [instanceIdx, name] = aliasTarget
+        const [, , [kind]] = aliasTarget
+        instanceIdx = Number.parseInt(instanceIdx)
+        name = String(name)
         Object.assign(node.meta, {
           type: 'instance-export',
-          instanceIdx: Number.parseInt(instanceIdx),
-          instance: adapterModuleNode.meta.instances[instanceIdx],
-          name: String(name),
+          instanceIdx,
+          name,
           kind,
+          path() {
+            return ['instances', instanceIdx, 'exports', name]
+          },
         })
       } else {
-        const [outerIdx, kindIdx, [kind]] = aliasTarget
+        let [outerIdx, kindIdx] = aliasTarget
+        outerIdx = Number.parseInt(outerIdx)
+        kindIdx = Number.parseInt(kindIdx)
+        const [, , [kind]] = aliasTarget
         Object.assign(node.meta, {
           type: 'outer',
-          outerIdx: Number.parseInt(outerIdx),
+          outerIdx,
           kind,
-          kindIdx: Number.parseInt(kindIdx),
+          kindIdx,
+          path(ancestors) {
+            const outerModuleIdx = ancestors.length - 1 - outerIdx
+            const outerModule = ancestors[outerModuleIdx]
+            const collection = kindCollection[kind]
+            const aliased = outerModule.meta[collection][kindIdx]
+            return [
+              ...Array(outerIdx).fill('..'),
+              ...aliased.meta.path(ancestors),
+            ]
+          },
         })
       }
     }
@@ -139,12 +157,24 @@ const indexExports = (adapterModuleNode) => {
     export(node) {
       adapterModuleNode.meta.exports.push(node)
 
-      const [, name, [kind, kindIdx]] = node
+      let [, name, [, kindIdx]] = node
+      name = String(name)
+      kindIdx = Number.parseInt(kindIdx)
+      const [, , [kind]] = node
       Object.assign(node.meta, {
         export: true,
-        name: String(name),
+        name,
         kind,
-        kindIdx: Number.parseInt(kindIdx),
+        kindIdx,
+        path(ancestors) {
+          const collection = kindCollection[kind]
+          const exported =
+            ancestors[ancestors.length - 1].meta[collection][kindIdx]
+          if (!exported.meta.import && !exported.meta.alias) {
+            return [kindCollection[kind], kindIdx]
+          }
+          return exported.meta.path(ancestors)
+        },
       })
 
       return node
@@ -161,27 +191,56 @@ const indexInstances = (adapterModuleNode) => {
       adapterModuleNode.meta[collection].push(node)
       const [, ...instanceExpr] = node
       if (instanceExpr.length === 1 && instanceExpr[0][0] === 'instantiate') {
-        const [[, moduleIdx, ...imports]] = instanceExpr
+        let [[, moduleIdx]] = instanceExpr
+        moduleIdx = Number.parseInt(moduleIdx)
+        const [[, , ...imports]] = instanceExpr
         Object.assign(node.meta, {
-          moduleIdx: Number.parseInt(moduleIdx),
+          instantiate: true,
+          moduleIdx,
           imports: imports.map((imp) => {
-            const [, name, [kind, kindIdx]] = imp
+            let [, name, [, kindIdx]] = imp
+            name = String(name)
+            kindIdx = Number.parseInt(kindIdx)
+            const [, , [kind]] = imp
             Object.assign(imp.meta, {
-              name: String(name),
+              name,
               kind,
-              kindIdx: Number.parseInt(kindIdx),
+              kindIdx,
+              path() {
+                return [kindCollection[kind], kindIdx]
+              },
             })
             return imp
           }),
+          path(ancestors) {
+            const module =
+              ancestors[ancestors.length - 1].meta.modules[moduleIdx]
+            if (!module.meta.import && !module.meta.alias) {
+              return ['modules', moduleIdx]
+            }
+            return module.meta.path(ancestors)
+          },
         })
       } else {
         node.meta.exports = instanceExpr.map((exp) => {
-          const [, name, [kind, kindIdx]] = exp
+          let [, name, [, kindIdx]] = exp
+          name = String(name)
+          kindIdx = Number.parseInt(kindIdx)
+          const [, , [kind]] = exp
           Object.assign(exp.meta, {
             export: true,
-            name: String(name),
+            name,
             kind,
-            kindIdx: Number.parseInt(kindIdx),
+            kindIdx,
+            path(ancestors) {
+              const collection = kindCollection[kind]
+              const exported =
+                ancestors[ancestors.length - 1].meta[collection][kindIdx]
+              if (!exported.meta.import && !exported.meta.alias) {
+                return [kindCollection[kind], kindIdx]
+              }
+              return exported.meta.path(ancestors)
+            },
           })
           return exp
         })
@@ -199,7 +258,6 @@ const indexInstances = (adapterModuleNode) => {
           exports: exports.map((exp) => {
             const [, name, [kind, ...kindType]] = exp
             Object.assign(exp.meta, {
-              export: true,
               name: String(name),
               kind,
               kindType,
@@ -225,11 +283,16 @@ const indexImports = (adapterModuleNode) => {
       }
       adapterModuleNode.meta.imports.push(node)
 
-      const [, moduleName, [kind, ...kindType]] = node
+      let [, moduleName] = node
+      moduleName = String(moduleName)
+      const [, , [kind, ...kindType]] = node
       Object.assign(node.meta, {
-        moduleName: String(moduleName),
+        moduleName,
         kind,
         kindType,
+        path() {
+          return ['imports', moduleName]
+        },
       })
     }
   }
