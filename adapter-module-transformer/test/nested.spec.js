@@ -56,7 +56,7 @@ describe('adapter-module-transformer', () => {
       })
     })
 
-    xtest('re-export func via inner module', () => {
+    test('re-export func via inner module', () => {
       const wat = `(adapter module (;0;)
         (import "imp" (func))
         (adapter module (;0;)
@@ -92,8 +92,9 @@ describe('adapter-module-transformer', () => {
         },
         instances: [
           {
-            kind: 'adapter module',
+            kind: 'module',
             path: ['modules', 0],
+            imports: {},
           },
         ],
         exports: {

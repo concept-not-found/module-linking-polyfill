@@ -25,33 +25,38 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
   config.instances.forEach((instance) => {
     if (instance.kind === 'module') {
       const module = path(instance.path, live)
-      const imports = {}
-      for (const moduleName in instance.imports) {
-        const imp = instance.imports[moduleName]
-        if (imp.kind === 'instance') {
-          const otherInstance = path(imp.path, live)
-          imports[moduleName] = otherInstance.exports
-        } else {
-          imports[moduleName] = path(imp.path, live)
+      if (module.kind === 'module') {
+        const imports = {}
+        for (const moduleName in instance.imports) {
+          const imp = instance.imports[moduleName]
+          if (imp.kind === 'instance') {
+            const otherInstance = path(imp.path, live)
+            imports[moduleName] = otherInstance.exports
+          } else {
+            imports[moduleName] = path(imp.path, live)
+          }
         }
-      }
-      live.instances.push(
-        new WebAssembly.Instance(new WebAssembly.Module(module.binary), imports)
-      )
-    } else if (instance.kind === 'adapter module') {
-      const imports = {}
-      for (const moduleName in instance.imports) {
-        const imp = instance.imports[moduleName]
-        if (imp.kind === 'instance') {
-          const otherInstance = path(imp.path, live)
-          imports[moduleName] = otherInstance
-        } else {
-          imports[moduleName] = path(imp.path, live)
+        live.instances.push(
+          new WebAssembly.Instance(
+            new WebAssembly.Module(module.binary),
+            imports
+          )
+        )
+      } else {
+        const imports = {}
+        for (const moduleName in instance.imports) {
+          const imp = instance.imports[moduleName]
+          if (imp.kind === 'instance') {
+            const otherInstance = path(imp.path, live)
+            imports[moduleName] = otherInstance
+          } else {
+            imports[moduleName] = path(imp.path, live)
+          }
         }
+        live.instances.push(
+          createAdapterModuleInstance(path(instance.path, live), imports, live)
+        )
       }
-      live.instances.push(
-        createAdapterModuleInstance(path(instance.path, live), imports, live)
-      )
     } else {
       live.instances.push({ exports: path(instance.path, live) })
     }

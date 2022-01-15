@@ -29,10 +29,8 @@ function resolvePath(node, ancestors) {
         const outerModuleIdx = ancestors.length - 1 - node.meta.outerIdx
         const outerModule = ancestors[outerModuleIdx]
         const collection = kindCollection[node.meta.kind]
-        console.log({ ancestors, outerModuleIdx, outerModule, collection })
         path.push(
-          'modules',
-          outerModuleIdx,
+          ...Array(node.meta.outerIdx).fill('..'),
           ...resolvePath(
             outerModule.meta[collection][node.meta.kindIdx],
             ancestors

@@ -26,7 +26,7 @@ describe('module-linking-polyfill-runtime', () => {
       },
       instances: [
         {
-          kind: 'adapter module',
+          kind: 'module',
           path: ['modules', 0],
         },
       ],
