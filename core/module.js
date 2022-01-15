@@ -53,8 +53,7 @@ const indexKinds = (moduleNode) => {
         moduleNode.meta[collection].push(node)
       },
       import(node) {
-        const [, , , imKind] = node
-        const [kind] = imKind
+        const [, , , [kind]] = node
         if (kind === targetKind) {
           moduleNode.meta[collection].push(node)
 

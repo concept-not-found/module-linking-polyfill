@@ -74,8 +74,7 @@ const indexModules = (adapterModuleNode) => {
       coreModule(node)
     },
     import(node) {
-      const [, , imKind] = node
-      const [kind, ...exports] = imKind
+      const [, , [kind, ...exports]] = node
       if (kind === targetKind) {
         adapterModuleNode.meta[collection].push(node)
 
@@ -111,8 +110,7 @@ const indexKinds = (adapterModuleNode) => {
     adapterModuleNode.meta[collection] = []
     Visit({
       import(node) {
-        const [, , imKind] = node
-        const [kind] = imKind
+        const [, , [kind]] = node
         if (kind === targetKind) {
           adapterModuleNode.meta[collection].push(node)
 
@@ -217,8 +215,7 @@ const indexInstances = (adapterModuleNode) => {
       }
     },
     import(node) {
-      const [, , imKind] = node
-      const [kind, ...exports] = imKind
+      const [, , [kind, ...exports]] = node
       if (kind === targetKind) {
         adapterModuleNode.meta[collection].push(node)
 
