@@ -27,15 +27,15 @@ export default [
   (export "load instance 0" (func 2))
   (export "load instance 1" (func 3))
 )`,
-    jsSource: `const instance = moduleLinkingPolyfillRuntime(config)
-console.log("load instance 0:", instance["load instance 0"]())
-console.log("load instance 1:", instance["load instance 1"]())
+    jsSource: `const {exports} = moduleLinkingPolyfillRuntime(config)
+console.log("load instance 0:", exports["load instance 0"]())
+console.log("load instance 1:", exports["load instance 1"]())
 
-instance["store instance 1"](42)
+exports["store instance 1"](42)
 console.log("store instance 1 = 42")
 
-console.log("load instance 0:", instance["load instance 0"]())
-console.log("load instance 1:", instance["load instance 1"]())
+console.log("load instance 0:", exports["load instance 0"]())
+console.log("load instance 1:", exports["load instance 1"]())
 `,
     expectedJsConsole: `load instance 0: 0
 load instance 1: 0
@@ -74,13 +74,13 @@ load instance 1: 42
   (export "load from module 0" (func 0))
   (export "store into module 1" (func 1))
 )`,
-    jsSource: `const instance = moduleLinkingPolyfillRuntime(config)
-console.log("load from module 0:", instance["load from module 0"]())
+    jsSource: `const {exports} = moduleLinkingPolyfillRuntime(config)
+console.log("load from module 0:", exports["load from module 0"]())
 
-instance["store into module 1"](42)
+exports["store into module 1"](42)
 console.log("store into module 1 = 42")
 
-console.log("load from module 0:", instance["load from module 0"]())
+console.log("load from module 0:", exports["load from module 0"]())
 `,
     expectedJsConsole: `load from module 0: 0
 store into module 1 = 42
@@ -103,8 +103,8 @@ load from module 0: 42
     }
   }
 }
-const instance = moduleLinkingPolyfillRuntime(config, imports)
-console.log("exp() ===", instance.exp())
+const {exports: {exp}} = moduleLinkingPolyfillRuntime(config, imports)
+console.log("exp() ===", exp())
 `,
     expectedJsConsole: `exp() === 42
 `,

@@ -2,6 +2,10 @@ import pipe from '../pipe.js'
 import MapChildren from '../map-children-sexp-by-tag.js'
 import coreModule from './module.js'
 
+// declared empty to avoid no-use-before-define
+// eslint-disable-next-line prefer-const
+let adapterModule
+
 const kindCollection = {
   instance: 'instances',
   func: 'funcs',
@@ -32,12 +36,12 @@ const indexAliases = (adapterModuleNode) => {
           kind,
         })
       } else {
-        const [outerIdx, idx, [kind]] = aliasTarget
+        const [outerIdx, kindIdx, [kind]] = aliasTarget
         Object.assign(node.meta, {
           type: 'outer',
           outerIdx: Number.parseInt(outerIdx),
-          idx: Number.parseInt(idx),
           kind,
+          kindIdx: Number.parseInt(kindIdx),
         })
       }
     }
@@ -50,14 +54,14 @@ const indexModules = (adapterModuleNode) => {
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
   return MapChildren({
-    adapter(node) {
+    adapter(node, index, parent) {
       if (node[1] === 'module') {
         adapterModuleNode.meta[collection].push(node)
       }
       Object.assign(node.meta, {
         type: 'adapter',
       })
-      return node
+      return adapterModule(node, index, parent)
     },
     module(node, index, parent) {
       adapterModuleNode.meta[collection].push(node)
@@ -286,7 +290,7 @@ const indexImports = (adapterModuleNode) => {
   return adapterModuleNode
 }
 
-const adapterModule = pipe(
+adapterModule = pipe(
   indexModules,
   indexFuncs,
   indexInstances,
@@ -295,15 +299,7 @@ const adapterModule = pipe(
   linkInstanceExports,
   indexAliases,
   indexExports,
-  linkExports,
-  (node, index, parent) => {
-    for (const module of node.meta.modules) {
-      if (module.meta.type === 'adapter' && !module.meta.import) {
-        adapterModule(module, index, parent)
-      }
-    }
-    return node
-  }
+  linkExports
 )
 
 export default adapterModule

@@ -4,7 +4,14 @@ import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
 import coreAdapterModule from '../core/adapter-module.js'
 import pipe from '../pipe.js'
 
-function resolvePath(node) {
+const kindCollection = {
+  instance: 'instances',
+  func: 'funcs',
+  module: 'modules',
+  memory: 'memories',
+}
+
+function resolvePath(node, ancestors) {
   const path = []
   function walk(node) {
     if (node.kind === 'module') {
@@ -19,7 +26,18 @@ function resolvePath(node) {
         path.push('instances', node.meta.instanceIdx, 'exports', node.meta.name)
         return
       } else {
-        throw new Error(`missing alias type ${node.meta.type}`)
+        const outerModuleIdx = ancestors.length - 1 - node.meta.outerIdx
+        const outerModule = ancestors[outerModuleIdx]
+        const collection = kindCollection[node.meta.kind]
+        console.log({ ancestors, outerModuleIdx, outerModule, collection })
+        path.push(
+          'modules',
+          outerModuleIdx,
+          ...resolvePath(
+            outerModule.meta[collection][node.meta.kindIdx],
+            ancestors
+          )
+        )
       }
     }
     if (node.meta.import) {
@@ -57,7 +75,7 @@ function resolvePath(node) {
   return path
 }
 
-const createAdapterModuleConfig = (node) => {
+const createAdapterModuleConfig = (node, ancestors = [node]) => {
   const [adapterValue, moduleValue] = node
   if (adapterValue !== 'adapter' || moduleValue !== 'module') {
     throw new Error(
@@ -80,7 +98,7 @@ const createAdapterModuleConfig = (node) => {
           source,
         }
       }
-      return createAdapterModuleConfig(module)
+      return createAdapterModuleConfig(module, [...ancestors, module])
     })
 
   const imports = Object.fromEntries(
@@ -120,18 +138,18 @@ const createAdapterModuleConfig = (node) => {
     if (moduleIdx !== undefined) {
       return {
         kind: 'module',
-        path: resolvePath(instance),
+        path: resolvePath(instance, ancestors),
         imports: Object.fromEntries(
           imports.map((imp) => {
             const { name, kind } = imp
-            return [name, { kind, path: resolvePath(imp) }]
+            return [name, { kind, path: resolvePath(imp, ancestors) }]
           })
         ),
       }
     } else if (instance.meta.import) {
       return {
         kind: 'instance',
-        path: resolvePath(instance),
+        path: resolvePath(instance, ancestors),
         exports: Object.fromEntries(
           exports.map((exp) => {
             const {
@@ -149,7 +167,7 @@ const createAdapterModuleConfig = (node) => {
             const {
               meta: { name, kind },
             } = exp
-            return [name, { kind, path: resolvePath(exp) }]
+            return [name, { kind, path: resolvePath(exp, ancestors) }]
           })
         ),
       }
@@ -165,7 +183,7 @@ const createAdapterModuleConfig = (node) => {
         name,
         {
           kind,
-          path: resolvePath(exp),
+          path: resolvePath(exp, ancestors),
         },
       ]
     })

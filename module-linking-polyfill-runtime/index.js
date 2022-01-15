@@ -1,23 +1,21 @@
 function path(parts, object) {
+  const original = JSON.stringify(object, null, 2)
   try {
     for (let i = 0; i < parts.length; i++) {
       object = object[parts[i]]
     }
     return object
   } catch (error) {
-    throw new Error(
-      `failed to walk path [${parts.join(', ')}] in ${JSON.stringify(object)}`
-    )
+    throw new Error(`failed to walk path [${parts.join(', ')}] in ${original}`)
   }
 }
-export default (config, imports) => {
+
+const createAdapterModuleInstance = (config, imports = {}, parent) => {
   const live = {
+    '..': parent,
     modules: config.modules,
     imports: Object.fromEntries(
       Object.entries(config.imports).map(([moduleName, imp]) => {
-        if (imp.kind === 'instance') {
-          return [moduleName, { exports: imports[moduleName] }]
-        }
         return [moduleName, imports[moduleName]]
       })
     ),
@@ -40,10 +38,22 @@ export default (config, imports) => {
       live.instances.push(
         new WebAssembly.Instance(new WebAssembly.Module(module.binary), imports)
       )
-    } else if (instance.path) {
-      live.instances.push(path(instance.path, live))
+    } else if (instance.kind === 'adapter module') {
+      const imports = {}
+      for (const moduleName in instance.imports) {
+        const imp = instance.imports[moduleName]
+        if (imp.kind === 'instance') {
+          const otherInstance = path(imp.path, live)
+          imports[moduleName] = otherInstance
+        } else {
+          imports[moduleName] = path(imp.path, live)
+        }
+      }
+      live.instances.push(
+        createAdapterModuleInstance(path(instance.path, live), imports, live)
+      )
     } else {
-      live.instances.push(instance)
+      live.instances.push({ exports: path(instance.path, live) })
     }
   })
 
@@ -52,5 +62,7 @@ export default (config, imports) => {
     const exp = config.exports[name]
     exports[name] = path(exp.path, live)
   }
-  return exports
+  return { exports }
 }
+
+export default createAdapterModuleInstance
