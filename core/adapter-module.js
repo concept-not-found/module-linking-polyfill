@@ -213,9 +213,6 @@ const indexInstances = (adapterModuleNode) => {
             path(ancestors) {
               const collection = kindCollection[kind]
               const exported = adapterModuleNode.meta[collection][kindIdx]
-              if (!exported.meta.import && !exported.meta.alias) {
-                return [kindCollection[kind], kindIdx]
-              }
               return exported.meta.path(ancestors)
             },
           })
