@@ -9,6 +9,7 @@ const indexExports = (moduleNode) => {
 
       const [, name, [kind, kindIdx]] = node
       Object.assign(node.meta, {
+        export: true,
         name: String(name),
         kind,
         kindIdx: Number.parseInt(kindIdx),
@@ -22,16 +23,6 @@ const indexExports = (moduleNode) => {
 const kindCollection = {
   func: 'funcs',
   memory: 'memories',
-}
-
-const linkExports = (moduleNode) => {
-  for (const exp of moduleNode.meta.exports) {
-    const { kind, kindIdx } = exp.meta
-    const collection = kindCollection[kind]
-    const exported = moduleNode.meta[collection][kindIdx]
-    exp.meta.exported = exported
-  }
-  return moduleNode
 }
 
 const indexImports = (moduleNode) => {
@@ -107,6 +98,5 @@ export default pipe(
   indexFuncs,
   indexMemories,
   indexImports,
-  indexExports,
-  linkExports
+  indexExports
 )

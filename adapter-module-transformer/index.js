@@ -42,15 +42,20 @@ function resolvePath(node, ancestors) {
       path.push('imports', node.meta.moduleName)
       return
     }
-    if (node.meta.module) {
-      if (node.meta.module.meta.import) {
-        return walk(node.meta.module)
+    if (node.meta.moduleIdx !== undefined) {
+      const module =
+        ancestors[ancestors.length - 1].meta.modules[node.meta.moduleIdx]
+      if (module.meta.import) {
+        return walk(module)
       }
       path.push('modules', node.meta.moduleIdx)
       return
     }
-    if (node.meta.exported) {
-      if (!node.meta.exported.meta.import) {
+    if (node.meta.export) {
+      const collection = kindCollection[node.meta.kind]
+      const exported =
+        ancestors[ancestors.length - 1].meta[collection][node.meta.kindIdx]
+      if (!exported.meta.import) {
         if (node.meta.kind === 'module') {
           path.push('modules', node.meta.kindIdx)
           return
@@ -59,7 +64,7 @@ function resolvePath(node, ancestors) {
           return
         }
       }
-      return walk(node.meta.exported)
+      return walk(exported)
     }
     if (node.meta.kind === 'module') {
       path.push('modules', node.meta.kindIdx)

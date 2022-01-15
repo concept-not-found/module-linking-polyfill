@@ -23,7 +23,7 @@ describe('core', () => {
       expect(module.meta.funcs).toMatchTree([['func']])
     })
 
-    test('exported func', () => {
+    test('export func', () => {
       const wat = `(module
         (export "ex" (func 0))
         (func)
@@ -48,7 +48,6 @@ describe('core', () => {
         kind: 'func',
         kindIdx: 0,
       })
-      expect(module.meta.exports[0].meta.exported).toMatchTree(['func'])
     })
 
     test('imported func', () => {

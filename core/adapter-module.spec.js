@@ -77,9 +77,6 @@ describe('plugin', () => {
         kind: 'module',
         kindIdx: 0,
       })
-      expect(adapterModule.meta.exports[0].meta.exported).toMatchTree([
-        'module',
-      ])
     })
 
     test('import module', () => {
@@ -147,11 +144,6 @@ describe('plugin', () => {
         kind: 'module',
         kindIdx: 0,
       })
-      expect(adapterModule.meta.exports[0].meta.exported).toMatchTree([
-        'import',
-        '"mod"',
-        ['module'],
-      ])
     })
 
     test('empty instance', () => {
@@ -191,9 +183,6 @@ describe('plugin', () => {
       expect(adapterModule.meta.instances[0].meta).toMatchObject({
         moduleIdx: 0,
       })
-      expect(adapterModule.meta.instances[0].meta.module).toMatchTree([
-        'module',
-      ])
     })
 
     test('instance exports module', () => {
@@ -228,9 +217,6 @@ describe('plugin', () => {
         kind: 'module',
         kindIdx: 0,
       })
-      expect(
-        adapterModule.meta.instances[0].meta.exports[0].meta.exported
-      ).toMatchTree(['module'])
     })
 
     test('alias instance export', () => {

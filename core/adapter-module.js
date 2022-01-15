@@ -141,6 +141,7 @@ const indexExports = (adapterModuleNode) => {
 
       const [, name, [kind, kindIdx]] = node
       Object.assign(node.meta, {
+        export: true,
         name: String(name),
         kind,
         kindIdx: Number.parseInt(kindIdx),
@@ -149,16 +150,6 @@ const indexExports = (adapterModuleNode) => {
       return node
     },
   })(adapterModuleNode)
-}
-
-const linkExports = (adapterModuleNode) => {
-  for (const exp of adapterModuleNode.meta.exports) {
-    const { kind, kindIdx } = exp.meta
-    const collection = kindCollection[kind]
-    const exported = adapterModuleNode.meta[collection][kindIdx]
-    exp.meta.exported = exported
-  }
-  return adapterModuleNode
 }
 
 const indexInstances = (adapterModuleNode) => {
@@ -186,6 +177,7 @@ const indexInstances = (adapterModuleNode) => {
         node.meta.exports = instanceExpr.map((exp) => {
           const [, name, [kind, kindIdx]] = exp
           Object.assign(exp.meta, {
+            export: true,
             name: String(name),
             kind,
             kindIdx: Number.parseInt(kindIdx),
@@ -206,6 +198,7 @@ const indexInstances = (adapterModuleNode) => {
           exports: exports.map((exp) => {
             const [, name, [kind, ...kindType]] = exp
             Object.assign(exp.meta, {
+              export: true,
               name: String(name),
               kind,
               kindType,
@@ -217,54 +210,6 @@ const indexInstances = (adapterModuleNode) => {
       return node
     },
   })(adapterModuleNode)
-}
-
-const linkInstanceInstantiate = (adapterModuleNode) => {
-  for (const instance of adapterModuleNode.meta.instances) {
-    const { moduleIdx } = instance.meta
-    if (moduleIdx === undefined) {
-      continue
-    }
-    const module = adapterModuleNode.meta.modules[moduleIdx]
-    // const instantiatedImports = module.meta.imports.map((moduleImport) => {
-    //   const { kind, kindIdx } = instance.meta.imports.find(
-    //     ({ name }) => name === moduleImport.meta.moduleName
-    //   )
-    //   const collection = kindCollection[kind]
-    //   const imp = adapterModuleNode.meta[collection][kindIdx]
-    //   return imp
-    // })
-    Object.assign(instance.meta, {
-      module,
-      // instantiatedImports,
-      exports: module.meta.exports,
-    })
-  }
-  return adapterModuleNode
-}
-
-const linkInstanceExports = (adapterModuleNode) => {
-  for (const instance of adapterModuleNode.meta.instances) {
-    if (
-      instance.meta.import ||
-      (instance.meta.module && instance.meta.module.meta.import) ||
-      instance.meta.moduleIdx !== undefined
-    ) {
-      continue
-    }
-    for (const exp of instance.meta.exports) {
-      const { kind, kindIdx } = exp.meta
-      const collection = kindCollection[kind]
-      if (instance.meta.module) {
-        const exported = instance.meta.module.meta[collection][kindIdx]
-        exp.meta.exported = exported
-      } else {
-        const exported = adapterModuleNode.meta[collection][kindIdx]
-        exp.meta.exported = exported
-      }
-    }
-  }
-  return adapterModuleNode
 }
 
 const indexImports = (adapterModuleNode) => {
@@ -295,11 +240,8 @@ adapterModule = pipe(
   indexFuncs,
   indexInstances,
   indexImports,
-  linkInstanceInstantiate,
-  linkInstanceExports,
   indexAliases,
-  indexExports,
-  linkExports
+  indexExports
 )
 
 export default adapterModule
