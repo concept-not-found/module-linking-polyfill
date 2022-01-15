@@ -13,7 +13,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
       )}`
     )
   }
-  node = coreAdapterModule(node)
+  coreAdapterModule(node)
 
   const modules = node.meta.modules
     .filter((module) => module.meta.type === 'core' || !module.meta.import)

@@ -13,9 +13,12 @@ describe('plugin', () => {
       const wat = `(adapter module)`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module'])
     })
@@ -26,9 +29,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -44,9 +50,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module', ['module']])
       expect(adapterModule.meta.modules).toMatchTree([['module']])
@@ -59,9 +68,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -85,9 +97,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -115,9 +130,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -152,9 +170,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module', ['instance']])
       expect(adapterModule.meta.instances).toMatchTree([['instance']])
@@ -167,9 +188,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -194,9 +218,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -229,9 +256,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -256,9 +286,12 @@ describe('plugin', () => {
       )`
 
       const parser = Parser()
-      const adapterModule = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreAdapterModule(node)
+      const adapterModule = pipe(
+        parser,
+        stripWasmWhitespace,
+        ([node]) => node
       )(wat)
+      coreAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',

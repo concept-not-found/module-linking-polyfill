@@ -1,5 +1,4 @@
-import pipe from '../pipe.js'
-import MapChildren from '../map-children-sexp-by-tag.js'
+import Visit from '../visit.js'
 import coreModule from './module.js'
 
 // declared empty to avoid no-use-before-define
@@ -60,29 +59,28 @@ const indexAliases = (adapterModuleNode) => {
       }
     }
   }
-  return adapterModuleNode
 }
 
 const indexModules = (adapterModuleNode) => {
   const targetKind = 'module'
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
-  return MapChildren({
-    adapter(node, index, parent) {
+  Visit({
+    adapter(node) {
       if (node[1] === 'module') {
         adapterModuleNode.meta[collection].push(node)
       }
       Object.assign(node.meta, {
         type: 'adapter',
       })
-      return adapterModule(node, index, parent)
+      adapterModule(node)
     },
-    module(node, index, parent) {
+    module(node) {
       adapterModuleNode.meta[collection].push(node)
       Object.assign(node.meta, {
         type: 'core',
       })
-      return coreModule(node, index, parent)
+      coreModule(node)
     },
     import(node) {
       const [, , imKind] = node
@@ -104,7 +102,6 @@ const indexModules = (adapterModuleNode) => {
           }),
         })
       }
-      return node
     },
     alias(node) {
       const [, , , [kind]] = node
@@ -113,8 +110,6 @@ const indexModules = (adapterModuleNode) => {
 
         node.meta.alias = true
       }
-
-      return node
     },
   })(adapterModuleNode)
 }
@@ -123,7 +118,7 @@ const indexFuncs = (adapterModuleNode) => {
   const targetKind = 'func'
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
-  return MapChildren({
+  Visit({
     import(node) {
       const [, , imKind] = node
       const [kind] = imKind
@@ -132,7 +127,6 @@ const indexFuncs = (adapterModuleNode) => {
 
         node.meta.import = true
       }
-      return node
     },
     alias(node) {
       const [, , , [kind]] = node
@@ -141,15 +135,13 @@ const indexFuncs = (adapterModuleNode) => {
 
         node.meta.alias = true
       }
-
-      return node
     },
   })(adapterModuleNode)
 }
 
 const indexExports = (adapterModuleNode) => {
   adapterModuleNode.meta.exports = []
-  return MapChildren({
+  Visit({
     export(node) {
       adapterModuleNode.meta.exports.push(node)
 
@@ -171,8 +163,6 @@ const indexExports = (adapterModuleNode) => {
           return exported.meta.path(ancestors)
         },
       })
-
-      return node
     },
   })(adapterModuleNode)
 }
@@ -181,7 +171,7 @@ const indexInstances = (adapterModuleNode) => {
   const targetKind = 'instance'
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
-  return MapChildren({
+  Visit({
     instance(node) {
       adapterModuleNode.meta[collection].push(node)
       const [, ...instanceExpr] = node
@@ -239,7 +229,6 @@ const indexInstances = (adapterModuleNode) => {
           return exp
         })
       }
-      return node
     },
     import(node) {
       const [, , imKind] = node
@@ -260,7 +249,6 @@ const indexInstances = (adapterModuleNode) => {
           }),
         })
       }
-      return node
     },
   })(adapterModuleNode)
 }
@@ -290,16 +278,15 @@ const indexImports = (adapterModuleNode) => {
       })
     }
   }
-  return adapterModuleNode
 }
 
-adapterModule = pipe(
-  indexModules,
-  indexFuncs,
-  indexInstances,
-  indexImports,
-  indexAliases,
-  indexExports
-)
+adapterModule = (node) => {
+  indexModules(node)
+  indexFuncs(node)
+  indexInstances(node)
+  indexImports(node)
+  indexAliases(node)
+  indexExports(node)
+}
 
 export default adapterModule

@@ -15,9 +15,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreModule(node)
-      )(wat)
+      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+      coreModule(module)
 
       expect(module).toMatchTree(['module', ['func']])
       expect(module.meta.funcs).toMatchTree([['func']])
@@ -30,9 +29,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreModule(node)
-      )(wat)
+      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+      coreModule(module)
 
       expect(module).toMatchTree([
         'module',
@@ -56,9 +54,8 @@ describe('core', () => {
       )`
 
       const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) =>
-        coreModule(node)
-      )(wat)
+      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+      coreModule(module)
 
       expect(module).toMatchTree([
         'module',

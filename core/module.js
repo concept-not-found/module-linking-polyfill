@@ -1,5 +1,4 @@
-import pipe from '../pipe.js'
-import MapChildren from '../map-children-sexp-by-tag.js'
+import Visit from '../visit.js'
 
 const kindCollection = {
   func: 'funcs',
@@ -8,7 +7,7 @@ const kindCollection = {
 
 const indexExports = (moduleNode) => {
   moduleNode.meta.exports = []
-  return MapChildren({
+  Visit({
     export(node) {
       moduleNode.meta.exports.push(node)
 
@@ -24,8 +23,6 @@ const indexExports = (moduleNode) => {
           return [kindCollection[kind], kindIdx]
         },
       })
-
-      return node
     },
   })(moduleNode)
 }
@@ -48,7 +45,6 @@ const indexImports = (moduleNode) => {
       })
     }
   }
-  return moduleNode
 }
 
 const indexFuncs = (moduleNode) => {
@@ -56,11 +52,9 @@ const indexFuncs = (moduleNode) => {
   const collection = kindCollection[targetKind]
   moduleNode.meta[collection] = []
 
-  return MapChildren({
+  Visit({
     func(node) {
       moduleNode.meta[collection].push(node)
-
-      return node
     },
     import(node) {
       const [, , , imKind] = node
@@ -70,7 +64,6 @@ const indexFuncs = (moduleNode) => {
 
         node.meta.import = true
       }
-      return node
     },
   })(moduleNode)
 }
@@ -80,11 +73,9 @@ const indexMemories = (moduleNode) => {
   const collection = kindCollection[targetKind]
   moduleNode.meta[collection] = []
 
-  return MapChildren({
+  Visit({
     memory(node) {
       moduleNode.meta[collection].push(node)
-
-      return node
     },
     import(node) {
       const [, , , imKind] = node
@@ -94,9 +85,13 @@ const indexMemories = (moduleNode) => {
 
         node.meta.import = true
       }
-      return node
     },
   })(moduleNode)
 }
 
-export default pipe(indexFuncs, indexMemories, indexImports, indexExports)
+export default (node) => {
+  indexFuncs(node)
+  indexMemories(node)
+  indexImports(node)
+  indexExports(node)
+}
