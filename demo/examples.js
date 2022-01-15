@@ -109,4 +109,27 @@ console.log("exp() ===", exp())
     expectedJsConsole: `exp() === 42
 `,
   },
+  {
+    name: 'adapter module is closed over import',
+    watSource: `(adapter module (;0;)
+  (import "imp" (func (;0;) (result i32)))
+  (adapter module (;0;)
+    (alias (;outer;) 1 (;func;) 0 (func (;0;)))
+    (export "inner-exp" (func 0))
+  )
+  (instance (;0;) (instantiate (;module;) 0))
+  (alias (;instance;) 0 "inner-exp" (func (;1;)))
+  (export "exp" (func 1))
+)`,
+    jsSource: `const imports = {
+  imp() {
+    return 42
+  }
+}
+const {exports: {exp}} = moduleLinkingPolyfillRuntime(config, imports)
+console.log("exp() ===", exp())
+`,
+    expectedJsConsole: `exp() === 42
+`,
+  },
 ]

@@ -58,7 +58,7 @@ describe('adapter-module-transformer', () => {
 
     test('re-export func via inner module', () => {
       const wat = `(adapter module (;0;)
-        (import "imp" (func))
+        (import "imp" (func (;0;)))
         (adapter module (;0;)
           (alias (;outer;) 1 (;func;) 0 (func (;0;)))
           (export "inner-exp" (func 0))

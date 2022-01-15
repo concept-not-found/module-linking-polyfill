@@ -6,11 +6,13 @@ export default (wabt) => {
     transformWat(wat) {
       const config = adapterModuleTransformer(wat)
       config.modules.forEach((module, index) => {
-        const { buffer, log } = wabt
-          .parseWat(`module ${index}.wat`, module.source)
-          .toBinary({ log: true })
-        module.binary = buffer
-        module.log = log
+        if (module.source) {
+          const { buffer, log } = wabt
+            .parseWat(`module ${index}.wat`, module.source)
+            .toBinary({ log: true })
+          module.binary = buffer
+          module.log = log
+        }
       })
       return config
     },
