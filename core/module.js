@@ -30,8 +30,6 @@ const linkExports = (moduleNode) => {
     const collection = kindCollection[kind]
     const exported = moduleNode.meta[collection][kindIdx]
     exp.meta.exported = exported
-    exported.meta.exportedBy ??= []
-    exported.meta.exportedBy.push(exp)
   }
   return moduleNode
 }

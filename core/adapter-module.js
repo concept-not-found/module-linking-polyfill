@@ -61,8 +61,6 @@ const linkAliases = (adapterModuleNode) => {
             instance,
             aliased,
           })
-          aliased.meta.aliasedBy ??= []
-          aliased.meta.aliasedBy.push(alias)
         } else {
           const {
             meta: { exported: aliased },
@@ -74,8 +72,6 @@ const linkAliases = (adapterModuleNode) => {
             instance,
             aliased,
           })
-          aliased.meta.aliasedBy ??= []
-          aliased.meta.aliasedBy.push(alias)
         }
         break
       }
@@ -195,8 +191,6 @@ const linkExports = (adapterModuleNode) => {
     const collection = kindCollection[kind]
     const exported = adapterModuleNode.meta[collection][kindIdx]
     exp.meta.exported = exported
-    exported.meta.exportedBy ??= []
-    exported.meta.exportedBy.push(exp)
   }
   return adapterModuleNode
 }
@@ -298,13 +292,9 @@ const linkInstanceExports = (adapterModuleNode) => {
       if (instance.meta.module) {
         const exported = instance.meta.module.meta[collection][kindIdx]
         exp.meta.exported = exported
-        exported.meta.exportedBy ??= []
-        exported.meta.exportedBy.push(exp)
       } else {
         const exported = adapterModuleNode.meta[collection][kindIdx]
         exp.meta.exported = exported
-        exported.meta.exportedBy ??= []
-        exported.meta.exportedBy.push(exp)
       }
     }
   }

@@ -40,9 +40,6 @@ describe('core', () => {
         ['func'],
       ])
       expect(module.meta.funcs).toMatchTree([['func']])
-      expect(module.meta.funcs[0].meta.exportedBy).toMatchTree([
-        ['export', '"ex"', ['func', '0']],
-      ])
       expect(module.meta.exports).toMatchTree([
         ['export', '"ex"', ['func', '0']],
       ])

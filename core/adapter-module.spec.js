@@ -69,9 +69,6 @@ describe('plugin', () => {
         ['module'],
         ['export', '"ex"', ['module', '0']],
       ])
-      expect(adapterModule.meta.modules[0].meta.exportedBy).toMatchTree([
-        ['export', '"ex"', ['module', '0']],
-      ])
       expect(adapterModule.meta.exports).toMatchTree([
         ['export', '"ex"', ['module', '0']],
       ])
@@ -148,9 +145,6 @@ describe('plugin', () => {
         'module',
       ])
 
-      expect(adapterModule.meta.modules[0].meta.exportedBy).toMatchTree([
-        ['export', '"ex"', ['module', '0']],
-      ])
       expect(adapterModule.meta.exports).toMatchTree([
         ['export', '"ex"', ['module', '0']],
       ])
@@ -230,9 +224,6 @@ describe('plugin', () => {
       expect(adapterModule.meta.instances).toMatchTree([
         ['instance', ['export', '"ex"', ['module', '0']]],
       ])
-      expect(adapterModule.meta.modules[0].meta.exportedBy).toMatchTree([
-        ['export', '"ex"', ['module', '0']],
-      ])
       expect(adapterModule.meta.instances[0].meta.exports).toMatchTree([
         ['export', '"ex"', ['module', '0']],
       ])
@@ -271,9 +262,6 @@ describe('plugin', () => {
       ])
       expect(adapterModule.meta.modules).toMatchTree([
         ['module'],
-        ['alias', '0', '"ex"', ['module']],
-      ])
-      expect(adapterModule.meta.modules[0].meta.aliasedBy).toMatchTree([
         ['alias', '0', '"ex"', ['module']],
       ])
       expect(adapterModule.meta.modules[1].meta.alias).toBe(true)
