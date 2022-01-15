@@ -9,14 +9,10 @@ const kindCollection = {
   instance: 'instances',
   func: 'funcs',
   module: 'modules',
-  memory: 'memories',
 }
 
 const indexAliases = (adapterModuleNode) => {
   for (const collection of Object.values(kindCollection)) {
-    if (!adapterModuleNode.meta[collection]) {
-      continue
-    }
     for (const node of adapterModuleNode.meta[collection]) {
       if (!node.meta.alias) {
         continue
@@ -256,9 +252,6 @@ const indexInstances = (adapterModuleNode) => {
 const indexImports = (adapterModuleNode) => {
   adapterModuleNode.meta.imports = []
   for (const collection of Object.values(kindCollection)) {
-    if (!adapterModuleNode.meta[collection]) {
-      continue
-    }
     for (const node of adapterModuleNode.meta[collection]) {
       if (!node.meta.import) {
         continue
