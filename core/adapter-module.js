@@ -27,6 +27,7 @@ const indexAliases = (adapterModuleNode) => {
         Object.assign(node.meta, {
           type: 'instance-export',
           instanceIdx: Number.parseInt(instanceIdx),
+          instance: adapterModuleNode.meta.instances[instanceIdx],
           name: String(name),
           kind,
         })
@@ -38,24 +39,6 @@ const indexAliases = (adapterModuleNode) => {
           idx: Number.parseInt(idx),
           kind,
         })
-      }
-    }
-  }
-  return adapterModuleNode
-}
-const linkAliases = (adapterModuleNode) => {
-  for (const alias of adapterModuleNode.meta.aliases) {
-    switch (alias.meta.type) {
-      case 'instance-export': {
-        const { instanceIdx } = alias.meta
-        const instance = adapterModuleNode.meta.instances[instanceIdx]
-        Object.assign(alias.meta, {
-          instance,
-        })
-        break
-      }
-      case 'outer': {
-        throw new Error('outer alias not implemented')
       }
     }
   }
@@ -311,7 +294,6 @@ const adapterModule = pipe(
   linkInstanceInstantiate,
   linkInstanceExports,
   indexAliases,
-  linkAliases,
   indexExports,
   linkExports,
   (node, index, parent) => {
