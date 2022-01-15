@@ -68,7 +68,6 @@ describe('core', () => {
       expect(module.meta.funcs).toMatchTree([
         ['import', '"mod"', '"im"', ['func']],
       ])
-      expect(module.meta.funcs[0].meta.imported).toMatchTree(['func'])
       expect(module.meta.imports).toMatchTree([
         ['import', '"mod"', '"im"', ['func']],
       ])
@@ -78,7 +77,6 @@ describe('core', () => {
         kind: 'func',
         kindType: [],
       })
-      expect(module.meta.imports[0].meta.imported).toMatchTree(['func'])
     })
   })
 })

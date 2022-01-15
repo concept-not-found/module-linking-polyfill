@@ -24,7 +24,7 @@ function resolvePath(node) {
     }
     if (node.meta.import) {
       path.push('imports', node.meta.moduleName)
-      return walk(node.meta.imported)
+      return
     }
     if (node.meta.module) {
       if (node.meta.module.meta.import) {

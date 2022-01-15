@@ -47,32 +47,11 @@ const linkAliases = (adapterModuleNode) => {
   for (const alias of adapterModuleNode.meta.aliases) {
     switch (alias.meta.type) {
       case 'instance-export': {
-        const { instanceIdx, name: aliasInstanceName } = alias.meta
+        const { instanceIdx } = alias.meta
         const instance = adapterModuleNode.meta.instances[instanceIdx]
-        if (
-          instance.meta.import ||
-          (instance.meta.module && instance.meta.module.meta.import)
-        ) {
-          const aliased = instance.meta.exports.find(
-            ({ meta: { name } }) => name === aliasInstanceName
-          )
-
-          Object.assign(alias.meta, {
-            instance,
-            aliased,
-          })
-        } else {
-          const {
-            meta: { exported: aliased },
-          } = instance.meta.exports.find(
-            ({ meta: { name } }) => name === aliasInstanceName
-          )
-
-          Object.assign(alias.meta, {
-            instance,
-            aliased,
-          })
-        }
+        Object.assign(alias.meta, {
+          instance,
+        })
         break
       }
       case 'outer': {
@@ -313,13 +292,11 @@ const indexImports = (adapterModuleNode) => {
       }
       adapterModuleNode.meta.imports.push(node)
 
-      const [, moduleName, imKind] = node
-      const [kind, ...kindType] = imKind
+      const [, moduleName, [kind, ...kindType]] = node
       Object.assign(node.meta, {
         moduleName: String(moduleName),
         kind,
         kindType,
-        imported: imKind,
       })
     }
   }
