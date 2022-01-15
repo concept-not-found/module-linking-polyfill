@@ -245,14 +245,6 @@ describe('plugin', () => {
         ['alias', '0', '"ex"', ['module']],
       ])
       expect(adapterModule.meta.modules[1].meta.alias).toBe(true)
-      expect(adapterModule.meta.aliases).toMatchTree([
-        ['alias', '0', '"ex"', ['module']],
-      ])
-      expect(adapterModule.meta.aliases[0].meta).toMatchObject({
-        instanceIdx: 0,
-        name: 'ex',
-        kind: 'module',
-      })
     })
 
     test('alias outer', () => {

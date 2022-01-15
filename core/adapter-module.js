@@ -14,7 +14,6 @@ const kindCollection = {
 }
 
 const indexAliases = (adapterModuleNode) => {
-  adapterModuleNode.meta.aliases = []
   for (const collection of Object.values(kindCollection)) {
     if (!adapterModuleNode.meta[collection]) {
       continue
@@ -23,7 +22,6 @@ const indexAliases = (adapterModuleNode) => {
       if (!node.meta.alias) {
         continue
       }
-      adapterModuleNode.meta.aliases.push(node)
 
       const [, ...aliasTarget] = node
       if (node.meta.typeOf(aliasTarget[1]) === 'string') {
