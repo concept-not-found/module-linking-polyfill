@@ -1,7 +1,7 @@
 import watParser from './parser/index.js'
-import stripWasmComments from './core/strip-wasm-comments.js'
-import stripWasmWhitespace from './core/strip-wasm-whitespace.js'
-import coreAdapterModule from './core/adapter-module.js'
+import stripWasmComments from './strip-wasm-comments.js'
+import stripWasmWhitespace from './strip-wasm-whitespace.js'
+import indexAdapterModule from './index-adapter-module/index.js'
 import pipe from './pipe.js'
 
 const createAdapterModuleConfig = (node, ancestors = [node]) => {
@@ -13,7 +13,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
       )}`
     )
   }
-  coreAdapterModule(node)
+  indexAdapterModule(node)
 
   const modules = node.meta.modules
     .filter((module) => module.meta.type === 'core' || !module.meta.import)

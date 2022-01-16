@@ -1,4 +1,4 @@
-import filter from '../filter/index.js'
+import filter from './filter/index.js'
 
 export default filter(
   (node, index, parent) =>

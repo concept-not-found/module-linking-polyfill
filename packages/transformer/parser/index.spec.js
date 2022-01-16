@@ -1,5 +1,5 @@
 import { toMatchTree } from '../matchers.js'
-import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
+import stripWasmWhitespace from '../strip-wasm-whitespace.js'
 import pipe from '../pipe.js'
 
 import Parser from './index.js'

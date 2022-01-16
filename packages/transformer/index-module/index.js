@@ -1,5 +1,5 @@
 import Visit from '../visit.js'
-import { coreKindCollection } from './kind-collection.js'
+import { coreKindCollection } from '../kind-collection.js'
 
 const indexExports = (moduleNode) => {
   moduleNode.meta.exports = []

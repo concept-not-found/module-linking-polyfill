@@ -1,9 +1,9 @@
 import { toMatchTree } from '../matchers.js'
-import stripWasmWhitespace from './strip-wasm-whitespace.js'
+import stripWasmWhitespace from '../strip-wasm-whitespace.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
-import coreAdapterModule from './adapter-module.js'
+import indexAdapterModule from './index.js'
 
 expect.extend({ toMatchTree })
 
@@ -18,7 +18,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module'])
     })
@@ -34,7 +34,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -55,7 +55,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module', ['module']])
       expect(adapterModule.meta.modules).toMatchTree([['module']])
@@ -73,7 +73,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -102,7 +102,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -135,7 +135,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -175,7 +175,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module', ['instance']])
       expect(adapterModule.meta.instances).toMatchTree([['instance']])
@@ -193,7 +193,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -223,7 +223,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -261,7 +261,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',
@@ -291,7 +291,7 @@ describe('plugin', () => {
         stripWasmWhitespace,
         ([node]) => node
       )(wat)
-      coreAdapterModule(adapterModule)
+      indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree([
         'adapter',

@@ -1,6 +1,6 @@
 import Visit from '../visit.js'
-import coreModule from './module.js'
-import kindCollection, { coreKindCollection } from './kind-collection.js'
+import indexModule from '../index-module/index.js'
+import kindCollection, { coreKindCollection } from '../kind-collection.js'
 
 // declared empty to avoid no-use-before-define
 // eslint-disable-next-line prefer-const
@@ -71,7 +71,7 @@ const indexModules = (adapterModuleNode) => {
       Object.assign(node.meta, {
         type: 'core',
       })
-      coreModule(node)
+      indexModule(node)
     },
     import(node) {
       const [, , [kind, ...exports]] = node
