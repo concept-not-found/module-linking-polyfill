@@ -1,8 +1,8 @@
-import watParser from '../parser/index.js'
-import stripWasmComments from '../core/strip-wasm-comments.js'
-import stripWasmWhitespace from '../core/strip-wasm-whitespace.js'
-import coreAdapterModule from '../core/adapter-module.js'
-import pipe from '../pipe.js'
+import watParser from './parser/index.js'
+import stripWasmComments from './core/strip-wasm-comments.js'
+import stripWasmWhitespace from './core/strip-wasm-whitespace.js'
+import coreAdapterModule from './core/adapter-module.js'
+import pipe from './pipe.js'
 
 const createAdapterModuleConfig = (node, ancestors = [node]) => {
   const [adapterValue, moduleValue] = node

@@ -1,4 +1,4 @@
-import moduleLinkingPolyfillRuntime from './index.js'
+import runtime from './index.js'
 
 describe('module-linking-polyfill-runtime', () => {
   test('adapter module refers to parent', () => {
@@ -40,7 +40,7 @@ describe('module-linking-polyfill-runtime', () => {
     const imp = () => {}
     const {
       exports: { exp },
-    } = moduleLinkingPolyfillRuntime(config, {
+    } = runtime(config, {
       imp,
     })
     expect(exp).toBe(imp)

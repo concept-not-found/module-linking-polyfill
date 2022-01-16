@@ -1,12 +1,18 @@
 function path(parts, object) {
-  const original = JSON.stringify(object, null, 2)
+  const original = object
   try {
     for (let i = 0; i < parts.length; i++) {
       object = object[parts[i]]
     }
     return object
   } catch (error) {
-    throw new Error(`failed to walk path [${parts.join(', ')}] in ${original}`)
+    throw new Error(
+      `failed to walk path [${parts.join(', ')}] in ${JSON.stringify(
+        original,
+        null,
+        2
+      )}`
+    )
   }
 }
 

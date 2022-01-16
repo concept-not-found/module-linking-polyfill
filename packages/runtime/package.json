@@ -1,0 +1,23 @@
+{
+  "name": "module-linking-polyfill-runtime",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "author": "Ronald Chen <pyrogx1133@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "27.4.5"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "./dist/"
+    ],
+    "transform": {}
+  }
+}

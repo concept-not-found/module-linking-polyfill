@@ -1,5 +1,5 @@
 {
-  "ignore": [".history/", "./node_modules/", "dist/"],
+  "ignore": [".history/", "**/node_modules/", "dist/"],
   "comments": false,
   "presets": [
     [

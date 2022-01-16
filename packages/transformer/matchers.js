@@ -1,4 +1,4 @@
-import matchers from 'expect/build/matchers.js'
+import matchers from 'expect/build/matchers'
 
 function stripMetaAndMemoizeStrings(node, index, parent) {
   if (node instanceof Array) {

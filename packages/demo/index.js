@@ -1,10 +1,10 @@
-import adapterModuleTransformer from '../adapter-module-transformer/index.js'
-import moduleLinkingPolyfillRuntime from '../module-linking-polyfill-runtime/index.js'
+import transformer from './node_modules/module-linking-polyfill-transformer/index.js'
+import runtime from './node_modules/module-linking-polyfill-runtime/index.js'
 
 export default (wabt) => {
   return {
     transformWat(wat) {
-      const config = adapterModuleTransformer(wat)
+      const config = transformer(wat)
       config.modules.forEach((module, index) => {
         if (module.source) {
           const { buffer, log } = wabt
@@ -31,7 +31,7 @@ export default (wabt) => {
         'config',
         js
       )
-      executable(fakeConsole, moduleLinkingPolyfillRuntime, config)
+      executable(fakeConsole, runtime, config)
       return lines.join('')
     },
   }

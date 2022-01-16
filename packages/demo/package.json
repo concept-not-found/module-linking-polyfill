@@ -1,0 +1,30 @@
+{
+  "name": "module-linking-polyfill-demo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -c-1",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "author": "Ronald Chen <pyrogx1133@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "module-linking-polyfill-transformer": "*",
+    "module-linking-polyfill-runtime": "*"
+  },
+  "devDependencies": {
+    "http-server": "14.1.0",
+    "jest": "27.4.5",
+    "wabt": "1.0.25"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "./dist/"
+    ],
+    "transform": {}
+  }
+}
