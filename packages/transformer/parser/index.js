@@ -1,80 +1,16 @@
-import { SexpBuilder } from '../builder.js'
+import Builders from './builders.js'
 
 export default ({ sourceTags = [] } = {}) =>
   (wat) => {
-    function BlockCommentFragmentBuilder(start) {
-      return {
-        type: 'block comment fragment',
-        build() {
-          return wat.substring(start, this.end)
-        },
-      }
-    }
-    function BlockCommentBuilder() {
-      const children = []
-      const builder = {
-        type: 'block comment',
-        add(...builders) {
-          children.push(...builders)
-          return builder
-        },
-        build() {
-          const fragments = children.map((builder) => {
-            if (builder.type === 'block comment') {
-              return `(;${builder.build()};)`
-            } else {
-              return builder.build()
-            }
-          })
-          // new String is required for identity equals
-          return new String(fragments.join(''))
-        },
-      }
-      return builder
-    }
-
-    function StringBuilder(start) {
-      return {
-        type: 'string',
-        build() {
-          const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
-        },
-      }
-    }
-
-    function WhitespaceBuilder(start) {
-      return {
-        type: 'whitespace',
-        build() {
-          const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
-        },
-      }
-    }
-
-    function LineCommentBuilder(start) {
-      return {
-        type: 'line comment',
-        build() {
-          const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
-        },
-      }
-    }
-
-    function ValueBuilder(start) {
-      return {
-        type: 'value',
-        build() {
-          const value = wat.substring(start, this.end)
-          return value
-        },
-      }
-    }
+    const {
+      SexpBuilder,
+      BlockCommentFragmentBuilder,
+      BlockCommentBuilder,
+      StringBuilder,
+      WhitespaceBuilder,
+      LineCommentBuilder,
+      ValueBuilder,
+    } = Builders(wat)
 
     let index = 0
     const root = SexpBuilder(index, wat)
