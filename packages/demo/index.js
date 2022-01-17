@@ -1,5 +1,5 @@
-import transformer from './node_modules/module-linking-polyfill-transformer/index.js'
-import runtime from './node_modules/module-linking-polyfill-runtime/index.js'
+import transformer from 'https://unpkg.com/@concept-not-found/module-linking-polyfill-transformer@0.1.0/index.js'
+import runtime from 'https://unpkg.com/@concept-not-found/module-linking-polyfill-runtime@0.1.0/index.js'
 
 export default (wabt) => {
   return {

@@ -24,10 +24,6 @@
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
   "license": "Apache-2.0",
-  "dependencies": {
-    "module-linking-polyfill-runtime": "*",
-    "module-linking-polyfill-transformer": "*"
-  },
   "devDependencies": {
     "http-server": "14.1.0",
     "jest": "27.4.5",
