@@ -44,15 +44,31 @@
         display: grid;
 
         grid-template-rows:
-          min-content min-content min-content min-content minmax(25%, 1fr)
+          repeat(7, min-content) minmax(25%, 1fr)
           min-content minmax(25%, 1fr);
         grid-template-columns: 50% 50%;
-        grid-gap: 5px;
+        grid-gap: 0 5px;
       }
 
-      .span-row {
+      main h1,
+      p,
+      ul {
         grid-column-start: 1;
         grid-column-end: 3;
+
+        margin: 5px;
+      }
+
+      main h1 {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+      }
+
+      main h1 img {
+        margin-left: 10px;
+        height: 30px;
       }
 
       .CodeMirror {
@@ -68,26 +84,51 @@
 
   <body>
     <main>
-      <h1 class="span-row">module linking polyfill demo</h1>
-      <p class="span-row">
+      <h1>
+        module linking polyfill demo
+        <a href="https://github.com/concept-not-found/module-linking-polyfill"
+          ><img src="./GitHub.png"
+        /></a>
+        <a href="https://twitter.com/pyrolistical"
+          ><img src="./Twitter.svg"
+        /></a>
+      </h1>
+      <p>
         This is a work in progress polyfill for
         <a href="https://webassembly.org/">WebAssembly</a>
         <a href="https://github.com/WebAssembly/module-linking"
-          >module linking</a
+          >Module linking</a
         >.
       </p>
-      <p class="span-row">
+      <p>
+        💣 Not production ready! 💣 Notably the following is not implemented
+        yet:
+      </p>
+      <ul>
+        <li>symbolic index references</li>
+        <li>import/export/alias kind first forms</li>
+        <li>type definitions</li>
+        <li>alias syntactic sugar</li>
+      </ul>
+      <p>
+        <a href="https://github.com/concept-not-found/module-linking-polyfill"
+          >Full list of critical issues</a
+        >
+      </p>
+      <p>
         <label>
           Examples:
           <select id="examples"></select
         ></label>
       </p>
 
-      <span class="subtitle">WebAssembly Text</span>
+      <span class="subtitle">WebAssembly Text (editable)</span>
       <span class="subtitle">WebAssembly console</span>
       <div id="wat"></div>
       <div id="wat-console"></div>
-      <span class="subtitle">JavaScript (only console.log() is supported)</span>
+      <span class="subtitle"
+        >JavaScript (editable, only console.log() is supported)</span
+      >
       <span class="subtitle">JavaScript console</span>
       <div id="js"></div>
       <div id="js-console"></div>
@@ -116,6 +157,7 @@
       })
       const watConsole = CodeMirror(document.getElementById('wat-console'), {
         value: ``,
+        mode: null,
         lineNumbers: true,
         viewportMargin: Infinity,
         readOnly: true,
@@ -129,6 +171,7 @@
       })
       const jsConsole = CodeMirror(document.getElementById('js-console'), {
         value: ``,
+        mode: null,
         lineNumbers: true,
         viewportMargin: Infinity,
         readOnly: true,
