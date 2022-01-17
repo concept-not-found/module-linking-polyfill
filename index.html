@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>module linking polyfill demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.skypack.dev/codemirror@v5.65.0/lib/codemirror.css"
+    />
+    <style>
+      html {
+        box-sizing: border-box;
+      }
+
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+
+      body {
+        background-color: lightgray;
+        font-family: monospace;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      main {
+        padding-left: 5px;
+        padding-right: 5px;
+        height: 100%;
+        width: 100%;
+        display: grid;
+
+        grid-template-rows:
+          repeat(7, min-content) minmax(25%, 1fr)
+          min-content minmax(25%, 1fr);
+        grid-template-columns: 50% 50%;
+        grid-gap: 0 5px;
+      }
+
+      main h1,
+      p,
+      ul {
+        grid-column-start: 1;
+        grid-column-end: 3;
+
+        margin: 5px;
+      }
+
+      main h1 {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+      }
+
+      main h1 img {
+        margin-left: 10px;
+        height: 30px;
+      }
+
+      .CodeMirror {
+        height: 100%;
+      }
+
+      .subtitle {
+        margin-top: 10px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/wabt@1.0.25/index.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <h1>
+        module linking polyfill demo
+        <a href="https://github.com/concept-not-found/module-linking-polyfill"
+          ><img src="./GitHub.png"
+        /></a>
+        <a href="https://twitter.com/pyrolistical"
+          ><img src="./Twitter.svg"
+        /></a>
+      </h1>
+      <p>
+        This is a work in progress polyfill for
+        <a href="https://webassembly.org/">WebAssembly</a>
+        <a href="https://github.com/WebAssembly/module-linking"
+          >Module linking</a
+        >.
+      </p>
+      <p>
+        💣 Not production ready! 💣 Notably the following is not implemented
+        yet:
+      </p>
+      <ul>
+        <li>symbolic index references</li>
+        <li>import/export/alias kind first forms</li>
+        <li>type definitions</li>
+        <li>alias syntactic sugar</li>
+      </ul>
+      <p>
+        <a href="https://github.com/concept-not-found/module-linking-polyfill"
+          >Full list of critical issues</a
+        >
+      </p>
+      <p>
+        <label>
+          Examples:
+          <select id="examples"></select
+        ></label>
+      </p>
+
+      <span class="subtitle">WebAssembly Text (editable)</span>
+      <span class="subtitle">WebAssembly console</span>
+      <div id="wat"></div>
+      <div id="wat-console"></div>
+      <span class="subtitle"
+        >JavaScript (editable, only console.log() is supported)</span
+      >
+      <span class="subtitle">JavaScript console</span>
+      <div id="js"></div>
+      <div id="js-console"></div>
+    </main>
+
+    <script type="module">
+      import CodeMirror from 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/lib/codemirror.js'
+      import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/wast/wast.js'
+      import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/javascript/javascript.js'
+      import debounce from 'https://cdn.skypack.dev/pin/debounce@v1.2.1-nsljQIXDuyHmm6xBMrgd/mode=imports,min/optimized/debounce.js'
+      import Index from './index.js'
+      import examples from './examples.js'
+
+      for (const { name } of examples) {
+        const option = document.createElement('option')
+        option.value = name
+        option.text = name
+        document.getElementById('examples').add(option)
+      }
+
+      const wat = CodeMirror(document.getElementById('wat'), {
+        value: '',
+        mode: 'wast',
+        lineNumbers: true,
+        viewportMargin: Infinity,
+      })
+      const watConsole = CodeMirror(document.getElementById('wat-console'), {
+        value: ``,
+        mode: null,
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        readOnly: true,
+        cursorHeight: 0,
+      })
+      const js = CodeMirror(document.getElementById('js'), {
+        value: '',
+        mode: 'javascript',
+        lineNumbers: true,
+        viewportMargin: Infinity,
+      })
+      const jsConsole = CodeMirror(document.getElementById('js-console'), {
+        value: ``,
+        mode: null,
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        readOnly: true,
+        cursorHeight: 0,
+      })
+      function onChangeExample(example) {
+        const { watSource, jsSource } = examples.find(
+          ({ name }) => name === example
+        )
+        js.setValue(jsSource)
+        wat.setValue(watSource)
+      }
+      onChangeExample(examples[0].name)
+      document
+        .getElementById('examples')
+        .addEventListener('change', ({ target: { value } }) =>
+          onChangeExample(value)
+        )
+
+      const wabt = await WabtModule()
+      const { transformWat, execJs } = Index(wabt)
+      let config
+      function onChangeWat() {
+        try {
+          watConsole.setValue('')
+          config = transformWat(wat.getValue())
+          watConsole.setValue(JSON.stringify(config, null, 2))
+        } catch (error) {
+          watConsole.setValue(String(error))
+        }
+        onChangeJs()
+      }
+      onChangeWat()
+      wat.on('change', debounce(onChangeWat, 200))
+
+      function onChangeJs() {
+        try {
+          jsConsole.setValue('')
+          const consoleOutput = execJs(js.getValue(), config)
+          jsConsole.replaceRange(
+            consoleOutput,
+            CodeMirror.Pos(jsConsole.lastLine())
+          )
+        } catch (error) {
+          jsConsole.setValue(String(error))
+        }
+      }
+      onChangeJs()
+
+      js.on('change', debounce(onChangeJs, 200))
+    </script>
+  </body>
+</html>
