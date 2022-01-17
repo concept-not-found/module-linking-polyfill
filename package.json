@@ -1,7 +1,20 @@
 {
-  "name": "module-linking-polyfill",
+  "name": "@concept-not-found/module-linking-polyfill",
   "private": true,
-  "description": "",
+  "description": "https://github.com/WebAssembly/module-linking polyfill",
+  "keywords": [
+    "webassembly",
+    "module linking",
+    "polyfill"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/concept-not-found/module-linking-polyfill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/concept-not-found/module-linking-polyfill/issues"
+  },
+  "homepage": "https://github.com/concept-not-found/module-linking-polyfill",
   "scripts": {
     "start": "cd packages/demo && npm start",
     "lint": "eslint .",

@@ -1,8 +1,21 @@
 {
-  "name": "module-linking-polyfill-demo",
+  "name": "@concept-not-found/module-linking-polyfill-demo",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "description": "Demo for https://github.com/WebAssembly/module-linking polyfill",
+  "keywords": [
+    "webassembly",
+    "module linking",
+    "polyfill"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/concept-not-found/module-linking-polyfill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/concept-not-found/module-linking-polyfill/issues"
+  },
+  "homepage": "https://github.com/concept-not-found/module-linking-polyfill",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -21,10 +34,6 @@
     "wabt": "1.0.25"
   },
   "jest": {
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "./dist/"
-    ],
     "transform": {}
   }
 }
