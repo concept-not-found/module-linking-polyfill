@@ -1,6 +1,6 @@
 {
   "name": "@concept-not-found/module-linking-polyfill-transformer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Transformer component for https://github.com/WebAssembly/module-linking polyfill",
   "keywords": [
     "webassembly",
@@ -22,7 +22,6 @@
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
   "license": "Apache-2.0",
-  "dependencies": {},
   "devDependencies": {
     "jest": "27.4.5"
   },
