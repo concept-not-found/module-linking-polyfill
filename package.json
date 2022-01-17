@@ -1,0 +1,23 @@
+{
+  "name": "interactive-explainer",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "author": "Ronald Chen <pyrogx1133@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "0.24.0",
+    "ramda": "0.27.1"
+  },
+  "devDependencies": {
+    "jest": "27.4.5",
+    "prettier": "2.5.1"
+  },
+  "jest": {
+    "transform": {}
+  }
+}

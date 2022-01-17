@@ -1,0 +1,107 @@
+(test "call imported func"
+  (transpile
+    (plugins
+      "plugin-transform-adapter-module"
+    )
+    (adapter module (;0;)
+      (module (;1;)
+        (import "imports" "answer" (func (;0;) (result i32)))
+        (func (;1;) (result i32)
+          (call (;func;) 0)
+        )
+        (export "call_answer" (func 1))
+      )
+      (import "answer" (func (;0;) (result i32)))
+      (instance (;0;) (instantiate (;module;) 1
+        (import "imports" (func "answer"))
+      ))
+      (alias (;instance;) 0 "call_answer" (func (;1;)))
+      (export "exported_answer" (func 1))
+    )
+  )
+  (expected
+    (modules
+      (module (;1;)
+        (import "imports" "answer" (func (;0;) (result i32)))
+        (func (;1;) (result i32)
+          (call (;func;) 0)
+        )
+        (export "call_answer" (func 1))
+      )
+    )
+    (config (json
+      (:imports (json
+        (:answer (func (result i32)))
+      ))
+      (:instances (
+        (module 1)
+      ))
+    ))
+  )
+)
+
+(test "export func from imported instance"
+  (transpile
+    (plugins
+      "plugin-transform-adapter-module"
+    )
+    (adapter module (;0;)
+      (import "external" (instance (;0;)
+        (export "answer" (func (result i32)))
+      ))
+      (alias (;instance;) 0 "answer" (func (;0;)))
+      (export "exported_answer" (func 0))
+    )
+  )
+  (expected
+    (module (;0;)
+      (import "external" "answer" (func (;0;) (result i32)))
+      (export "exported_answer" (func 0))
+    )
+  )
+)
+
+(test "export func from imported module"
+  (transpile
+    (plugins
+      "plugin-transform-adapter-module"
+    )
+    (adapter module (;0;)
+      (import "external" (module (;1;)
+        (export "answer" (func (result i32)))
+      ))
+      (instance (;0;) (instantiate (;module;) 1))
+      (alias (;instance;) 0 "answer" (func (;0;)))
+      (export "exported_answer" (func 0))
+    )
+  )
+  (expected
+    (module
+      (import "external$$instance$$0" "answer" (func (;0;) (result i32)))
+      (export "exported_answer" (func 0))
+    )
+  )
+)
+
+
+(test "interleave and re-export funcs"
+  (transpile
+    (plugins
+      "plugin-transform-adapter-module"
+    )
+    (adapter module
+      (import "A" (func))
+      (import "B" (func))
+      (export "X" (func 1))
+      (export "Y" (func 0))
+    )
+  )
+  (expected
+    (module
+      (import "B" "" (func))
+      (import "A" "" (func))
+      (export "X" (func 0))
+      (export "Y" (func 1))
+    )
+  )
+)
