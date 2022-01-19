@@ -21,9 +21,9 @@ Critical issues need to be resolved before the first release:
 - add test scenarios
 - decide on feature set of first release
   - is binary format support?
-- stablize both runtime and transformer API
+- stabilize both runtime and transformer API
 - documentation
 
 ### Project goals
 
-The intention of this project learn and understand how Module linking works. We value correctness and clear error messages more so then performance.
+The intention of this project learn and understand how Module linking works. We value correctness and clear error messages over performance.
