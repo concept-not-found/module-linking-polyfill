@@ -1,4 +1,6 @@
 import Wabt from 'wabt'
+import transformer from './node_modules/@concept-not-found/module-linking-polyfill-transformer/index.js'
+import runtime from './node_modules/@concept-not-found/module-linking-polyfill-runtime/index.js'
 import Index from './index.js'
 import examples from './examples.js'
 
@@ -7,7 +9,11 @@ describe('demo', () => {
     test.each(examples)(
       '$name',
       async ({ watSource, jsSource, expectedJsConsole }) => {
-        const { transformWat, execJs } = Index(await Wabt())
+        const { transformWat, execJs } = Index(
+          await Wabt(),
+          transformer,
+          runtime
+        )
 
         const config = transformWat(watSource)
         const consoleOutput = execJs(jsSource, config)
@@ -58,7 +64,7 @@ describe('demo', () => {
   test.each(scenarios)(
     '$name',
     async ({ watSource, jsSource, expectedJsConsole }) => {
-      const { transformWat, execJs } = Index(await Wabt())
+      const { transformWat, execJs } = Index(await Wabt(), transformer, runtime)
 
       const config = transformWat(watSource)
       const consoleOutput = execJs(jsSource, config)
