@@ -7,10 +7,15 @@ const indexExports = (moduleNode) => {
     export(node) {
       moduleNode.meta.exports.push(node)
 
+      const [, , [kind]] = node
       let [, name, [, kindIdx]] = node
       name = String(name)
-      kindIdx = Number.parseInt(kindIdx)
-      const [, , [kind]] = node
+      if (kindIdx.startsWith('$')) {
+        const collection = coreKindCollection[kind]
+        kindIdx = moduleNode.meta.symbolIndex[collection][kindIdx]
+      } else {
+        kindIdx = Number.parseInt(kindIdx)
+      }
       Object.assign(node.meta, {
         name,
         kind,
@@ -32,7 +37,11 @@ const indexImports = (moduleNode) => {
       }
       moduleNode.meta.imports.push(node)
 
-      const [, moduleName, name, [kind, ...kindType]] = node
+      const [, moduleName, name, [kind]] = node
+      let [, , , [, ...kindType]] = node
+      if (node.meta.hasKindSymbol) {
+        kindType = kindType.slice(1)
+      }
       Object.assign(node.meta, {
         moduleName: String(moduleName),
         name: String(name),
@@ -64,8 +73,32 @@ const indexKinds = (moduleNode) => {
   }
 }
 
+const indexKindSymbols = (moduleNode) => {
+  moduleNode.meta.symbolIndex = {}
+  for (const targetKind in coreKindCollection) {
+    const collection = coreKindCollection[targetKind]
+    moduleNode.meta.symbolIndex[collection] = {}
+
+    moduleNode.meta[collection].forEach((node, kindIdx) => {
+      if (node.meta.import) {
+        const [, , , [, symbol]] = node
+        if (node.meta.typeOf(symbol) === 'value') {
+          node.meta.hasKindSymbol = true
+          moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
+        }
+      } else {
+        const [, symbol] = node
+        if (node.meta.typeOf(symbol) === 'value') {
+          moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
+        }
+      }
+    })
+  }
+}
+
 export default (node) => {
   indexKinds(node)
+  indexKindSymbols(node)
   indexImports(node)
   indexExports(node)
 }
