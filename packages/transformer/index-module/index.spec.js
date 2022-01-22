@@ -9,69 +9,114 @@ expect.extend({ toMatchTree })
 
 describe('core', () => {
   describe('module', () => {
-    test('empty func', () => {
-      const wat = `(module
-        (func)
-      )`
+    describe('empty func', () => {
+      test('implicit index', () => {
+        const wat = `(module
+          (func)
+        )`
 
-      const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
-      indexModule(module)
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
 
-      expect(module).toMatchTree(['module', ['func']])
-      expect(module.meta.funcs).toMatchTree([['func']])
-    })
+        expect(module.meta.funcs[0]).toMatchTree(['func'])
+      })
+      test('explicit index', () => {
+        const wat = `(module
+          (func $f)
+        )`
 
-    test('export func', () => {
-      const wat = `(module
-        (export "ex" (func 0))
-        (func)
-      )`
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
 
-      const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
-      indexModule(module)
-
-      expect(module).toMatchTree([
-        'module',
-        ['export', '"ex"', ['func', '0']],
-        ['func'],
-      ])
-      expect(module.meta.funcs).toMatchTree([['func']])
-      expect(module.meta.exports).toMatchTree([
-        ['export', '"ex"', ['func', '0']],
-      ])
-      expect(module.meta.exports[0].meta).toMatchObject({
-        name: 'ex',
-        kind: 'func',
-        kindIdx: 0,
+        expect(module.meta.symbolIndex.funcs.$f).toBe(0)
+        expect(module.meta.funcs[0]).toMatchTree(['func', '$f'])
       })
     })
 
-    test('imported func', () => {
-      const wat = `(module
-        (import "mod" "im" (func))
-      )`
+    describe('export func', () => {
+      test('implicit index', () => {
+        const wat = `(module
+          (export "ex" (func 0))
+          (func)
+        )`
 
-      const parser = Parser()
-      const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
-      indexModule(module)
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
 
-      expect(module).toMatchTree([
-        'module',
-        ['import', '"mod"', '"im"', ['func']],
-      ])
-      expect(module.meta.funcs).toMatchTree([
-        ['import', '"mod"', '"im"', ['func']],
-      ])
-      expect(module.meta.imports).toMatchTree([
-        ['import', '"mod"', '"im"', ['func']],
-      ])
-      expect(module.meta.imports[0].meta).toMatchObject({
-        moduleName: 'mod',
-        name: 'im',
-        kind: 'func',
-        kindType: [],
+        expect(module.meta.exports).toMatchTree([
+          ['export', '"ex"', ['func', '0']],
+        ])
+        expect(module.meta.exports[0].meta).toMatchObject({
+          name: 'ex',
+          kind: 'func',
+          kindIdx: 0,
+        })
+      })
+
+      test('explicit index', () => {
+        const wat = `(module
+          (export "ex" (func $f))
+          (func $f)
+        )`
+
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
+
+        expect(module.meta.exports).toMatchTree([
+          ['export', '"ex"', ['func', '$f']],
+        ])
+        expect(module.meta.exports[0].meta).toMatchObject({
+          name: 'ex',
+          kind: 'func',
+          kindIdx: 0,
+        })
+      })
+    })
+
+    describe('import func', () => {
+      test('implicit index', () => {
+        const wat = `(module
+          (import "mod" "im" (func))
+        )`
+
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
+
+        const expectedImportFunc = ['import', '"mod"', '"im"', ['func']]
+        expect(module.meta.funcs[0]).toMatchTree(expectedImportFunc)
+        expect(module.meta.imports).toMatchTree([expectedImportFunc])
+        expect(module.meta.imports[0].meta).toMatchObject({
+          moduleName: 'mod',
+          name: 'im',
+          kind: 'func',
+          kindType: [],
+        })
+      })
+
+      test('explicit index', () => {
+        const wat = `(module
+          (import "mod" "im" (func $f))
+        )`
+
+        const parser = Parser()
+        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        indexModule(module)
+
+        expect(module.meta.symbolIndex.funcs.$f).toBe(0)
+        const expectedImportFunc = ['import', '"mod"', '"im"', ['func', '$f']]
+        expect(module.meta.funcs[0]).toMatchTree(expectedImportFunc)
+        expect(module.meta.imports).toMatchTree([expectedImportFunc])
+        expect(module.meta.imports[0].meta).toMatchObject({
+          moduleName: 'mod',
+          name: 'im',
+          kind: 'func',
+          kindType: [],
+        })
       })
     })
   })
