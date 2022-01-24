@@ -1,5 +1,5 @@
 import { toMatchTree } from '../matchers.js'
-import stripWasmWhitespace from '../strip-wasm-whitespace.js'
+import trimWasm from '../trim-wasm.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
@@ -16,7 +16,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         expect(module.meta.funcs[0]).toMatchTree(['func'])
@@ -27,7 +27,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         expect(module.meta.symbolIndex.funcs.$f).toBe(0)
@@ -43,7 +43,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         expect(module.meta.exports).toMatchTree([
@@ -63,7 +63,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         expect(module.meta.exports).toMatchTree([
@@ -84,7 +84,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         const expectedImportFunc = ['import', '"mod"', '"im"', ['func']]
@@ -104,7 +104,7 @@ describe('core', () => {
         )`
 
         const parser = Parser()
-        const module = pipe(parser, stripWasmWhitespace, ([node]) => node)(wat)
+        const module = pipe(parser, trimWasm, ([node]) => node)(wat)
         indexModule(module)
 
         expect(module.meta.symbolIndex.funcs.$f).toBe(0)

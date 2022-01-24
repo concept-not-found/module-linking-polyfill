@@ -53,13 +53,20 @@ const indexAliases = (adapterModuleNode) => {
 }
 
 const indexModules = (adapterModuleNode) => {
+  adapterModuleNode.meta.symbolIndex = {}
   const targetKind = 'module'
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
+  adapterModuleNode.meta.symbolIndex[collection] = {}
   Visit({
     adapter(node) {
       if (node[1] === 'module') {
-        adapterModuleNode.meta[collection].push(node)
+        const moduleIdx = adapterModuleNode.meta[collection].push(node) - 1
+        const [, , symbol] = node
+        if (node.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = moduleIdx
+        }
       }
       Object.assign(node.meta, {
         type: 'adapter',
@@ -67,16 +74,31 @@ const indexModules = (adapterModuleNode) => {
       adapterModule(node)
     },
     module(node) {
-      adapterModuleNode.meta[collection].push(node)
+      const moduleIdx = adapterModuleNode.meta[collection].push(node) - 1
+      const [, symbol] = node
+      if (node.meta.typeOf(symbol) === 'value') {
+        node.meta.symbolIndex = true
+        adapterModuleNode.meta.symbolIndex[collection][symbol] = moduleIdx
+      }
       Object.assign(node.meta, {
         type: 'core',
       })
       indexModule(node)
     },
     import(node) {
-      const [, , [kind, ...exports]] = node
+      const [, , kindImport] = node
+      const [kind, symbol] = kindImport
       if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+        const moduleIdx = adapterModuleNode.meta[collection].push(node) - 1
+        if (kindImport.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = moduleIdx
+        }
+
+        let [, , [, ...exports]] = node
+        if (node.meta.symbolIndex) {
+          exports = exports.slice(1)
+        }
 
         Object.assign(node.meta, {
           type: 'adapter',
@@ -106,7 +128,7 @@ const indexModules = (adapterModuleNode) => {
 
 const indexKinds = (adapterModuleNode) => {
   for (const targetKind in coreKindCollection) {
-    const collection = kindCollection[targetKind]
+    const collection = coreKindCollection[targetKind]
     adapterModuleNode.meta[collection] = []
     Visit({
       import(node) {
@@ -135,10 +157,15 @@ const indexExports = (adapterModuleNode) => {
     export(node) {
       adapterModuleNode.meta.exports.push(node)
 
+      const [, , [kind]] = node
       let [, name, [, kindIdx]] = node
       name = String(name)
-      kindIdx = Number.parseInt(kindIdx)
-      const [, , [kind]] = node
+      if (kindIdx.startsWith('$')) {
+        const collection = kindCollection[kind]
+        kindIdx = adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+      } else {
+        kindIdx = Number.parseInt(kindIdx)
+      }
       Object.assign(node.meta, {
         name,
         kind,
@@ -255,7 +282,11 @@ const indexImports = (adapterModuleNode) => {
 
       let [, moduleName] = node
       moduleName = String(moduleName)
-      const [, , [kind, ...kindType]] = node
+      const [, , [kind]] = node
+      let [, , [, ...kindType]] = node
+      if (node.meta.symbolIndex) {
+        kindType = kindType.slice(1)
+      }
       Object.assign(node.meta, {
         moduleName,
         kind,
