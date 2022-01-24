@@ -29,13 +29,13 @@
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
   "license": "Apache-2.0",
-  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "7.16.7",
     "@babel/core": "7.16.7",
     "@babel/preset-env": "7.16.7",
     "core-js": "3.20.2",
     "eslint": "8.6.0",
+    "eslint-plugin-jest": "26.0.0",
     "lerna": "4.0.0",
     "prettier": "2.5.1"
   }

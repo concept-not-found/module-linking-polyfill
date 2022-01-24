@@ -8,7 +8,7 @@ import indexAdapterModule from './index.js'
 expect.extend({ toMatchTree })
 
 describe('plugin', () => {
-  describe('adapter module', () => {
+  describe('index adapter module', () => {
     test('empty', () => {
       const wat = `(adapter module)`
 
@@ -286,6 +286,28 @@ describe('plugin', () => {
             kind: 'module',
             kindIdx: 0,
           })
+        })
+      })
+
+      describe('instance imports func', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
+            (adapter module
+              (import "f" (func))
+            )
+            (import "imp" (func))
+            (instance (instantiate 0
+              (import "f" (func 0))
+            ))
+          )`
+
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
+
+          expect(
+            adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          ).toEqual(['imports', 'imp'])
         })
       })
 

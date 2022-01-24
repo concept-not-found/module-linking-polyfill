@@ -114,7 +114,7 @@ describe('adapter-module-transformer', () => {
       })
     })
 
-    test.only('export func from imported module', () => {
+    test('export func from imported module', () => {
       const wat = `(adapter module (;0;)
         (import "imp" (module (;0;)
           (export "f" (func))
@@ -140,7 +140,7 @@ describe('adapter-module-transformer', () => {
         instances: [
           {
             kind: 'module',
-            path: ['imports', 'imp'],
+            modulePath: ['imports', 'imp'],
             imports: {},
           },
         ],
@@ -238,7 +238,7 @@ describe('adapter-module-transformer', () => {
           },
           {
             kind: 'module',
-            path: ['modules', 0],
+            modulePath: ['modules', 0],
             imports: {
               mimp: {
                 kind: 'instance',

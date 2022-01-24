@@ -30,7 +30,7 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
 
   config.instances.forEach((instance) => {
     if (instance.kind === 'module') {
-      const module = path(instance.path, live)
+      const module = path(instance.modulePath, live)
       if (module.kind === 'module') {
         const imports = {}
         for (const moduleName in instance.imports) {
@@ -60,7 +60,11 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
           }
         }
         live.instances.push(
-          createAdapterModuleInstance(path(instance.path, live), imports, live)
+          createAdapterModuleInstance(
+            path(instance.modulePath, live),
+            imports,
+            live
+          )
         )
       }
     } else {

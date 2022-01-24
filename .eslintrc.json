@@ -1,6 +1,12 @@
 {
   "root": true,
-  "extends": ["eslint:recommended"],
+  "plugins": ["jest"],
+  "settings": {
+    "jest": {
+      "version": 27
+    }
+  },
+  "extends": ["eslint:recommended", "plugin:jest/recommended"],
   "ignorePatterns": [".history/*", "dist/*"],
   "parserOptions": {
     "ecmaVersion": "latest",

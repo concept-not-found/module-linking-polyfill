@@ -202,6 +202,9 @@ const indexInstances = (adapterModuleNode) => {
         node.meta.symbolIndex = true
         adapterModuleNode.meta.symbolIndex[collection][symbol] = instanceIdx
       }
+      node.meta.path = () => {
+        return ['instances', instanceIdx]
+      }
 
       let [, ...instanceExpr] = node
       if (node.meta.symbolIndex) {
@@ -218,6 +221,13 @@ const indexInstances = (adapterModuleNode) => {
         Object.assign(node.meta, {
           instantiate: true,
           moduleIdx,
+          modulePath(ancestors) {
+            const module = adapterModuleNode.meta.modules[moduleIdx]
+            if (!module.meta.import && !module.meta.alias) {
+              return ['modules', moduleIdx]
+            }
+            return module.meta.path(ancestors)
+          },
           imports: imports.map((imp) => {
             const [, , [kind]] = imp
             let [, name, [, kindIdx]] = imp
@@ -232,19 +242,14 @@ const indexInstances = (adapterModuleNode) => {
               name,
               kind,
               kindIdx,
-              path() {
-                return [kindCollection[kind], kindIdx]
+              path(ancestors) {
+                const collection = kindCollection[kind]
+                const exported = adapterModuleNode.meta[collection][kindIdx]
+                return exported.meta.path(ancestors)
               },
             })
             return imp
           }),
-          path(ancestors) {
-            const module = adapterModuleNode.meta.modules[moduleIdx]
-            if (!module.meta.import && !module.meta.alias) {
-              return ['modules', moduleIdx]
-            }
-            return module.meta.path(ancestors)
-          },
         })
       } else {
         node.meta.exports = instanceExpr.map((exp) => {

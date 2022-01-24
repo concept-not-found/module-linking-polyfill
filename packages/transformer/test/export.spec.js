@@ -28,7 +28,7 @@ describe('adapter-module-transformer', () => {
         instances: [
           {
             kind: 'module',
-            path: ['modules', 0],
+            modulePath: ['modules', 0],
             imports: {},
           },
         ],
@@ -110,7 +110,7 @@ describe('adapter-module-transformer', () => {
         instances: [
           {
             kind: 'module',
-            path: ['modules', 0],
+            modulePath: ['modules', 0],
             imports: {},
           },
         ],
