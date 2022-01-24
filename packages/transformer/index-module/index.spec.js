@@ -8,7 +8,7 @@ import indexModule from './index.js'
 expect.extend({ toMatchTree })
 
 describe('core', () => {
-  describe('module', () => {
+  describe('index module', () => {
     describe('empty func', () => {
       test('implicit index', () => {
         const wat = `(module

@@ -69,7 +69,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
     if (instantiate) {
       return {
         kind: 'module',
-        path: instance.meta.path(ancestors),
+        modulePath: instance.meta.modulePath(ancestors),
         imports: Object.fromEntries(
           imports.map((imp) => {
             const { name, kind } = imp.meta
