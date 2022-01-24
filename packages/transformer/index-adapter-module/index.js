@@ -156,6 +156,30 @@ const indexKinds = (adapterModuleNode) => {
   }
 }
 
+const indexKindSymbols = (adapterModuleNode) => {
+  for (const targetKind in coreKindCollection) {
+    const collection = coreKindCollection[targetKind]
+    adapterModuleNode.meta.symbolIndex[collection] = {}
+
+    adapterModuleNode.meta[collection].forEach((node, kindIdx) => {
+      if (node.meta.import) {
+        const [, , kindDef] = node
+        const [, symbol] = kindDef
+        if (kindDef.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = kindIdx
+        }
+      } else if (node.meta.alias) {
+        const [, , , kindDef] = node
+        const [, symbol] = kindDef
+        if (kindDef.meta.typeOf(symbol) === 'value') {
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = kindIdx
+        }
+      }
+    })
+  }
+}
+
 const indexExports = (adapterModuleNode) => {
   adapterModuleNode.meta.exports = []
   Visit({
@@ -351,8 +375,9 @@ const indexImports = (adapterModuleNode) => {
 
 adapterModule = (node) => {
   indexModules(node)
-  indexInstances(node)
   indexKinds(node)
+  indexKindSymbols(node)
+  indexInstances(node)
   indexImports(node)
   indexAliases(node)
   indexExports(node)

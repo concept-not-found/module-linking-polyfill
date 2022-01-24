@@ -94,7 +94,6 @@ describe('core', () => {
           moduleName: 'mod',
           name: 'im',
           kind: 'func',
-          kindType: [],
         })
       })
 
@@ -115,7 +114,6 @@ describe('core', () => {
           moduleName: 'mod',
           name: 'im',
           kind: 'func',
-          kindType: [],
         })
       })
     })

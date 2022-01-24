@@ -309,6 +309,26 @@ describe('plugin', () => {
             adapterModule.meta.instances[0].meta.imports[0].meta.path()
           ).toEqual(['imports', 'imp'])
         })
+
+        test('explicit index', () => {
+          const wat = `(adapter module
+            (adapter module
+              (import "f" (func))
+            )
+            (import "imp" (func $f))
+            (instance (instantiate 0
+              (import "f" (func $f))
+            ))
+          )`
+
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
+
+          expect(
+            adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          ).toEqual(['imports', 'imp'])
+        })
       })
 
       describe('instance exports module', () => {
@@ -358,6 +378,42 @@ describe('plugin', () => {
             kind: 'module',
             kindIdx: 0,
           })
+        })
+      })
+
+      describe('instance exports func', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
+            (import "imp" (func))
+            (instance
+              (export "f" (func 0))
+            )
+          )`
+
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
+
+          expect(
+            adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          ).toEqual(['imports', 'imp'])
+        })
+
+        test('explicit index', () => {
+          const wat = `(adapter module
+            (import "imp" (func $f))
+            (instance
+              (export "f" (func $f))
+            )
+          )`
+
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
+
+          expect(
+            adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          ).toEqual(['imports', 'imp'])
         })
       })
 
