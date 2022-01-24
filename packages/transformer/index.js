@@ -1,6 +1,5 @@
 import watParser from './parser/index.js'
-import stripWasmComments from './strip-wasm-comments.js'
-import stripWasmWhitespace from './strip-wasm-whitespace.js'
+import trimWasm from './trim-wasm.js'
 import indexAdapterModule from './index-adapter-module/index.js'
 import pipe from './pipe.js'
 
@@ -132,8 +131,7 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
 
 export default pipe(
   watParser({ sourceTags: ['module'] }),
-  stripWasmComments,
-  stripWasmWhitespace,
+  trimWasm,
   (root) => {
     if (root.length !== 1) {
       throw new Error('expected a single adapter module')

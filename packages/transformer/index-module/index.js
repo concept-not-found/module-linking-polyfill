@@ -39,7 +39,7 @@ const indexImports = (moduleNode) => {
 
       const [, moduleName, name, [kind]] = node
       let [, , , [, ...kindType]] = node
-      if (node.meta.hasKindSymbol) {
+      if (node.meta.symbolIndex) {
         kindType = kindType.slice(1)
       }
       Object.assign(node.meta, {
@@ -83,7 +83,7 @@ const indexKindSymbols = (moduleNode) => {
       if (node.meta.import) {
         const [, , , [, symbol]] = node
         if (node.meta.typeOf(symbol) === 'value') {
-          node.meta.hasKindSymbol = true
+          node.meta.symbolIndex = true
           moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
         }
       } else {

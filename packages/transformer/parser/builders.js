@@ -79,6 +79,9 @@ export default (wat) => {
 
           values.meta = {
             typeOf(value) {
+              if (value === undefined) {
+                return
+              }
               return types.get(value) ?? 'value'
             },
           }

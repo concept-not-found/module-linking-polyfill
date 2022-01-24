@@ -1,5 +1,4 @@
 import { toMatchTree } from '../matchers.js'
-import stripWasmWhitespace from '../strip-wasm-whitespace.js'
 import pipe from '../pipe.js'
 
 import Parser from './index.js'
@@ -11,52 +10,44 @@ describe('parser', () => {
     const wat = `(module)`
 
     const parser = Parser()
-    const result = pipe(parser, stripWasmWhitespace)(wat)
+    const result = pipe(parser)(wat)
     expect(result).toMatchTree([['module']])
   })
 
   test('output can have multiple sexp', () => {
-    const wat = `(module) (module)`
+    const wat = `(module)(module)`
 
     const parser = Parser()
-    const result = pipe(parser, stripWasmWhitespace)(wat)
+    const result = pipe(parser)(wat)
     expect(result).toMatchTree([['module'], ['module']])
   })
 
   test('nested sexp are arrays', () => {
-    const wat = `(module
-      (func)
-    )`
+    const wat = `(module(func))`
 
     const parser = Parser()
-    expect(pipe(parser, stripWasmWhitespace)(wat)).toMatchTree([
-      ['module', ['func']],
-    ])
+    expect(pipe(parser)(wat)).toMatchTree([['module', ['func']]])
   })
 
   test('nested block comments collapse', () => {
     const wat = `(;a(;b;)c;)`
 
     const parser = Parser()
-    expect(pipe(parser, stripWasmWhitespace)(wat)).toMatchTree(['(;a(;b;)c;)'])
+    expect(pipe(parser)(wat)).toMatchTree(['(;a(;b;)c;)'])
   })
 
   test('more nested block comments', () => {
     const wat = `(;(;(;;);)(;;)(;(;;););)`
 
     const parser = Parser()
-    expect(pipe(parser, stripWasmWhitespace)(wat)).toMatchTree([
-      '(;(;(;;);)(;;)(;(;;););)',
-    ])
+    expect(pipe(parser)(wat)).toMatchTree(['(;(;(;;);)(;;)(;(;;););)'])
   })
 
   test('line comments is just text within a block comment', () => {
     const wat = `(;;;line comment;;;)`
 
     const parser = Parser()
-    expect(pipe(parser, stripWasmWhitespace)(wat)).toMatchTree([
-      '(;;;line comment;;;)',
-    ])
+    expect(pipe(parser)(wat)).toMatchTree(['(;;;line comment;;;)'])
   })
 
   test('block comments can contain newlines', () => {
@@ -64,7 +55,7 @@ describe('parser', () => {
     ;)`
 
     const parser = Parser()
-    expect(pipe(parser, stripWasmWhitespace)(wat)).toMatchTree(['(;\n    ;)'])
+    expect(pipe(parser)(wat)).toMatchTree(['(;\n    ;)'])
   })
 
   test('value, strings and comments are all strings', () => {
@@ -73,10 +64,7 @@ describe('parser', () => {
     )`
 
     const parser = Parser()
-    const [[value, string, blockComment, lineComment]] = pipe(
-      parser,
-      stripWasmWhitespace
-    )(wat)
+    const [[value, string, blockComment, lineComment]] = pipe(parser)(wat)
     expect(value).toEqual(expect.any(String))
     expect(string).toEqual(expect.any(String))
     expect(blockComment).toEqual(expect.any(String))
@@ -84,13 +72,13 @@ describe('parser', () => {
   })
 
   test('value, strings and comments are distinguished by type by container', () => {
-    const wat = `(func
-      "func" (;func;) ;;func
+    const wat = `(func"func"(;func;);;func
     )`
 
     const parser = Parser()
-    const [container] = pipe(parser, stripWasmWhitespace)(wat)
+    const [container] = pipe(parser)(wat)
     const [value, string, blockComment, lineComment] = container
+    expect(container.meta.typeOf(undefined)).toBe(undefined)
     expect(container.meta.typeOf(value)).toBe('value')
     expect(container.meta.typeOf(string)).toBe('string')
     expect(container.meta.typeOf(blockComment)).toBe('block comment')

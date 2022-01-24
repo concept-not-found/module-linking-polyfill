@@ -114,7 +114,7 @@ describe('adapter-module-transformer', () => {
       })
     })
 
-    test('export func from imported module', () => {
+    test.only('export func from imported module', () => {
       const wat = `(adapter module (;0;)
         (import "imp" (module (;0;)
           (export "f" (func))
