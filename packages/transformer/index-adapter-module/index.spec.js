@@ -9,7 +9,7 @@ expect.extend({ toMatchTree })
 
 describe('plugin', () => {
   describe('adapter module', () => {
-    test('empty adapter module', () => {
+    test('empty', () => {
       const wat = `(adapter module)`
 
       const parser = Parser()
@@ -17,199 +17,158 @@ describe('plugin', () => {
       indexAdapterModule(adapterModule)
 
       expect(adapterModule).toMatchTree(['adapter', 'module'])
-      expect(adapterModule.meta.modules).toEqual([])
     })
 
-    describe('nested adapter module', () => {
-      test('implicit index', () => {
-        const wat = `(adapter module
+    describe('module definition', () => {
+      describe('adapter module', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
           (adapter module)
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree(['adapter', 'module'])
-      })
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'adapter',
+            'module',
+          ])
+        })
 
-      test('explicit index', () => {
-        const wat = `(adapter module
+        test('explicit index', () => {
+          const wat = `(adapter module
           (adapter module $M)
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'adapter',
-          'module',
-          '$M',
-        ])
+          expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'adapter',
+            'module',
+            '$M',
+          ])
+        })
       })
-    })
 
-    describe('nested module', () => {
-      test('implicit index', () => {
-        const wat = `(adapter module
+      describe('module', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
           (module)
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree(['module'])
-      })
+          expect(adapterModule.meta.modules[0]).toMatchTree(['module'])
+        })
 
-      test('explicit index', () => {
-        const wat = `(adapter module
+        test('explicit index', () => {
+          const wat = `(adapter module
           (module $M)
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree(['module', '$M'])
-      })
-    })
-
-    describe('export module', () => {
-      test('implicit index', () => {
-        const wat = `(adapter module
-          (module)
-          (export "ex" (module 0))
-        )`
-
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
-
-        expect(adapterModule).toMatchTree([
-          'adapter',
-          'module',
-          ['module'],
-          ['export', '"ex"', ['module', '0']],
-        ])
-        expect(adapterModule.meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '0']],
-        ])
-        expect(adapterModule.meta.exports[0].meta).toMatchObject({
-          name: 'ex',
-          kind: 'module',
-          kindIdx: 0,
+          expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
+          expect(adapterModule.meta.modules[0]).toMatchTree(['module', '$M'])
         })
       })
 
-      test('explicit index', () => {
-        const wat = `(adapter module
-          (module $M)
-          (export "ex" (module $M))
-        )`
-
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
-
-        expect(adapterModule.meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '$M']],
-        ])
-        expect(adapterModule.meta.exports[0].meta).toMatchObject({
-          name: 'ex',
-          kind: 'module',
-          kindIdx: 0,
-        })
-      })
-    })
-
-    describe('import module', () => {
-      test('implicit index', () => {
-        const wat = `(adapter module
+      describe('import adapter module', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
           (import "mod" (module))
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'import',
-          '"mod"',
-          ['module'],
-        ])
-        expect(adapterModule.meta.modules[0].meta.import).toBe(true)
-        expect(adapterModule.meta.imports).toMatchTree([
-          ['import', '"mod"', ['module']],
-        ])
-        expect(adapterModule.meta.imports[0].meta).toMatchObject({
-          moduleName: 'mod',
-          kind: 'module',
-          kindType: [],
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'import',
+            '"mod"',
+            ['module'],
+          ])
+          expect(adapterModule.meta.modules[0].meta.import).toBe(true)
+          expect(adapterModule.meta.imports).toMatchTree([
+            ['import', '"mod"', ['module']],
+          ])
+          expect(adapterModule.meta.imports[0].meta).toMatchObject({
+            moduleName: 'mod',
+            kind: 'module',
+            kindType: [],
+          })
         })
-      })
 
-      test('explicit index', () => {
-        const wat = `(adapter module
+        test('explicit index', () => {
+          const wat = `(adapter module
           (import "mod" (module $M))
         )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'import',
-          '"mod"',
-          ['module', '$M'],
-        ])
-        expect(adapterModule.meta.modules[0].meta.import).toBe(true)
-        expect(adapterModule.meta.imports).toMatchTree([
-          ['import', '"mod"', ['module', '$M']],
-        ])
-        expect(adapterModule.meta.imports[0].meta).toMatchObject({
-          moduleName: 'mod',
-          kind: 'module',
-          kindType: [],
+          expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'import',
+            '"mod"',
+            ['module', '$M'],
+          ])
+          expect(adapterModule.meta.modules[0].meta.import).toBe(true)
+          expect(adapterModule.meta.imports).toMatchTree([
+            ['import', '"mod"', ['module', '$M']],
+          ])
+          expect(adapterModule.meta.imports[0].meta).toMatchObject({
+            moduleName: 'mod',
+            kind: 'module',
+            kindType: [],
+          })
         })
       })
-    })
 
-    describe('re-export module', () => {
-      test('implicit index', () => {
-        const wat = `(adapter module
-          (import "mod" (module))
-          (export "ex" (module 0))
-        )`
+      describe('alias module', () => {
+        test('implicit index', () => {
+          const wat = `(adapter module
+              (alias 1 0 (module))
+            )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.exports[0].meta.path()).toEqual([
-          'imports',
-          'mod',
-        ])
-      })
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'alias',
+            '1',
+            '0',
+            ['module'],
+          ])
+        })
 
-      test('explicit index', () => {
-        const wat = `(adapter module
-          (import "mod" (module $M))
-          (export "ex" (module $M))
-        )`
+        test('explicit index', () => {
+          const wat = `(adapter module
+              (alias 1 0 (module $M))
+            )`
 
-        const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
-        indexAdapterModule(adapterModule)
+          const parser = Parser()
+          const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+          indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.exports[0].meta.path()).toEqual([
-          'imports',
-          'mod',
-        ])
+          expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
+          expect(adapterModule.meta.modules[0]).toMatchTree([
+            'alias',
+            '1',
+            '0',
+            ['module', '$M'],
+          ])
+        })
       })
     })
 
@@ -428,6 +387,54 @@ describe('plugin', () => {
       expect(adapterModule.meta.modules[1].meta.modules[0].meta.alias).toBe(
         true
       )
+    })
+
+    describe('export module', () => {
+      test('implicit index', () => {
+        const wat = `(adapter module
+        (module)
+        (export "ex" (module 0))
+      )`
+
+        const parser = Parser()
+        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        indexAdapterModule(adapterModule)
+
+        expect(adapterModule).toMatchTree([
+          'adapter',
+          'module',
+          ['module'],
+          ['export', '"ex"', ['module', '0']],
+        ])
+        expect(adapterModule.meta.exports).toMatchTree([
+          ['export', '"ex"', ['module', '0']],
+        ])
+        expect(adapterModule.meta.exports[0].meta).toMatchObject({
+          name: 'ex',
+          kind: 'module',
+          kindIdx: 0,
+        })
+      })
+
+      test('explicit index', () => {
+        const wat = `(adapter module
+        (module $M)
+        (export "ex" (module $M))
+      )`
+
+        const parser = Parser()
+        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        indexAdapterModule(adapterModule)
+
+        expect(adapterModule.meta.exports).toMatchTree([
+          ['export', '"ex"', ['module', '$M']],
+        ])
+        expect(adapterModule.meta.exports[0].meta).toMatchObject({
+          name: 'ex',
+          kind: 'module',
+          kindIdx: 0,
+        })
+      })
     })
   })
 })
