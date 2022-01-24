@@ -86,11 +86,11 @@ const indexModules = (adapterModuleNode) => {
       indexModule(node)
     },
     import(node) {
-      const [, , kindImport] = node
-      const [kind, symbol] = kindImport
+      const [, , kindDef] = node
+      const [kind, symbol] = kindDef
       if (kind === targetKind) {
         const moduleIdx = adapterModuleNode.meta[collection].push(node) - 1
-        if (kindImport.meta.typeOf(symbol) === 'value') {
+        if (kindDef.meta.typeOf(symbol) === 'value') {
           node.meta.symbolIndex = true
           adapterModuleNode.meta.symbolIndex[collection][symbol] = moduleIdx
         }
@@ -116,9 +116,14 @@ const indexModules = (adapterModuleNode) => {
       }
     },
     alias(node) {
-      const [, , , [kind]] = node
+      const [, , , kindDef] = node
+      const [kind, symbol] = kindDef
       if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+        const moduleIdx = adapterModuleNode.meta[collection].push(node) - 1
+        if (kindDef.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = moduleIdx
+        }
 
         node.meta.alias = true
       }
