@@ -46,8 +46,8 @@ const indexImports = (moduleNode) => {
         moduleName: String(moduleName),
         name: String(name),
         kind,
-        kindType,
       })
+      // TODO consume kindType
     }
   }
 }
@@ -81,8 +81,9 @@ const indexKindSymbols = (moduleNode) => {
 
     moduleNode.meta[collection].forEach((node, kindIdx) => {
       if (node.meta.import) {
-        const [, , , [, symbol]] = node
-        if (node.meta.typeOf(symbol) === 'value') {
+        const [, , , kindDef] = node
+        const [, symbol] = kindDef
+        if (kindDef.meta.typeOf(symbol) === 'value') {
           node.meta.symbolIndex = true
           moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
         }
