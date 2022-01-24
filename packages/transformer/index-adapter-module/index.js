@@ -272,9 +272,19 @@ const indexInstances = (adapterModuleNode) => {
       }
     },
     import(node) {
-      const [, , [kind, ...exports]] = node
+      const [, , kindDef] = node
+      const [kind, symbol] = kindDef
       if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+        const instanceIdx = adapterModuleNode.meta[collection].push(node) - 1
+        if (kindDef.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = instanceIdx
+        }
+
+        let [, , [, ...exports]] = node
+        if (node.meta.symbolIndex) {
+          exports = exports.slice(1)
+        }
 
         Object.assign(node.meta, {
           import: true,
@@ -291,9 +301,14 @@ const indexInstances = (adapterModuleNode) => {
       }
     },
     alias(node) {
-      const [, , , [kind]] = node
+      const [, , , kindDef] = node
+      const [kind, symbol] = kindDef
       if (kind === targetKind) {
-        adapterModuleNode.meta[collection].push(node)
+        const instanceIdx = adapterModuleNode.meta[collection].push(node) - 1
+        if (kindDef.meta.typeOf(symbol) === 'value') {
+          node.meta.symbolIndex = true
+          adapterModuleNode.meta.symbolIndex[collection][symbol] = instanceIdx
+        }
 
         node.meta.alias = true
       }
