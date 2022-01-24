@@ -187,22 +187,42 @@ const indexInstances = (adapterModuleNode) => {
   const targetKind = 'instance'
   const collection = kindCollection[targetKind]
   adapterModuleNode.meta[collection] = []
+  adapterModuleNode.meta.symbolIndex[collection] = {}
   Visit({
     instance(node) {
-      adapterModuleNode.meta[collection].push(node)
-      const [, ...instanceExpr] = node
+      const instanceIdx = adapterModuleNode.meta[collection].push(node) - 1
+
+      const [, symbol] = node
+      if (node.meta.typeOf(symbol) === 'value') {
+        node.meta.symbolIndex = true
+        adapterModuleNode.meta.symbolIndex[collection][symbol] = instanceIdx
+      }
+
+      let [, ...instanceExpr] = node
+      if (node.meta.symbolIndex) {
+        instanceExpr = instanceExpr.slice(1)
+      }
       if (instanceExpr.length === 1 && instanceExpr[0][0] === 'instantiate') {
         let [[, moduleIdx]] = instanceExpr
-        moduleIdx = Number.parseInt(moduleIdx)
+        if (moduleIdx.startsWith('$')) {
+          moduleIdx = adapterModuleNode.meta.symbolIndex.modules[moduleIdx]
+        } else {
+          moduleIdx = Number.parseInt(moduleIdx)
+        }
         const [[, , ...imports]] = instanceExpr
         Object.assign(node.meta, {
           instantiate: true,
           moduleIdx,
           imports: imports.map((imp) => {
+            const [, , [kind]] = imp
             let [, name, [, kindIdx]] = imp
             name = String(name)
-            kindIdx = Number.parseInt(kindIdx)
-            const [, , [kind]] = imp
+            if (kindIdx.startsWith('$')) {
+              const collection = kindCollection[kind]
+              kindIdx = adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+            } else {
+              kindIdx = Number.parseInt(kindIdx)
+            }
             Object.assign(imp.meta, {
               name,
               kind,
@@ -223,10 +243,15 @@ const indexInstances = (adapterModuleNode) => {
         })
       } else {
         node.meta.exports = instanceExpr.map((exp) => {
+          const [, , [kind]] = exp
           let [, name, [, kindIdx]] = exp
           name = String(name)
-          kindIdx = Number.parseInt(kindIdx)
-          const [, , [kind]] = exp
+          if (kindIdx.startsWith('$')) {
+            const collection = kindCollection[kind]
+            kindIdx = adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+          } else {
+            kindIdx = Number.parseInt(kindIdx)
+          }
           Object.assign(exp.meta, {
             name,
             kind,
