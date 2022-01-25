@@ -6,7 +6,6 @@ on:
       version:
         description: Publish version
         required: true
-        default: patch
         type: choice
         options:
         - major
@@ -57,4 +56,4 @@ jobs:
         if: github.event.inputs.dryRun != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        run: npx lerna publish ${{ github.event.inputs.version }}
+        run: npx lerna publish ${{ github.event.inputs.version }} --yes
