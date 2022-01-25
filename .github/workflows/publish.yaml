@@ -1,6 +1,22 @@
 name: publish
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Publish version
+        required: true
+        default: major
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
+      dryRun:
+        description: Dry run
+        default: true
+        type: boolean
+
 
 jobs:
   main:
@@ -31,7 +47,14 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci --ignore-scripts
 
-      - name: publish
+      - name: dry run
+        if: github.event.inputs.dryRun == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        run: npx lerna publish --no-git-tag-version --no-push
+        run: npx lerna publish ${{ github.event.inputs.version }} --no-git-tag-version --no-push
+
+      - name: publish
+        if: github.event.inputs.dryRun != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: npx lerna publish ${{ github.event.inputs.version }}
