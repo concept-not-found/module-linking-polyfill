@@ -138,12 +138,15 @@
       import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/wast/wast.js'
       import 'https://cdn.skypack.dev/pin/codemirror@v5.65.0-PQxIsYN0IQoqvGScHYR5/mode=imports,min/unoptimized/mode/javascript/javascript.js'
       import debounce from 'https://cdn.skypack.dev/pin/debounce@v1.2.1-nsljQIXDuyHmm6xBMrgd/mode=imports,min/optimized/debounce.js'
+      import dedent from 'https://cdn.skypack.dev/pin/dedent@v0.7.0-Vsia1nfXs8cMunckwOIY/mode=imports,min/optimized/dedent.js'
 
       import transformer from '<%= transformerUrl ?? `./node_modules/@concept-not-found/module-linking-polyfill-transformer/index.js` %>'
       import runtime from '<%= runtimeUrl ?? `./node_modules/@concept-not-found/module-linking-polyfill-runtime/index.js` %>'
 
       import Index from './index.js'
-      import examples from './examples.js'
+      import Examples from './examples.js'
+
+      const examples = Examples(dedent)
 
       for (const { name } of examples) {
         const option = document.createElement('option')

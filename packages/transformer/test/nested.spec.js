@@ -3,9 +3,11 @@ import transformer from '../index.js'
 describe('adapter-module-transformer', () => {
   describe('nested', () => {
     test('nested empty adapter module', () => {
-      const wat = `(adapter module (;0;)
-        (adapter module (;0;))
-      )`
+      const wat = `
+        (adapter module (;0;)
+          (adapter module (;0;))
+        )
+      `
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
         kind: 'adapter module',
@@ -25,11 +27,13 @@ describe('adapter-module-transformer', () => {
     })
 
     test('nested nested empty adapter module', () => {
-      const wat = `(adapter module (;0;)
+      const wat = `
         (adapter module (;0;)
-          (adapter module (;0;))
+          (adapter module (;0;)
+            (adapter module (;0;))
+          )
         )
-      )`
+      `
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
         kind: 'adapter module',
@@ -57,16 +61,18 @@ describe('adapter-module-transformer', () => {
     })
 
     test('re-export func via inner module', () => {
-      const wat = `(adapter module (;0;)
-        (import "imp" (func (;0;)))
+      const wat = `
         (adapter module (;0;)
-          (alias (;outer;) 1 (;func;) 0 (func (;0;)))
-          (export "inner-exp" (func 0))
+          (import "imp" (func (;0;)))
+          (adapter module (;0;)
+            (alias (;outer;) 1 (;func;) 0 (func (;0;)))
+            (export "inner-exp" (func 0))
+          )
+          (instance (;0;) (instantiate (;module;) 0))
+          (alias (;instance;) 0 "inner-exp" (func (;1;)))
+          (export "exp" (func 1))
         )
-        (instance (;0;) (instantiate (;module;) 0))
-        (alias (;instance;) 0 "inner-exp" (func (;1;)))
-        (export "exp" (func 1))
-      )`
+      `
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
         kind: 'adapter module',

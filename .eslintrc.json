@@ -22,6 +22,7 @@
     "jest": true
   },
   "rules": {
+    "quotes": ["error", "single"],
     "no-unused-vars": [
       "error",
       {
@@ -57,12 +58,21 @@
     "unicorn/prevent-abbreviations": [
       "error",
       {
-        "ignore": ["^e2e\\.spec", "Idx$", "Func$", "Def$"]
+        "ignore": ["^e2e\\.spec", "Idx$", "Func$", "Def$", "def\\.spec$"]
       }
     ],
     "unicorn/no-array-callback-reference": "off",
     "unicorn/no-unreadable-array-destructuring": "off",
     "unicorn/prefer-top-level-await": "error",
+    "unicorn/template-indent": [
+      "error",
+      {
+        "tags": ["dedent", "onedent"],
+        "selectors": [
+          "VariableDeclaration[kind='const'] > VariableDeclarator[id.name='wat'] > TemplateLiteral"
+        ]
+      }
+    ],
 
     "prettier/prettier": "error"
   }
