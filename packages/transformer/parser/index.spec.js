@@ -78,7 +78,7 @@ describe('parser', () => {
     const parser = Parser()
     const [container] = pipe(parser)(wat)
     const [value, string, blockComment, lineComment] = container
-    expect(container.meta.typeOf(undefined)).toBe(undefined)
+    expect(container.meta.typeOf(undefined)).toBe(undefined) // eslint-disable-line unicorn/no-useless-undefined
     expect(container.meta.typeOf(value)).toBe('value')
     expect(container.meta.typeOf(string)).toBe('string')
     expect(container.meta.typeOf(blockComment)).toBe('block comment')

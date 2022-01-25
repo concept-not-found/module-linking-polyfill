@@ -64,12 +64,12 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
 
   const instances = node.meta.instances.map((instance) => {
     const {
-      meta: { instantiate, imports, exports },
+      meta: { instantiate, imports, exports, modulePath, path },
     } = instance
     if (instantiate) {
       return {
         kind: 'module',
-        modulePath: instance.meta.modulePath(ancestors),
+        modulePath: modulePath(ancestors),
         imports: Object.fromEntries(
           imports.map((imp) => {
             const { name, kind } = imp.meta
@@ -77,10 +77,11 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
           })
         ),
       }
+      // eslint-disable-next-line unicorn/consistent-destructuring
     } else if (instance.meta.import) {
       return {
         kind: 'instance',
-        path: instance.meta.path(ancestors),
+        path: path(ancestors),
         exports: Object.fromEntries(
           exports.map((exp) => {
             const {
@@ -96,9 +97,9 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
         exports: Object.fromEntries(
           exports.map((exp) => {
             const {
-              meta: { name, kind },
+              meta: { name, kind, path },
             } = exp
-            return [name, { kind, path: exp.meta.path(ancestors) }]
+            return [name, { kind, path: path(ancestors) }]
           })
         ),
       }
@@ -108,13 +109,13 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
   const exports = Object.fromEntries(
     node.meta.exports.map((exp) => {
       const {
-        meta: { name, kind },
+        meta: { name, kind, path },
       } = exp
       return [
         name,
         {
           kind,
-          path: exp.meta.path(ancestors),
+          path: path(ancestors),
         },
       ]
     })

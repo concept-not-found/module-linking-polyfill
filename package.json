@@ -17,7 +17,7 @@
   "homepage": "https://github.com/concept-not-found/module-linking-polyfill",
   "scripts": {
     "start": "cd packages/demo && npm start",
-    "lint": "eslint .",
+    "lint": "eslint . --fix",
     "test": "lerna run test --stream --no-bail",
     "pretest-target-compatibility": "rm -rf dist/target-compatibility && mkdir -p dist/target-compatibility/original",
     "test-target-compatibility:original": "find . -name '*.js' |egrep -v '.history/|/node_modules/|^./dist/' | xargs -I FILE -n 1 cp --parent -r FILE dist/target-compatibility/original/",
@@ -36,6 +36,8 @@
     "core-js": "3.20.2",
     "eslint": "8.6.0",
     "eslint-plugin-jest": "26.0.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "eslint-plugin-unicorn": "40.1.0",
     "lerna": "4.0.0",
     "prettier": "2.5.1"
   }

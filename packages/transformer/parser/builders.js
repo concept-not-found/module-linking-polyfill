@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/new-for-builtins, unicorn/prefer-string-slice */
+
 export default (wat) => {
   return {
     SexpBuilder(start, sourceTags = []) {
@@ -113,11 +115,9 @@ export default (wat) => {
         },
         build() {
           const fragments = children.map((builder) => {
-            if (builder.type === 'block comment') {
-              return `(;${builder.build()};)`
-            } else {
-              return builder.build()
-            }
+            return builder.type === 'block comment'
+              ? `(;${builder.build()};)`
+              : builder.build()
           })
           // new String is required for identity equals
           return new String(fragments.join(''))
