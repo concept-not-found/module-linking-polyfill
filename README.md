@@ -8,9 +8,6 @@ An **incomplete** 🚧 work in progress 🚧 polyfill for [WebAssembly](https://
 
 Critical issues need to be resolved before the first release:
 
-- support symbolic index references<br/>
-  ✅ implemented `(export "exp" (func 0))`<br/>
-  ❌ missing `(export "exp" (func $f))`
 - support import/export/alias kind first forms<br/>
   ✅ implemented `(export "exp" (func 0))`<br/>
   ❌ missing `(func (export "exp") ...)`
