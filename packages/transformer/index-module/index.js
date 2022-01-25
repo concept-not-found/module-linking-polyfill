@@ -8,20 +8,20 @@ const indexExports = (moduleNode) => {
       moduleNode.meta.exports.push(node)
 
       const [, , [kind]] = node
-      let [, name, [, kindIdx]] = node
+      let [, name] = node
       name = String(name)
-      if (kindIdx.startsWith('$')) {
-        const collection = coreKindCollection[kind]
-        kindIdx = moduleNode.meta.symbolIndex[collection][kindIdx]
-      } else {
-        kindIdx = Number.parseInt(kindIdx)
-      }
       Object.assign(node.meta, {
         name,
         kind,
-        kindIdx,
         path() {
-          return [coreKindCollection[kind], kindIdx]
+          let [, , [, kindIdx]] = node
+          const collection = coreKindCollection[kind]
+          if (kindIdx.startsWith('$')) {
+            kindIdx = moduleNode.meta.symbolIndex[collection][kindIdx]
+          } else {
+            kindIdx = Number.parseInt(kindIdx)
+          }
+          return [collection, kindIdx]
         },
       })
     },
