@@ -1,9 +1,13 @@
+import dedent from '../dedent.js'
+import onedent from '../onedent.js'
 import transformer from '../index.js'
 
 describe('adapter-module-transformer', () => {
   describe('empty config', () => {
     test('empty adapter module', () => {
-      const wat = `(adapter module (;0;))`
+      const wat = `
+        (adapter module (;0;))
+      `
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
         kind: 'adapter module',
@@ -15,16 +19,20 @@ describe('adapter-module-transformer', () => {
     })
 
     test('nested empty module', () => {
-      const wat = `(adapter module (;0;)
-        (module (;0;))
-      )`
+      const wat = dedent`
+        (adapter module (;0;)
+          (module (;0;))
+        )
+      `
       const adapterModule = transformer(wat)
       expect(adapterModule).toEqual({
         kind: 'adapter module',
         modules: [
           {
             kind: 'module',
-            source: '(module (;0;))',
+            source: onedent`
+              (module (;0;))
+            `,
           },
         ],
         imports: {},

@@ -1,5 +1,10 @@
 {
-  "ignore": [".history/", "**/node_modules/", "dist/"],
+  "ignore": [
+    ".history/",
+    "**/node_modules/",
+    "dist/",
+    "packages/transformer/dedent.js"
+  ],
   "comments": false,
   "presets": [
     [
