@@ -37,7 +37,7 @@ describe('module-linking-polyfill-runtime', () => {
         },
       },
     }
-    const imp = () => {}
+    const imp = Symbol()
     const {
       exports: { exp },
     } = runtime(config, {

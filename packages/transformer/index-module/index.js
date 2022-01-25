@@ -16,11 +16,9 @@ const indexExports = (moduleNode) => {
         path() {
           let [, , [, kindIdx]] = node
           const collection = coreKindCollection[kind]
-          if (kindIdx.startsWith('$')) {
-            kindIdx = moduleNode.meta.symbolIndex[collection][kindIdx]
-          } else {
-            kindIdx = Number.parseInt(kindIdx)
-          }
+          kindIdx = kindIdx.startsWith('$')
+            ? moduleNode.meta.symbolIndex[collection][kindIdx]
+            : Number.parseInt(kindIdx)
           return [collection, kindIdx]
         },
       })
@@ -79,7 +77,7 @@ const indexKindSymbols = (moduleNode) => {
     const collection = coreKindCollection[targetKind]
     moduleNode.meta.symbolIndex[collection] = {}
 
-    moduleNode.meta[collection].forEach((node, kindIdx) => {
+    for (const [kindIdx, node] of moduleNode.meta[collection].entries()) {
       if (node.meta.import) {
         const [, , , kindDef] = node
         const [, symbol] = kindDef
@@ -93,7 +91,7 @@ const indexKindSymbols = (moduleNode) => {
           moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
         }
       }
-    })
+    }
   }
 }
 

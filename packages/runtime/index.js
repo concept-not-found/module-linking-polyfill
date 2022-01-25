@@ -1,15 +1,15 @@
 function path(parts, object) {
   const original = object
   try {
-    for (let i = 0; i < parts.length; i++) {
-      object = object[parts[i]]
+    for (const part of parts) {
+      object = object[part]
     }
     return object
-  } catch (error) {
+  } catch {
     throw new Error(
       `failed to walk path [${parts.join(', ')}] in ${JSON.stringify(
         original,
-        null,
+        undefined,
         2
       )}`
     )
@@ -28,7 +28,7 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
     instances: [],
   }
 
-  config.instances.forEach((instance) => {
+  for (const instance of config.instances) {
     if (instance.kind === 'module') {
       const module = path(instance.modulePath, live)
       if (module.kind === 'module') {
@@ -70,7 +70,7 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
     } else {
       live.instances.push({ exports: path(instance.path, live) })
     }
-  })
+  }
 
   const exports = {}
   for (const name in config.exports) {

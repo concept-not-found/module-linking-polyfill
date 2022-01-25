@@ -18,12 +18,9 @@ const indexAliases = (adapterModuleNode) => {
         Object.assign(node.meta, {
           path() {
             let [instanceIdx, name] = aliasTarget
-            if (instanceIdx.startsWith('$')) {
-              instanceIdx =
-                adapterModuleNode.meta.symbolIndex.instances[instanceIdx]
-            } else {
-              instanceIdx = Number.parseInt(instanceIdx)
-            }
+            instanceIdx = instanceIdx.startsWith('$')
+              ? adapterModuleNode.meta.symbolIndex.instances[instanceIdx]
+              : Number.parseInt(instanceIdx)
             name = String(name)
             return ['instances', instanceIdx, 'exports', name]
           },
@@ -45,7 +42,7 @@ const indexAliases = (adapterModuleNode) => {
             }
             const aliased = outerModule.meta[collection][kindIdx]
             return [
-              ...Array(outerIdx).fill('..'),
+              ...Array.from({ length: outerIdx }).fill('..'),
               ...aliased.meta.path(ancestors.slice(0, -outerIdx)),
             ]
           },
@@ -170,7 +167,9 @@ const indexKindSymbols = (adapterModuleNode) => {
     const collection = coreKindCollection[targetKind]
     adapterModuleNode.meta.symbolIndex[collection] = {}
 
-    adapterModuleNode.meta[collection].forEach((node, kindIdx) => {
+    for (const [kindIdx, node] of adapterModuleNode.meta[
+      collection
+    ].entries()) {
       if (node.meta.import) {
         const [, , kindDef] = node
         const [, symbol] = kindDef
@@ -185,7 +184,7 @@ const indexKindSymbols = (adapterModuleNode) => {
           adapterModuleNode.meta.symbolIndex[collection][symbol] = kindIdx
         }
       }
-    })
+    }
   }
 }
 
@@ -204,11 +203,9 @@ const indexExports = (adapterModuleNode) => {
         path(ancestors) {
           const collection = kindCollection[kind]
           let [, , [, kindIdx]] = node
-          if (kindIdx.startsWith('$')) {
-            kindIdx = adapterModuleNode.meta.symbolIndex[collection][kindIdx]
-          } else {
-            kindIdx = Number.parseInt(kindIdx)
-          }
+          kindIdx = kindIdx.startsWith('$')
+            ? adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+            : Number.parseInt(kindIdx)
           const exported = adapterModuleNode.meta[collection][kindIdx]
           if (!exported.meta.import && !exported.meta.alias) {
             return [kindCollection[kind], kindIdx]
@@ -248,11 +245,9 @@ const indexInstances = (adapterModuleNode) => {
           instantiate: true,
           modulePath(ancestors) {
             let [[, moduleIdx]] = instanceExpr
-            if (moduleIdx.startsWith('$')) {
-              moduleIdx = adapterModuleNode.meta.symbolIndex.modules[moduleIdx]
-            } else {
-              moduleIdx = Number.parseInt(moduleIdx)
-            }
+            moduleIdx = moduleIdx.startsWith('$')
+              ? adapterModuleNode.meta.symbolIndex.modules[moduleIdx]
+              : Number.parseInt(moduleIdx)
             const module = adapterModuleNode.meta.modules[moduleIdx]
             if (!module.meta.import && !module.meta.alias) {
               return ['modules', moduleIdx]
@@ -269,12 +264,9 @@ const indexInstances = (adapterModuleNode) => {
               path(ancestors) {
                 let [, , [, kindIdx]] = imp
                 const collection = kindCollection[kind]
-                if (kindIdx.startsWith('$')) {
-                  kindIdx =
-                    adapterModuleNode.meta.symbolIndex[collection][kindIdx]
-                } else {
-                  kindIdx = Number.parseInt(kindIdx)
-                }
+                kindIdx = kindIdx.startsWith('$')
+                  ? adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+                  : Number.parseInt(kindIdx)
                 const imported = adapterModuleNode.meta[collection][kindIdx]
                 return imported.meta.path(ancestors)
               },
@@ -293,12 +285,9 @@ const indexInstances = (adapterModuleNode) => {
             path(ancestors) {
               let [, , [, kindIdx]] = exp
               const collection = kindCollection[kind]
-              if (kindIdx.startsWith('$')) {
-                kindIdx =
-                  adapterModuleNode.meta.symbolIndex[collection][kindIdx]
-              } else {
-                kindIdx = Number.parseInt(kindIdx)
-              }
+              kindIdx = kindIdx.startsWith('$')
+                ? adapterModuleNode.meta.symbolIndex[collection][kindIdx]
+                : Number.parseInt(kindIdx)
               const exported = adapterModuleNode.meta[collection][kindIdx]
               return exported.meta.path(ancestors)
             },

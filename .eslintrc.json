@@ -1,12 +1,16 @@
 {
   "root": true,
-  "plugins": ["jest"],
+  "plugins": ["unicorn", "prettier", "jest"],
   "settings": {
     "jest": {
       "version": 27
     }
   },
-  "extends": ["eslint:recommended", "plugin:jest/recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:unicorn/recommended",
+    "plugin:jest/recommended"
+  ],
   "ignorePatterns": [".history/*", "dist/*"],
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -48,6 +52,18 @@
     "object-shorthand": "error",
     "prefer-arrow-callback": "error",
     "prefer-const": "error",
-    "prefer-destructuring": "error"
+    "prefer-destructuring": "error",
+
+    "unicorn/prevent-abbreviations": [
+      "error",
+      {
+        "ignore": ["^e2e\\.spec", "Idx$", "Func$", "Def$"]
+      }
+    ],
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/no-unreadable-array-destructuring": "off",
+    "unicorn/prefer-top-level-await": "error",
+
+    "prettier/prettier": "error"
   }
 }

@@ -1,14 +1,14 @@
 export default (pluginByTag) => {
   return (node) => {
-    node.forEach((child) => {
-      if (child instanceof Array) {
+    for (const child of node) {
+      if (Array.isArray(child)) {
         const [tag] = child
         const plugin = pluginByTag[tag]
         if (!plugin) {
-          return
+          continue
         }
         plugin(child)
       }
-    })
+    }
   }
 }

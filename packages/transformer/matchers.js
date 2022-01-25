@@ -1,7 +1,7 @@
 import matchers from 'expect/build/matchers'
 
 function stripMetaAndMemoizeStrings(node, index, parent) {
-  if (node instanceof Array) {
+  if (Array.isArray(node)) {
     return node.map(stripMetaAndMemoizeStrings)
   }
   if (!parent?.meta) {

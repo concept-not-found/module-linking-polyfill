@@ -1,5 +1,5 @@
 const trim = (node) => {
-  if (node instanceof Array) {
+  if (Array.isArray(node)) {
     const children = node
       .filter(
         (child) =>
@@ -10,7 +10,7 @@ const trim = (node) => {
       .map(trim)
     const types = new WeakMap()
     for (const child of children) {
-      const type = child instanceof Array ? 'sexp' : node.meta.typeOf(child)
+      const type = Array.isArray(child) ? 'sexp' : node.meta.typeOf(child)
       if (type !== 'value') {
         types.set(child, type)
       }
