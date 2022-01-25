@@ -1,12 +1,14 @@
-name: test
+name: publish
 
-on: push
+on: workflow_dispatch
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - uses: nodenv/actions/node-version@v2.0.10
         id: nodenv
@@ -29,8 +31,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci --ignore-scripts
 
-      - name: install package dependencies
-        run: npx lerna bootstrap
-
-      - name: run test
-        run: npm test
+      - name: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: npx lerna publish --no-git-tag-version --no-push

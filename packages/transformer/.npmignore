@@ -1,1 +1,4 @@
 *.spec.js
+dedent.js
+onedent.js
+matchers.js
