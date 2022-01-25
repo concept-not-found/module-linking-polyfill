@@ -1,0 +1,33 @@
+name: lint
+
+on: push
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v2'
+
+      - uses: nodenv/actions/node-version@v2.0.10
+        id: nodenv
+
+      - uses: actions/setup-node@v2.5.1
+        with:
+          node-version: '${{ steps.nodenv.outputs.node-version }}'
+
+      - name: restore node_modules
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-
+
+      - name: install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci --ignore-scripts
+
+      - name: 'run lint'
+        run: 'npm run lint:ci'

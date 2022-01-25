@@ -18,6 +18,7 @@
   "scripts": {
     "start": "cd packages/demo && npm start",
     "lint": "eslint . --fix",
+    "lint:ci": "eslint .",
     "test": "lerna run test --stream --no-bail",
     "pretest-target-compatibility": "rm -rf dist/target-compatibility && mkdir -p dist/target-compatibility/original",
     "test-target-compatibility:original": "find . -name '*.js' |egrep -v '.history/|/node_modules/|^./dist/' | xargs -I FILE -n 1 cp --parent -r FILE dist/target-compatibility/original/",
