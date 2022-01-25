@@ -52,8 +52,8 @@ describe('core', () => {
         expect(module.meta.exports[0].meta).toMatchObject({
           name: 'ex',
           kind: 'func',
-          kindIdx: 0,
         })
+        expect(module.meta.exports[0].meta.path()).toEqual(['funcs', 0])
       })
 
       test('explicit index', () => {
@@ -72,8 +72,8 @@ describe('core', () => {
         expect(module.meta.exports[0].meta).toMatchObject({
           name: 'ex',
           kind: 'func',
-          kindIdx: 0,
         })
+        expect(module.meta.exports[0].meta.path()).toEqual(['funcs', 0])
       })
     })
 
