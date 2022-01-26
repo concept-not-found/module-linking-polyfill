@@ -1,6 +1,6 @@
 {
   "name": "@concept-not-found/module-linking-polyfill-runtime",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Runtime component for https://github.com/WebAssembly/module-linking polyfill",
   "keywords": [
     "webassembly",
