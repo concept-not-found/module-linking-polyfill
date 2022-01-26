@@ -1,21 +1,11 @@
-name: publish
+name: deploy demo
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Publish version
+        description: Library ersion
         required: true
-        type: choice
-        options:
-        - major
-        - minor
-        - patch
-      dryRun:
-        description: Dry run
-        default: true
-        type: boolean
-
 
 jobs:
   main:
@@ -24,7 +14,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.GH_PAT }}
-          fetch-depth: 0
 
       - uses: nodenv/actions/node-version@v2.0.10
         id: nodenv
@@ -47,18 +36,22 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci --ignore-scripts
 
-      - name: dry run
-        if: github.event.inputs.dryRun == 'true'
-        run: |
-          npx lerna publish ${{ github.event.inputs.version }} --no-git-tag-version --no-push
+      - name: install package dependencies
+        run: npx lerna bootstrap
 
-      - name: publish
-        if: github.event.inputs.dryRun != 'true'
+      - name: deploy
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
         run: |
+          mkdir dist/
+          cd packages/demo
+          npm run build -- version=${{ github.event.inputs.version }}
+          cd ../..
+          cp packages/demo/{index.html,index.js,examples.js,GitHub.png,Twitter.svg} dist/
+          git checkout gh-pages
+          mv dist/* .
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          echo //registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN} > .npmrc
-          npx lerna publish ${{ github.event.inputs.version }} --yes --no-verify-access
+          git add .
+          git commit -m'updated demo'
+          git push

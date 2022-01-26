@@ -25,8 +25,7 @@
     "test-target-compatibility:babel": "babel . --quiet --delete-dir-on-start --out-dir dist/target-compatibility/babeled",
     "test-target-compatibility:normalize": "prettier --loglevel silent --print-width 1 --write dist/target-compatibility",
     "test-target-compatibility:diff": "diff -wBry --suppress-common-lines dist/target-compatibility/original dist/target-compatibility/babeled | egrep -v '^\\s*//|^/\\*|^\\s+<$|\/\/ eslint-disable'",
-    "test-target-compatibility": "npm run test-target-compatibility:original && npm run test-target-compatibility:babel && npm run test-target-compatibility:normalize && npm run test-target-compatibility:diff",
-    "deploy-demo": "git checkout gh-pages && git checkout master packages/demo && cp packages/demo/{examples.js,GitHub.png,Twitter.svg,index.html,index.js} . && rm -rf cp packages/demo && git add . && git commit -m'updated demo' && echo git push to finalize"
+    "test-target-compatibility": "npm run test-target-compatibility:original && npm run test-target-compatibility:babel && npm run test-target-compatibility:normalize && npm run test-target-compatibility:diff"
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
   "license": "Apache-2.0",
