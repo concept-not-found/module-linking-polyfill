@@ -1,11 +1,8 @@
-import transformer from 'https://unpkg.com/@concept-not-found/module-linking-polyfill-transformer@0.1.0/index.js'
-import runtime from 'https://unpkg.com/@concept-not-found/module-linking-polyfill-runtime@0.1.0/index.js'
-
-export default (wabt) => {
+export default (wabt, transformer, runtime) => {
   return {
     transformWat(wat) {
       const config = transformer(wat)
-      config.modules.forEach((module, index) => {
+      for (const [index, module] of config.modules.entries()) {
         if (module.source) {
           const { buffer, log } = wabt
             .parseWat(`module ${index}.wat`, module.source)
@@ -13,7 +10,7 @@ export default (wabt) => {
           module.binary = buffer
           module.log = log
         }
-      })
+      }
       return config
     },
 
