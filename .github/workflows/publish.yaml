@@ -61,4 +61,4 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor}}@users.noreply.github.com"
           echo //registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN} > .npmrc
-          npx lerna publish ${{ github.event.inputs.version }} --yes
+          npx lerna publish ${{ github.event.inputs.version }} --yes --no-verify-access
