@@ -18,8 +18,7 @@ fastify.register(Pov, {
 
 fastify.get('/', (request, reply) => {
   reply.view('index.html.ejs', {
-    transformerUrl: undefined,
-    runtimeUrl: undefined,
+    version: undefined,
   })
 })
 
