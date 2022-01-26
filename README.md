@@ -2,7 +2,7 @@
 
 An **incomplete** 🚧 work in progress 🚧 polyfill for [WebAssembly](https://webassembly.org/) [Module linking proposal](https://github.com/WebAssembly/module-linking).
 
-### <a href="https://concept-not-found.github.com/module-linking-polyfill">Live demo</a>
+### <a href="https://concept-not-found.github.io/module-linking-polyfill">Live demo</a>
 
 ### 💣 Not production ready 💣
 
