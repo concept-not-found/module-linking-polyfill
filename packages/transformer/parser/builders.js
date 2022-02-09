@@ -79,14 +79,16 @@ export default (wat) => {
             values.push(value)
           }
 
-          values.meta = {
-            typeOf(value) {
-              if (value === undefined) {
-                return
-              }
-              return types.get(value) ?? 'value'
+          Object.defineProperty(values, 'meta', {
+            value: {
+              typeOf(value) {
+                if (value === undefined) {
+                  return
+                }
+                return types.get(value) ?? 'value'
+              },
             },
-          }
+          })
           if (sourceTags.includes(values[0])) {
             values.meta.source = wat.slice(start, this.end)
           }

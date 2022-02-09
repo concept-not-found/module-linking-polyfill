@@ -1,5 +1,4 @@
 import { toMatchTree } from '../matchers.js'
-import trimWasm from '../trim-wasm.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
@@ -18,7 +17,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0]).toMatchTree(['instance'])
@@ -32,7 +31,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.symbolIndex.instances.$i).toBe(0)
@@ -50,7 +49,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.modulePath()).toEqual([
@@ -68,7 +67,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.modulePath()).toEqual([
@@ -92,7 +91,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.imports).toMatchTree([
@@ -122,7 +121,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.imports).toMatchTree([
@@ -155,7 +154,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
@@ -177,7 +176,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
@@ -198,7 +197,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.exports).toMatchTree([
@@ -226,7 +225,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0].meta.exports).toMatchTree([
@@ -256,7 +255,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
@@ -275,7 +274,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
@@ -295,7 +294,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[0]).toMatchTree([
@@ -322,7 +321,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.symbolIndex.instances.$i).toBe(0)
@@ -353,7 +352,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.instances[1]).toMatchTree([
@@ -375,7 +374,7 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, ([node]) => node)(wat)
         indexAdapterModule(adapterModule)
 
         expect(adapterModule.meta.symbolIndex.instances.$i).toBe(1)
