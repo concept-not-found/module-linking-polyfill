@@ -26,7 +26,7 @@ export const sexp = (...expected) => {
       matcher.logger(`${matcher} failed to match [${input}]`, {
         typeOf,
         expected: expected.map(String),
-        input: input && [...input],
+        input,
       })
       return {
         match: false,
@@ -38,10 +38,10 @@ export const sexp = (...expected) => {
       if (!childResult.match) {
         matcher.logger(`${matcher} failed to match [${originalInput}]`, {
           expected: expected.map(String),
-          input: [...originalInput],
+          input: originalInput,
           unmatchedExpected: String(child),
           matched: value,
-          unmatched: [...input],
+          unmatched: input,
         })
         return {
           match: false,
@@ -65,9 +65,9 @@ export const sexp = (...expected) => {
     }
     matcher.logger(`${matcher} failed to match [${originalInput}]`, {
       expected: expected.map(String),
-      input: [...originalInput],
+      input: originalInput,
       matched: value,
-      unmatched: [...input],
+      unmatched: input,
     })
     return {
       match: false,
@@ -186,7 +186,7 @@ export const any = () => {
   function matcher(input) {
     const result = {
       match: 'any',
-      value: [...input],
+      value: input,
     }
     Object.defineProperty(result, 'build', {
       value: () => matcher.builder(result.value),
@@ -275,7 +275,7 @@ export const one = (...expected) => {
     }
     matcher.logger(`${matcher} failed to match ${input}`, {
       expected: expected.map(String),
-      input: [...input],
+      input,
     })
     return {
       match: false,
@@ -303,10 +303,10 @@ export const seq = (...expected) => {
       if (!childResult.match) {
         matcher.logger(`${matcher} failed to match [${originalInput}]`, {
           expected: expected.map(String),
-          input: [...originalInput],
+          input: originalInput,
           unmatchedExpected: String(child),
           matched: value,
-          unmatched: [...input],
+          unmatched: input,
         })
         return {
           match: false,
@@ -344,7 +344,7 @@ export const some = (expected) => {
     if (input.length === 0) {
       matcher.logger(`${matcher} failed to match [${input}]`, {
         expected: String(expected),
-        input: [...input],
+        input,
       })
       return {
         match: false,
@@ -375,7 +375,7 @@ export const some = (expected) => {
     }
     matcher.logger(`${matcher} failed to match [${input}]`, {
       expected: String(expected),
-      input: [...input],
+      input,
     })
     return {
       match: false,
