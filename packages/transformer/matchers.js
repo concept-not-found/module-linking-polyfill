@@ -1,4 +1,4 @@
-import matchers from 'expect/build/matchers'
+import matchers from 'expect/build/matchers.js' // eslint-disable-line node/no-extraneous-import
 
 function stripMetaAndMemoizeStrings(node, index, parent) {
   if (Array.isArray(node)) {

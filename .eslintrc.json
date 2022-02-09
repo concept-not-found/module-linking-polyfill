@@ -1,6 +1,5 @@
 {
   "root": true,
-  "plugins": ["unicorn", "prettier", "jest"],
   "settings": {
     "jest": {
       "version": 27
@@ -8,8 +7,11 @@
   },
   "extends": [
     "eslint:recommended",
+    "plugin:node/recommended-module",
+    "plugin:import/recommended",
     "plugin:unicorn/recommended",
-    "plugin:jest/recommended"
+    "plugin:jest/recommended",
+    "plugin:prettier/recommended"
   ],
   "ignorePatterns": [".history/*", "dist/*"],
   "parserOptions": {
@@ -43,7 +45,7 @@
 
     "dot-notation": "error",
     "eqeqeq": "error",
-    "no-confusing-arrow": "error",
+    "no-confusing-arrow": ["error", { "allowParens": false }],
     "no-implicit-coercion": "error",
     "no-lone-blocks": "error",
     "no-lonely-if": "error",
@@ -54,6 +56,14 @@
     "prefer-arrow-callback": "error",
     "prefer-const": "error",
     "prefer-destructuring": "error",
+
+    "node/file-extension-in-import": ["error"],
+    "node/no-extraneous-import": [
+      "error",
+      {
+        "allowModules": ["@jest/globals"]
+      }
+    ],
 
     "unicorn/prevent-abbreviations": [
       "error",
@@ -72,8 +82,6 @@
           "VariableDeclaration[kind='const'] > VariableDeclarator[id.name='wat'] > TemplateLiteral"
         ]
       }
-    ],
-
-    "prettier/prettier": "error"
+    ]
   }
 }
