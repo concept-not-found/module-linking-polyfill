@@ -27,21 +27,21 @@ describe('demo', () => {
     {
       name: 'chained outer alias',
       watSource: dedent`
-        (adapter module (;0;)
-          (import "imp" (func (;0;) (result i32)))
-          (adapter module (;0;)
-            (adapter module (;0;)
-              (alias (;outer;) 1 (;func;) 0 (func (;0;)))
-              (export "inner-inner-exp" (func 0))
+        (adapter module $M
+          (adapter module $MM
+            (adapter module $MMM
+              (func $fff (alias $MM $ff))
+              (export "inner-inner-exp" (func $fff))
             )
-            (alias (;outer;) 1 (;func;) 0 (func (;0;)))
-            (instance (;0;) (instantiate (;module;) 0))
-            (alias (;instance;) 0 "inner-inner-exp" (func (;1;)))
-            (export "inner-exp" (func 1))
-          )
-          (instance (;0;) (instantiate (;module;) 0))
-          (alias (;instance;) 0 "inner-exp" (func (;1;)))
-          (export "exp" (func 1))
+            (func $ff (alias $M $f))
+            (instance $ii (instantiate $MMM))
+            (func $gg (alias $ii "inner-inner-exp"))
+            (export "inner-exp" (func $gg))
+            )
+          (func $f (import "imp") (result i32))
+          (instance $i (instantiate $MM))
+          (func $g (alias $i "inner-exp"))
+          (export "exp" (func $g))
         )
       `,
       jsSource: dedent`
