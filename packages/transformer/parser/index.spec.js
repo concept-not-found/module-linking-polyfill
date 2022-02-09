@@ -1,4 +1,4 @@
-import { toMatchTree } from '../matchers.js'
+import { toMatchTree } from './matchers.js'
 
 import { RawParser as Parser } from './index.js'
 

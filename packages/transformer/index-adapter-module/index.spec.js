@@ -1,10 +1,8 @@
-import { toMatchTree } from '../matchers.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
 import indexAdapterModule from './index.js'
-
-expect.extend({ toMatchTree })
+import parseModule from './grammar.js'
 
 describe('index adapter module', () => {
   test('empty', () => {
@@ -13,9 +11,27 @@ describe('index adapter module', () => {
     `
 
     const parser = Parser()
-    const adapterModule = pipe(parser, ([node]) => node)(wat)
+    const adapterModule = pipe(parser, parseModule)(wat)
     indexAdapterModule(adapterModule)
 
-    expect(adapterModule).toMatchTree(['adapter', 'module'])
+    expect(adapterModule).toEqual({
+      type: 'adapter module',
+      modules: [],
+      instances: [],
+      funcs: [],
+      tables: [],
+      memories: [],
+      globals: [],
+      imports: [],
+      exports: [],
+      symbolIndex: {
+        modules: {},
+        instances: {},
+        funcs: {},
+        tables: {},
+        memories: {},
+        globals: {},
+      },
+    })
   })
 })

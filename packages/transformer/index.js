@@ -1,10 +1,11 @@
 import watParser from './parser/index.js'
-import indexAdapterModule from './index-adapter-module/index.js'
 import pipe from './pipe.js'
 
+import indexAdapterModule from './index-adapter-module/index.js'
+import parseAdapterModule from './index-adapter-module/grammar.js'
+
 const createAdapterModuleConfig = (node, ancestors = [node]) => {
-  const [adapterValue, moduleValue] = node
-  if (adapterValue !== 'adapter' || moduleValue !== 'module') {
+  if (node.type !== 'adapter module') {
     throw new Error(
       `expected top level sexp to be adapter module but got ${JSON.stringify(
         node
@@ -12,13 +13,14 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
     )
   }
 
-  const modules = node.meta.modules
-    .filter((module) => module.meta.type === 'core' || !module.meta.import)
+  const modules = node.modules
+    .filter(
+      ({ type, import: imp, alias }) =>
+        ['adapter module', 'module'].includes(type) && !imp && !alias
+    )
     .map((module) => {
-      const {
-        meta: { type, source },
-      } = module
-      if (type === 'core') {
+      const { type, source } = module
+      if (type === 'module') {
         return {
           kind: 'module',
           source,
@@ -28,28 +30,42 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
     })
 
   const imports = Object.fromEntries(
-    node.meta.imports.map(
-      ({ meta: { moduleName, kind, kindType, exports } }) => {
+    node.imports.map(
+      ({ type: kind, exports, instanceExpression, import: { name } }) => {
         switch (kind) {
           case 'func':
           case 'table':
           case 'memory':
           case 'global':
             return [
-              moduleName,
+              name,
               {
                 kind,
-                kindType,
+                kindType: [],
               },
             ]
           case 'module':
-          case 'instance':
             return [
-              moduleName,
+              name,
               {
                 kind,
                 exports: Object.fromEntries(
-                  exports.map(({ meta: { name, kind } }) => [name, { kind }])
+                  exports.map(({ name, kindType: { type: kind } }) => [
+                    name,
+                    { kind },
+                  ])
+                ),
+              },
+            ]
+          case 'instance':
+            return [
+              name,
+              {
+                kind,
+                exports: Object.fromEntries(
+                  instanceExpression.exports.map(
+                    ({ name, kindType: { type: kind } }) => [name, { kind }]
+                  )
                 ),
               },
             ]
@@ -60,55 +76,49 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
     )
   )
 
-  const instances = node.meta.instances.map((instance) => {
-    const {
-      meta: { instantiate, imports, exports, modulePath, path },
-    } = instance
-    if (instantiate) {
-      return {
-        kind: 'module',
-        modulePath: modulePath(ancestors),
-        imports: Object.fromEntries(
-          imports.map((imp) => {
-            const { name, kind } = imp.meta
-            return [name, { kind, path: imp.meta.path(ancestors) }]
-          })
-        ),
-      }
-      // eslint-disable-next-line unicorn/consistent-destructuring
-    } else if (instance.meta.import) {
-      return {
-        kind: 'instance',
-        path: path(ancestors),
-        exports: Object.fromEntries(
-          exports.map((exp) => {
-            const {
-              meta: { name, kind },
-            } = exp
-            return [name, { kind }]
-          })
-        ),
-      }
-    } else {
-      return {
-        kind: 'instance',
-        exports: Object.fromEntries(
-          exports.map((exp) => {
-            const {
-              meta: { name, kind, path },
-            } = exp
-            return [name, { kind, path: path(ancestors) }]
-          })
-        ),
+  const instances = node.instances.map(
+    ({
+      instanceExpression: { type, imports, exports, modulePath },
+      import: imp,
+      path,
+      // eslint-disable-next-line array-callback-return
+    }) => {
+      switch (type) {
+        case 'instantiate':
+          return {
+            kind: 'module',
+            modulePath: modulePath(ancestors),
+            imports: Object.fromEntries(
+              imports.map(({ name, kindReference: { kind, path } }) => {
+                return [name, { kind, path: path(ancestors) }]
+              })
+            ),
+          }
+        case 'tupling':
+          return imp
+            ? {
+                kind: 'instance',
+                path: path(ancestors),
+                exports: Object.fromEntries(
+                  exports.map(({ name, kindType: { type: kind } }) => {
+                    return [name, { kind }]
+                  })
+                ),
+              }
+            : {
+                kind: 'instance',
+                exports: Object.fromEntries(
+                  exports.map(({ name, kindReference: { kind, path } }) => {
+                    return [name, { kind, path: path(ancestors) }]
+                  })
+                ),
+              }
       }
     }
-  })
+  )
 
   const exports = Object.fromEntries(
-    node.meta.exports.map((exp) => {
-      const {
-        meta: { name, kind, path },
-      } = exp
+    node.exports.map(({ name, kindReference: { kind, path } }) => {
       return [
         name,
         {
@@ -130,11 +140,8 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
 
 export default pipe(
   watParser({ sourceTags: ['module'] }),
-  (root) => {
-    if (root.length !== 1) {
-      throw new Error('expected a single adapter module')
-    }
-    const [node] = root
+  parseAdapterModule,
+  (node) => {
     indexAdapterModule(node)
     return node
   },
