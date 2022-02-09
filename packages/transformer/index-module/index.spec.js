@@ -1,5 +1,4 @@
 import { toMatchTree } from '../matchers.js'
-import trimWasm from '../trim-wasm.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
@@ -17,7 +16,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       expect(module.meta.funcs[0]).toMatchTree(['func'])
@@ -30,7 +29,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       expect(module.meta.symbolIndex.funcs.$f).toBe(0)
@@ -48,7 +47,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       expect(module.meta.exports).toMatchTree([
@@ -70,7 +69,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       expect(module.meta.exports).toMatchTree([
@@ -93,7 +92,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       const expectedImportFunc = ['import', '"mod"', '"im"', ['func']]
@@ -114,7 +113,7 @@ describe('index module', () => {
       `
 
       const parser = Parser()
-      const module = pipe(parser, trimWasm, ([node]) => node)(wat)
+      const module = pipe(parser, ([node]) => node)(wat)
       indexModule(module)
 
       expect(module.meta.symbolIndex.funcs.$f).toBe(0)

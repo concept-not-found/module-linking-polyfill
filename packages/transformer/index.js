@@ -1,5 +1,4 @@
 import watParser from './parser/index.js'
-import trimWasm from './trim-wasm.js'
 import indexAdapterModule from './index-adapter-module/index.js'
 import pipe from './pipe.js'
 
@@ -12,7 +11,6 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
       )}`
     )
   }
-  indexAdapterModule(node)
 
   const modules = node.meta.modules
     .filter((module) => module.meta.type === 'core' || !module.meta.import)
@@ -132,12 +130,13 @@ const createAdapterModuleConfig = (node, ancestors = [node]) => {
 
 export default pipe(
   watParser({ sourceTags: ['module'] }),
-  trimWasm,
   (root) => {
     if (root.length !== 1) {
       throw new Error('expected a single adapter module')
     }
-    return root[0]
+    const [node] = root
+    indexAdapterModule(node)
+    return node
   },
   createAdapterModuleConfig
 )

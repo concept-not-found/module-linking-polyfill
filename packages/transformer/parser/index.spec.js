@@ -1,6 +1,6 @@
 import { toMatchTree } from '../matchers.js'
 
-import Parser from './index.js'
+import { RawParser as Parser } from './index.js'
 
 expect.extend({ toMatchTree })
 

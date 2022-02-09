@@ -1,6 +1,9 @@
+import pipe from '../pipe.js'
+
 import Builders from './builders.js'
 
-export default ({ sourceTags = [] } = {}) =>
+export const RawParser =
+  ({ sourceTags = [] } = {}) =>
   (wat) => {
     const {
       SexpBuilder,
@@ -13,7 +16,7 @@ export default ({ sourceTags = [] } = {}) =>
     } = Builders(wat)
 
     let index = 0
-    const root = SexpBuilder(index, wat)
+    const root = SexpBuilder(index)
     const stack = [root]
 
     function create(next) {
@@ -57,7 +60,7 @@ export default ({ sourceTags = [] } = {}) =>
                 endLiteral()
               // falls through
               case 'sexp':
-                create(SexpBuilder(index, wat, sourceTags))
+                create(SexpBuilder(index, sourceTags))
                 break
               case 'string':
               case 'line comment':
@@ -301,3 +304,36 @@ export default ({ sourceTags = [] } = {}) =>
     }
     return root.build()
   }
+
+function trim(node) {
+  if (Array.isArray(node)) {
+    const children = node
+      .filter(
+        (child) =>
+          !['block comment', 'line comment', 'whitespace'].includes(
+            node.meta.typeOf(child)
+          )
+      )
+      .map(trim)
+    const types = new WeakMap()
+    for (const child of children) {
+      const type = Array.isArray(child) ? 'sexp' : node.meta.typeOf(child)
+      if (type !== 'value') {
+        types.set(child, type)
+      }
+    }
+    Object.defineProperty(children, 'meta', {
+      value: {
+        ...node.meta,
+        typeOf(value) {
+          return types.get(value) ?? 'value'
+        },
+      },
+    })
+    return children
+  } else {
+    return node
+  }
+}
+
+export default (...parameters) => pipe(RawParser(...parameters), trim)

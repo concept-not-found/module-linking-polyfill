@@ -1,5 +1,4 @@
 import { toMatchTree } from '../matchers.js'
-import trimWasm from '../trim-wasm.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
@@ -14,7 +13,7 @@ describe('index adapter module', () => {
     `
 
     const parser = Parser()
-    const adapterModule = pipe(parser, trimWasm, ([node]) => node)(wat)
+    const adapterModule = pipe(parser, ([node]) => node)(wat)
     indexAdapterModule(adapterModule)
 
     expect(adapterModule).toMatchTree(['adapter', 'module'])
