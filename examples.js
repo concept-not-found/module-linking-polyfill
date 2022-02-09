@@ -18,15 +18,15 @@ export default (dedent) => [
           (export "load" (func $load))
         )
         (instance $m0 (instantiate $M))
-        (alias $m0 "store" (func $store_m0))
+        (func $store_m0 (alias $m0 "store"))
         (export "store instance 0" (func $store_m0))
-        (alias $m0 "load" (func $load_m0))
+        (func $load_m0 (alias $m0 "load"))
         (export "load instance 0" (func $load_m0))
 
         (instance $m1 (instantiate $M))
-        (alias $m1 "store" (func $store_m1))
+        (func $store_m1 (alias $m1 "store"))
         (export "store instance 1" (func $store_m1))
-        (alias $m1 "load" (func $load_m1))
+        (func $load_m1 (alias $m1 "load"))
         (export "load instance 1" (func $load_m1))
       )
     `,
@@ -63,7 +63,7 @@ export default (dedent) => [
           (export "load" (func $load))
         )
         (module $Storer
-          (import "imp" "mem" (memory 1))
+          (memory (import "imp" "mem") 1)
           (func $store (param $value i32)
             (i32.const (;address;) 0)
             (local.get $value)
@@ -72,13 +72,13 @@ export default (dedent) => [
           (export "store" (func $store))
         )
         (instance $loader (instantiate $Loader))
-        (alias $loader "load" (func $load))
+        (func $load (alias $loader "load"))
         (export "load from loader" (func $load))
 
         (instance $storer (instantiate $Storer
           (import "imp" (instance $loader))
         ))
-        (alias $storer "store" (func $store))
+        (func $store (alias $storer "store"))
         (export "store into storer" (func $store))
       )
     `,
@@ -101,10 +101,10 @@ export default (dedent) => [
     name: 're-export instance func',
     watSource: dedent`
       (adapter module
-        (import "imp" (instance $i
+        (instance $i (import "imp")
           (export "f" (func (result i32)))
-        ))
-        (alias $i "f" (func $f))
+        )
+        (func $f (alias $i "f"))
         (export "exp" (func $f))
       )
     `,
@@ -126,14 +126,14 @@ export default (dedent) => [
   {
     name: 'adapter module is closed over import',
     watSource: dedent`
-      (adapter module
-        (import "imp" (func $f (result i32)))
-        (adapter module $M
-          (alias (;outer;) 1 $f (func $g))
+      (adapter module $Outer
+        (func $f (import "imp") (result i32))
+        (adapter module $Inner
+          (func $g (alias $Outer $f))
           (export "inner-exp" (func $g))
         )
-        (instance $m (instantiate $M))
-        (alias $m "inner-exp" (func $h))
+        (instance $m (instantiate $Inner))
+        (func $h (alias $m "inner-exp"))
         (export "exp" (func $h))
       )
     `,
@@ -154,12 +154,12 @@ export default (dedent) => [
     name: 're-export all kinds',
     watSource: dedent`
       (adapter module (;0;)
-        (import "impmodule" (module $a))
-        (import "impinstance" (instance $b))
-        (import "impfunc" (func $c))
-        (import "imptable" (table $d))
-        (import "impmemory" (memory $e))
-        (import "impglobal" (global $f))
+        (module $a (import "impmodule"))
+        (instance $b (import "impinstance"))
+        (func $c (import "impfunc"))
+        (table $d (import "imptable"))
+        (memory $e (import "impmemory"))
+        (global $f (import "impglobal"))
         (export "expmodule" (module $a))
         (export "expinstance" (instance $b))
         (export "expfunc" (func $c))
