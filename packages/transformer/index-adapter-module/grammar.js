@@ -87,7 +87,8 @@ const coreKind = one(
   value('table'),
   value('global')
 )
-const coreKindType = sexp(coreKind, maybe(name), any())
+const coreKindName = [coreKind, maybe(name)]
+const coreKindType = sexp(...coreKindName, any())
 coreKindType.builder = ([type, name]) => {
   return {
     type: type.build(),
@@ -99,8 +100,8 @@ const kindType = one(coreKindType, instanceType, moduleType)
 kindTypeReference.value = kindType
 
 const importName = [value('import'), anyString]
-const importDefinition = sexp(...importName, kindType)
-importDefinition.builder = ([, name, kindType]) => {
+const importFirstForm = sexp(...importName, kindType)
+importFirstForm.builder = ([, name, kindType]) => {
   return {
     ...kindType.build(),
     import: {
@@ -108,6 +109,69 @@ importDefinition.builder = ([, name, kindType]) => {
     },
   }
 }
+
+const inlineImport = sexp(...importName)
+inlineImport.builder = ([, name]) => {
+  return {
+    name: name.build(),
+  }
+}
+
+const coreKindTypeInlineImport = sexp(
+  coreKind,
+  maybe(name),
+  inlineImport,
+  any()
+)
+coreKindTypeInlineImport.builder = ([type, name, imp]) => {
+  return {
+    type: type.build(),
+    name: name.build(),
+    import: imp.build(),
+  }
+}
+
+const instanceTypeInlineImport = sexp(
+  value('instance'),
+  maybe(name),
+  inlineImport,
+  maybe(some(exportType))
+)
+instanceTypeInlineImport.builder = ([, name, imp, exports]) => {
+  return {
+    type: 'instance',
+    name: name.build(),
+    import: imp.build(),
+    instanceExpression: {
+      type: 'tupling',
+      exports: exports.build() ?? [],
+    },
+  }
+}
+
+const moduleTypeInlineImport = sexp(
+  value('module'),
+  maybe(name),
+  inlineImport,
+  maybe(some(importType)),
+  maybe(some(exportType))
+)
+moduleTypeInlineImport.builder = ([, name, imp, imports, exports]) => {
+  return {
+    type: 'module',
+    name: name.build(),
+    import: imp.build(),
+    imports: imports.build() ?? [],
+    exports: exports.build() ?? [],
+  }
+}
+
+const inlineImportForm = one(
+  coreKindTypeInlineImport,
+  instanceTypeInlineImport,
+  moduleTypeInlineImport
+)
+const importDefinition = one(importFirstForm, inlineImportForm)
 
 const kindReference = sexp(kind, variable)
 kindReference.builder = ([kind, kindIdx]) => {
@@ -197,13 +261,23 @@ outerAlias.builder = ([outerIdx, kindIdx]) => {
 }
 
 const aliasTarget = one(instanceExportAlias, outerAlias)
-const aliasDefinition = sexp(value('alias'), aliasTarget, kindDefinition)
-aliasDefinition.builder = ([, aliasTarget, kindDefinition]) => {
+const aliasFirstForm = sexp(value('alias'), aliasTarget, kindDefinition)
+aliasFirstForm.builder = ([, aliasTarget, kindDefinition]) => {
   return {
     ...kindDefinition.build(),
     alias: aliasTarget.build(),
   }
 }
+const inlineAliasForm = sexp(...kindName, sexp(value('alias'), aliasTarget))
+inlineAliasForm.builder = ([type, name, alias]) => {
+  const [, aliasTarget] = alias.build()
+  return {
+    type: type.build(),
+    name: name.build(),
+    alias: aliasTarget,
+  }
+}
+const aliasDefinition = one(aliasFirstForm, inlineAliasForm)
 
 const adapterModuleReference = reference()
 const definition = one(

@@ -8,9 +8,6 @@ An **incomplete** 🚧 work in progress 🚧 polyfill for [WebAssembly](https://
 
 Critical issues need to be resolved before the first release:
 
-- support import/export/alias kind first forms<br/>
-  ✅ implemented `(export "exp" (func 0))`<br/>
-  ❌ missing `(func (export "exp") ...)`
 - implement [type definitions](https://github.com/WebAssembly/module-linking/blob/main/design/proposals/module-linking/Explainer.md#type-definitions)
 - implement [alias syntactic sugar](https://github.com/WebAssembly/module-linking/blob/main/design/proposals/module-linking/Explainer.md#alias-definitions)
 - implement type checking

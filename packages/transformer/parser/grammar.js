@@ -1,6 +1,3 @@
-/* eslint-disable unicorn/consistent-function-scoping */
-import { inspect } from 'node:util'
-
 const consumedCache = new WeakMap()
 function calculateConsumed(result) {
   if (!Array.isArray(result.value)) {
@@ -85,8 +82,7 @@ export const sexp = (...expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () =>
-    `sexp(${expected.join(', ')})`
+  matcher.toString = () => `sexp(${expected.join(', ')})`
 
   return matcher
 }
@@ -141,7 +137,7 @@ export const value = (expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () => `value("${expected}")`
+  matcher.toString = () => `value("${expected}")`
   return matcher
 }
 
@@ -182,7 +178,7 @@ export const string = (expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () => `string("${expected}")`
+  matcher.toString = () => `string("${expected}")`
   return matcher
 }
 
@@ -202,7 +198,7 @@ export const any = () => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () => 'any()'
+  matcher.toString = () => 'any()'
   return matcher
 }
 
@@ -228,8 +224,7 @@ export const reference = () => {
     },
   })
 
-  matcher.toString = matcher[inspect.custom] = () =>
-    matcher.value?.[inspect.custom]() ?? 'reference()'
+  matcher.toString = () => matcher.value?.toString() ?? 'reference()'
   Object.defineProperty(matcher, 'value', {
     value: undefined,
     writable: true,
@@ -259,7 +254,7 @@ export const maybe = (expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () => `maybe(${expected})`
+  matcher.toString = () => `maybe(${expected})`
   return matcher
 }
 
@@ -295,8 +290,7 @@ export const one = (...expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () =>
-    `one(${expected.join(', ')})`
+  matcher.toString = () => `one(${expected.join(', ')})`
   return matcher
 }
 
@@ -341,8 +335,7 @@ export const seq = (...expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () =>
-    `seq(${expected.join(', ')})`
+  matcher.toString = () => `seq(${expected.join(', ')})`
   return matcher
 }
 
@@ -397,6 +390,6 @@ export const some = (expected) => {
     writable: true,
   })
 
-  matcher.toString = matcher[inspect.custom] = () => `some(${expected})`
+  matcher.toString = () => `some(${expected})`
   return matcher
 }

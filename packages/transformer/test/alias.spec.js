@@ -1,4 +1,3 @@
-import dedent from '../dedent.js'
 import transformer from '../index.js'
 
 describe('adapter-module-transformer', () => {
@@ -7,12 +6,24 @@ describe('adapter-module-transformer', () => {
       test.each([
         {
           form: 'alias first',
-          wat: dedent`
+          wat: `
             (adapter module
               (import "imp" (instance $i
                 (export "inner-exp" (func))
               ))
               (alias $i "inner-exp" (func $f))
+              (export "exp" (func $f))
+            )
+          `,
+        },
+        {
+          form: 'inline alias',
+          wat: `
+            (adapter module
+              (instance $i (import "imp")
+                (export "inner-exp" (func))
+              )
+              (func $f (alias $i "inner-exp"))
               (export "exp" (func $f))
             )
           `,
@@ -57,11 +68,24 @@ describe('adapter-module-transformer', () => {
       test.each([
         {
           form: 'alias first',
-          wat: dedent`
+          wat: `
             (adapter module $M
               (import "imp" (func $f))
               (adapter module $N
                 (alias $M $f (func $g))
+                (export "inner-exp" (func $g))
+              )
+              (export "exp" (module $N))
+            )
+          `,
+        },
+        {
+          form: 'inline alias',
+          wat: `
+            (adapter module $M
+              (func $f (import "imp"))
+              (adapter module $N
+                (func $g (alias $M $f))
                 (export "inner-exp" (func $g))
               )
               (export "exp" (module $N))

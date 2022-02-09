@@ -1,4 +1,3 @@
-import dedent from '../dedent.js'
 import onedent from '../onedent.js'
 import transformer from '../index.js'
 
@@ -19,7 +18,7 @@ describe('adapter-module-transformer', () => {
     })
 
     test('nested empty module', () => {
-      const wat = dedent`
+      const wat = `
         (adapter module (;0;)
           (module (;0;))
         )
