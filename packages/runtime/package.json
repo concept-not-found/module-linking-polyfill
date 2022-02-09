@@ -15,10 +15,13 @@
     "url": "https://github.com/concept-not-found/module-linking-polyfill/issues"
   },
   "homepage": "https://github.com/concept-not-found/module-linking-polyfill",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",
   "license": "Apache-2.0",
