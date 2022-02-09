@@ -12,6 +12,21 @@ function resolveIndex(adapterModuleNode, kind, kindIdx) {
     : adapterModuleNode.symbolIndex[collection][kindIdx]
 }
 
+function resolveOuterIndex(ancestors, outerIdx) {
+  if (typeof outerIdx === 'number') {
+    return outerIdx
+  }
+
+  for (const [index, { name }] of [...ancestors].reverse().entries()) {
+    if (outerIdx === name) {
+      return index
+    }
+  }
+  throw new Error(
+    `failed to resolved outer index ${outerIdx} to an adapter module`
+  )
+}
+
 function resolve(adapterModuleNode, kind, kindIdx) {
   const collection = kindCollection[kind]
   const index = resolveIndex(adapterModuleNode, kind, kindIdx)
@@ -52,7 +67,9 @@ const indexAliases = (adapterModuleNode) => {
         Object.defineProperty(node, 'path', {
           value(ancestors) {
             const { type: kind } = node
-            const { outerIdx, kindIdx } = alias
+            let { outerIdx } = alias
+            outerIdx = resolveOuterIndex(ancestors, outerIdx)
+            const { kindIdx } = alias
             const outerModuleIdx = ancestors.length - 1 - outerIdx
             const outerModule = ancestors[outerModuleIdx]
             const aliased = resolve(outerModule, kind, kindIdx)
