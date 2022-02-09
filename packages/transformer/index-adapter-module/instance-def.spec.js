@@ -1,10 +1,8 @@
-import { toMatchTree } from '../matchers.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
 import indexAdapterModule from './index.js'
-
-expect.extend({ toMatchTree })
+import parseModule from './grammar.js'
 
 describe('index adapter module', () => {
   describe('instance definition', () => {
@@ -17,10 +15,16 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0]).toMatchTree(['instance'])
+        expect(adapterModule.instances[0]).toEqual({
+          type: 'instance',
+          instanceExpression: {
+            type: 'tupling',
+            exports: [],
+          },
+        })
       })
 
       test('explicit index', () => {
@@ -31,11 +35,17 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.instances.$i).toBe(0)
-        expect(adapterModule.meta.instances[0]).toMatchTree(['instance', '$i'])
+        expect(adapterModule.instances[0]).toEqual({
+          type: 'instance',
+          name: '$i',
+          instanceExpression: {
+            type: 'tupling',
+            exports: [],
+          },
+        })
       })
     })
 
@@ -49,13 +59,12 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.modulePath()).toEqual([
-          'modules',
-          0,
-        ])
+        expect(
+          adapterModule.instances[0].instanceExpression.modulePath()
+        ).toEqual(['modules', 0])
       })
 
       test('explicit index', () => {
@@ -67,13 +76,12 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.modulePath()).toEqual([
-          'modules',
-          0,
-        ])
+        expect(
+          adapterModule.instances[0].instanceExpression.modulePath()
+        ).toEqual(['modules', 0])
       })
     })
 
@@ -91,20 +99,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.imports).toMatchTree([
-          ['import', '"self"', ['module', '0']],
+        expect(adapterModule.instances[0].instanceExpression.imports).toEqual([
+          {
+            name: 'self',
+            kindReference: {
+              kind: 'module',
+              kindIdx: 0,
+            },
+          },
         ])
         expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta
-        ).toMatchObject({
-          name: 'self',
-          kind: 'module',
-        })
-        expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.imports[0].kindReference.path()
         ).toEqual(['modules', 0])
       })
 
@@ -121,20 +129,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.imports).toMatchTree([
-          ['import', '"self"', ['module', '$M']],
+        expect(adapterModule.instances[0].instanceExpression.imports).toEqual([
+          {
+            name: 'self',
+            kindReference: {
+              kind: 'module',
+              kindIdx: '$M',
+            },
+          },
         ])
         expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta
-        ).toMatchObject({
-          name: 'self',
-          kind: 'module',
-        })
-        expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.imports[0].kindReference.path()
         ).toEqual(['modules', 0])
       })
     })
@@ -154,11 +162,11 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.imports[0].kindReference.path()
         ).toEqual(['imports', 'imp'])
       })
 
@@ -176,11 +184,11 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
-          adapterModule.meta.instances[0].meta.imports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.imports[0].kindReference.path()
         ).toEqual(['imports', 'imp'])
       })
     })
@@ -197,20 +205,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '0']],
-        ])
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta
-        ).toMatchObject({
+          adapterModule.instances[0].instanceExpression.exports[0]
+        ).toEqual({
           name: 'ex',
-          kind: 'module',
+          kindReference: {
+            kind: 'module',
+            kindIdx: 0,
+          },
         })
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.exports[0].kindReference.path()
         ).toEqual(['modules', 0])
       })
 
@@ -225,20 +233,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0].meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '$M']],
-        ])
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta
-        ).toMatchObject({
+          adapterModule.instances[0].instanceExpression.exports[0]
+        ).toEqual({
           name: 'ex',
-          kind: 'module',
+          kindReference: {
+            kind: 'module',
+            kindIdx: '$M',
+          },
         })
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.exports[0].kindReference.path()
         ).toEqual(['modules', 0])
       })
     })
@@ -255,11 +263,11 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.exports[0].kindReference.path()
         ).toEqual(['imports', 'imp'])
       })
 
@@ -274,11 +282,11 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
         expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta.path()
+          adapterModule.instances[0].instanceExpression.exports[0].kindReference.path()
         ).toEqual(['imports', 'imp'])
       })
     })
@@ -288,26 +296,31 @@ describe('index adapter module', () => {
         const wat = `
           (adapter module
             (import "imp" (instance
-              (exports "f" (func))
+              (export "f" (func))
             ))
           )
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[0]).toMatchTree([
-          'import',
-          '"imp"',
-          ['instance', ['exports', '"f"', ['func']]],
-        ])
-        expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta
-        ).toMatchObject({
-          name: 'f',
-          kind: 'func',
-          kindType: [],
+        expect(adapterModule.instances[0]).toEqual({
+          type: 'instance',
+          instanceExpression: {
+            type: 'tupling',
+            exports: [
+              {
+                name: 'f',
+                kindType: {
+                  type: 'func',
+                },
+              },
+            ],
+          },
+          import: {
+            name: 'imp',
+          },
         })
       })
 
@@ -315,27 +328,33 @@ describe('index adapter module', () => {
         const wat = `
           (adapter module
             (import "imp" (instance $i
-              (exports "f" (func))
+              (export "f" (func))
             ))
           )
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.instances.$i).toBe(0)
-        expect(adapterModule.meta.instances[0]).toMatchTree([
-          'import',
-          '"imp"',
-          ['instance', '$i', ['exports', '"f"', ['func']]],
-        ])
-        expect(
-          adapterModule.meta.instances[0].meta.exports[0].meta
-        ).toMatchObject({
-          name: 'f',
-          kind: 'func',
-          kindType: [],
+        expect(adapterModule.symbolIndex.instances.$i).toBe(0)
+        expect(adapterModule.instances[0]).toEqual({
+          type: 'instance',
+          name: '$i',
+          instanceExpression: {
+            type: 'tupling',
+            exports: [
+              {
+                name: 'f',
+                kindType: {
+                  type: 'func',
+                },
+              },
+            ],
+          },
+          import: {
+            name: 'imp',
+          },
         })
       })
     })
@@ -345,45 +364,50 @@ describe('index adapter module', () => {
         const wat = `
           (adapter module
             (import "imp" (instance
-              (exports "f" (func))
+              (export "f" (func))
             ))
             (alias 0 0 (instance))
           )
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.instances[1]).toMatchTree([
-          'alias',
-          '0',
-          '0',
-          ['instance'],
-        ])
+        expect(adapterModule.instances[1]).toEqual({
+          type: 'instance',
+          alias: {
+            type: 'outer',
+            outerIdx: 0,
+            kindIdx: 0,
+          },
+        })
       })
 
       test('explicit index', () => {
         const wat = `
           (adapter module
             (import "imp" (instance
-              (exports "f" (func))
+              (export "f" (func))
             ))
             (alias 0 0 (instance $i))
           )
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.instances.$i).toBe(1)
-        expect(adapterModule.meta.instances[1]).toMatchTree([
-          'alias',
-          '0',
-          '0',
-          ['instance', '$i'],
-        ])
+        expect(adapterModule.symbolIndex.instances.$i).toBe(1)
+        expect(adapterModule.instances[1]).toEqual({
+          type: 'instance',
+          name: '$i',
+          alias: {
+            type: 'outer',
+            outerIdx: 0,
+            kindIdx: 0,
+          },
+        })
       })
     })
   })

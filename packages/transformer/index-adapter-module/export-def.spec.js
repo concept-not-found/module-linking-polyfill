@@ -1,10 +1,8 @@
-import { toMatchTree } from '../matchers.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
 import indexAdapterModule from './index.js'
-
-expect.extend({ toMatchTree })
+import parseModule from './grammar.js'
 
 describe('index adapter module', () => {
   describe('export defintion', () => {
@@ -18,23 +16,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule).toMatchTree([
-          'adapter',
-          'module',
-          ['module'],
-          ['export', '"ex"', ['module', '0']],
+        expect(adapterModule.exports).toEqual([
+          {
+            type: 'export',
+            name: 'ex',
+            kindReference: {
+              kind: 'module',
+              kindIdx: 0,
+            },
+          },
         ])
-        expect(adapterModule.meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '0']],
-        ])
-        expect(adapterModule.meta.exports[0].meta).toMatchObject({
-          name: 'ex',
-          kind: 'module',
-        })
-        expect(adapterModule.meta.exports[0].meta.path()).toEqual([
+        expect(adapterModule.exports[0].kindReference.path()).toEqual([
           'modules',
           0,
         ])
@@ -49,17 +44,20 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.exports).toMatchTree([
-          ['export', '"ex"', ['module', '$M']],
+        expect(adapterModule.exports).toEqual([
+          {
+            type: 'export',
+            name: 'ex',
+            kindReference: {
+              kind: 'module',
+              kindIdx: '$M',
+            },
+          },
         ])
-        expect(adapterModule.meta.exports[0].meta).toMatchObject({
-          name: 'ex',
-          kind: 'module',
-        })
-        expect(adapterModule.meta.exports[0].meta.path()).toEqual([
+        expect(adapterModule.exports[0].kindReference.path()).toEqual([
           'modules',
           0,
         ])

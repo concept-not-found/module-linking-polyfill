@@ -1,10 +1,8 @@
-import { toMatchTree } from '../matchers.js'
 import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
 import indexAdapterModule from './index.js'
-
-expect.extend({ toMatchTree })
+import parseModule from './grammar.js'
 
 describe('index adapter module', () => {
   describe('module definition', () => {
@@ -17,10 +15,28 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree(['adapter', 'module'])
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'adapter module',
+          modules: [],
+          instances: [],
+          funcs: [],
+          tables: [],
+          memories: [],
+          globals: [],
+          imports: [],
+          exports: [],
+          symbolIndex: {
+            modules: {},
+            instances: {},
+            funcs: {},
+            tables: {},
+            memories: {},
+            globals: {},
+          },
+        })
       })
 
       test('explicit index', () => {
@@ -31,15 +47,30 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'adapter',
-          'module',
-          '$M',
-        ])
+        expect(adapterModule.symbolIndex.modules.$M).toBe(0)
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'adapter module',
+          name: '$M',
+          modules: [],
+          instances: [],
+          funcs: [],
+          tables: [],
+          memories: [],
+          globals: [],
+          imports: [],
+          exports: [],
+          symbolIndex: {
+            modules: {},
+            instances: {},
+            funcs: {},
+            tables: {},
+            memories: {},
+            globals: {},
+          },
+        })
       })
     })
 
@@ -52,10 +83,24 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree(['module'])
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          imports: [],
+          exports: [],
+          funcs: [],
+          tables: [],
+          memories: [],
+          globals: [],
+          symbolIndex: {
+            funcs: {},
+            tables: {},
+            memories: {},
+            globals: {},
+          },
+        })
       })
 
       test('explicit index', () => {
@@ -66,11 +111,26 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree(['module', '$M'])
+        expect(adapterModule.symbolIndex.modules.$M).toBe(0)
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          name: '$M',
+          imports: [],
+          exports: [],
+          funcs: [],
+          tables: [],
+          memories: [],
+          globals: [],
+          symbolIndex: {
+            funcs: {},
+            tables: {},
+            memories: {},
+            globals: {},
+          },
+        })
       })
     })
 
@@ -83,22 +143,24 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'import',
-          '"mod"',
-          ['module'],
-        ])
-        expect(adapterModule.meta.modules[0].meta.import).toBe(true)
-        expect(adapterModule.meta.imports).toMatchTree([
-          ['import', '"mod"', ['module']],
-        ])
-        expect(adapterModule.meta.imports[0].meta).toMatchObject({
-          moduleName: 'mod',
-          kind: 'module',
-          kindType: [],
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          imports: [],
+          exports: [],
+          import: {
+            name: 'mod',
+          },
+        })
+        expect(adapterModule.imports[0]).toEqual({
+          type: 'module',
+          imports: [],
+          exports: [],
+          import: {
+            name: 'mod',
+          },
         })
       })
 
@@ -110,23 +172,27 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'import',
-          '"mod"',
-          ['module', '$M'],
-        ])
-        expect(adapterModule.meta.modules[0].meta.import).toBe(true)
-        expect(adapterModule.meta.imports).toMatchTree([
-          ['import', '"mod"', ['module', '$M']],
-        ])
-        expect(adapterModule.meta.imports[0].meta).toMatchObject({
-          moduleName: 'mod',
-          kind: 'module',
-          kindType: [],
+        expect(adapterModule.symbolIndex.modules.$M).toBe(0)
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          name: '$M',
+          imports: [],
+          exports: [],
+          import: {
+            name: 'mod',
+          },
+        })
+        expect(adapterModule.imports[0]).toEqual({
+          type: 'module',
+          name: '$M',
+          imports: [],
+          exports: [],
+          import: {
+            name: 'mod',
+          },
         })
       })
     })
@@ -140,15 +206,17 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'alias',
-          '1',
-          '0',
-          ['module'],
-        ])
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          alias: {
+            type: 'outer',
+            outerIdx: 1,
+            kindIdx: 0,
+          },
+        })
       })
 
       test('explicit index', () => {
@@ -159,16 +227,19 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.symbolIndex.modules.$M).toBe(0)
-        expect(adapterModule.meta.modules[0]).toMatchTree([
-          'alias',
-          '1',
-          '0',
-          ['module', '$M'],
-        ])
+        expect(adapterModule.symbolIndex.modules.$M).toBe(0)
+        expect(adapterModule.modules[0]).toEqual({
+          type: 'module',
+          name: '$M',
+          alias: {
+            type: 'outer',
+            outerIdx: 1,
+            kindIdx: 0,
+          },
+        })
       })
     })
   })

@@ -1,103 +1,59 @@
-import Visit from '../visit.js'
 import { coreKindCollection } from '../kind-collection.js'
 
+function resolveIndex(adapterModuleNode, kind, kindIdx) {
+  const collection = coreKindCollection[kind]
+  return typeof kindIdx === 'number'
+    ? kindIdx
+    : adapterModuleNode.symbolIndex[collection][kindIdx]
+}
+
+function directPath(moduleNode, kind, kindIdx) {
+  const collection = coreKindCollection[kind]
+  return [collection, resolveIndex(moduleNode, kind, kindIdx)]
+}
+
 const indexExports = (moduleNode) => {
-  moduleNode.meta.exports = []
-  Visit({
-    export(node) {
-      moduleNode.meta.exports.push(node)
-
-      const [, , [kind]] = node
-      let [, name] = node
-      name = String(name)
-      Object.assign(node.meta, {
-        name,
-        kind,
-        path() {
-          let [, , [, kindIdx]] = node
-          const collection = coreKindCollection[kind]
-          kindIdx = kindIdx.startsWith('$')
-            ? moduleNode.meta.symbolIndex[collection][kindIdx]
-            : Number.parseInt(kindIdx)
-          return [collection, kindIdx]
-        },
-      })
-    },
-  })(moduleNode)
+  for (const node of moduleNode.exports) {
+    Object.defineProperty(node, 'path', {
+      value() {
+        const {
+          kindReference: { kind, kindIdx },
+        } = node
+        return directPath(moduleNode, kind, kindIdx)
+      },
+    })
+  }
 }
 
-const indexImports = (moduleNode) => {
-  moduleNode.meta.imports = []
+const indexDefinitions = (adapterModuleNode) => {
+  const matchers = [
+    ...Object.entries({ ...coreKindCollection, export: 'exports' }).map(
+      ([kind, collection]) => [collection, ({ type }) => type === kind]
+    ),
+    ['imports', ({ import: imp }) => imp],
+  ]
+  for (const [collection, matcher] of matchers) {
+    adapterModuleNode[collection] =
+      adapterModuleNode.definitions.filter(matcher)
+  }
+  delete adapterModuleNode.definitions
+}
+
+const indexSymbols = (moduleNode) => {
+  moduleNode.symbolIndex = {}
   for (const collection of Object.values(coreKindCollection)) {
-    for (const node of moduleNode.meta[collection]) {
-      if (!node.meta.import) {
-        continue
-      }
-      moduleNode.meta.imports.push(node)
+    moduleNode.symbolIndex[collection] = {}
 
-      const [, moduleName, name, [kind]] = node
-      let [, , , [, ...kindType]] = node
-      if (node.meta.symbolIndex) {
-        kindType = kindType.slice(1)
-      }
-      Object.assign(node.meta, {
-        moduleName: String(moduleName),
-        name: String(name),
-        kind,
-      })
-      // TODO consume kindType
-    }
-  }
-}
-
-const indexKinds = (moduleNode) => {
-  for (const targetKind in coreKindCollection) {
-    const collection = coreKindCollection[targetKind]
-    moduleNode.meta[collection] = []
-
-    Visit({
-      [targetKind]: (node) => {
-        moduleNode.meta[collection].push(node)
-      },
-      import(node) {
-        const [, , , [kind]] = node
-        if (kind === targetKind) {
-          moduleNode.meta[collection].push(node)
-
-          node.meta.import = true
-        }
-      },
-    })(moduleNode)
-  }
-}
-
-const indexKindSymbols = (moduleNode) => {
-  moduleNode.meta.symbolIndex = {}
-  for (const targetKind in coreKindCollection) {
-    const collection = coreKindCollection[targetKind]
-    moduleNode.meta.symbolIndex[collection] = {}
-
-    for (const [kindIdx, node] of moduleNode.meta[collection].entries()) {
-      if (node.meta.import) {
-        const [, , , kindDef] = node
-        const [, symbol] = kindDef
-        if (kindDef.meta.typeOf(symbol) === 'value') {
-          node.meta.symbolIndex = true
-          moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
-        }
-      } else {
-        const [, symbol] = node
-        if (node.meta.typeOf(symbol) === 'value') {
-          moduleNode.meta.symbolIndex[collection][symbol] = kindIdx
-        }
+    for (const [kindIdx, { name }] of moduleNode[collection].entries()) {
+      if (name) {
+        moduleNode.symbolIndex[collection][name] = kindIdx
       }
     }
   }
 }
 
 export default (node) => {
-  indexKinds(node)
-  indexKindSymbols(node)
-  indexImports(node)
+  indexDefinitions(node)
+  indexSymbols(node)
   indexExports(node)
 }

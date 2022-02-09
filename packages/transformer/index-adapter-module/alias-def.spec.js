@@ -2,6 +2,7 @@ import pipe from '../pipe.js'
 import Parser from '../parser/index.js'
 
 import indexAdapterModule from './index.js'
+import parseModule from './grammar.js'
 
 describe('index adapter module', () => {
   describe('alias definition', () => {
@@ -18,10 +19,10 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[1].meta.path()).toEqual([
+        expect(adapterModule.modules[1].path()).toEqual([
           'instances',
           0,
           'exports',
@@ -41,10 +42,10 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(adapterModule.meta.modules[1].meta.path()).toEqual([
+        expect(adapterModule.modules[1].path()).toEqual([
           'instances',
           0,
           'exports',
@@ -65,15 +66,15 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(
-          adapterModule.meta.modules[1].meta.modules[0].meta.path([
-            adapterModule,
-            adapterModule.meta.modules[1],
-          ])
-        ).toEqual(['..', 'modules', 0])
+        const ancestors = [adapterModule, adapterModule.modules[1]]
+        expect(adapterModule.modules[1].modules[0].path(ancestors)).toEqual([
+          '..',
+          'modules',
+          0,
+        ])
       })
 
       test('explicit index', () => {
@@ -87,15 +88,15 @@ describe('index adapter module', () => {
         `
 
         const parser = Parser()
-        const adapterModule = pipe(parser, ([node]) => node)(wat)
+        const adapterModule = pipe(parser, parseModule)(wat)
         indexAdapterModule(adapterModule)
 
-        expect(
-          adapterModule.meta.modules[1].meta.modules[0].meta.path([
-            adapterModule,
-            adapterModule.meta.modules[1],
-          ])
-        ).toEqual(['..', 'modules', 0])
+        const ancestors = [adapterModule, adapterModule.modules[1]]
+        expect(adapterModule.modules[1].modules[0].path(ancestors)).toEqual([
+          '..',
+          'modules',
+          0,
+        ])
       })
     })
   })
