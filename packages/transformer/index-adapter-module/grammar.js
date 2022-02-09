@@ -191,7 +191,7 @@ const outerAlias = seq(variable, variable)
 outerAlias.builder = ([outerIdx, kindIdx]) => {
   return {
     type: 'outer',
-    outerIdx: Number.parseInt(outerIdx.build(), 10),
+    outerIdx: parseIndex(outerIdx.build()),
     kindIdx: parseIndex(kindIdx.build()),
   }
 }
