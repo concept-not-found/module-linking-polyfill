@@ -1,6 +1,5 @@
 import type { Sexp } from './builder.mjs'
 
-// export type MatchResult<T, R> = (Matched<T> & Buildable<R>) | NoMatch
 export type MatchResult<T, R> = Matched<T, R> | NoMatch
 
 export type Matched<T, R> = {
@@ -8,10 +7,6 @@ export type Matched<T, R> = {
   value: T
   build: () => R
 }
-
-// export type Buildable<T> = {
-//   build: () => T
-// }
 
 export type NoMatch = {
   match: false

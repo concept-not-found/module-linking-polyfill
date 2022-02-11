@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals'
+import { assertMatched } from './grammar-test-utils.js'
 
 import { sexp, maybe, value } from './grammar.js'
 
@@ -89,6 +90,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
+      assertMatched(result)
       expect(result.build()).toEqual(['alice', 'bob'])
     })
 
@@ -99,6 +101,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
+      assertMatched(result)
       expect(result.build()).toEqual('built')
     })
 

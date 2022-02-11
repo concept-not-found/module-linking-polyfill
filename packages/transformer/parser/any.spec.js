@@ -1,3 +1,5 @@
+import { assertMatched } from './grammar-test-utils.js'
+
 import { sexp, any } from './grammar.js'
 
 import Parser from './index.js'
@@ -27,6 +29,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
+      assertMatched(result)
       expect(result.value[0].build()).toEqual(['alice', 'bob'])
     })
 
@@ -38,6 +41,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
+      assertMatched(result)
       expect(result.value[0].build()).toEqual('built')
     })
 

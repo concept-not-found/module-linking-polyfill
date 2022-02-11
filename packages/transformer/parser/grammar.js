@@ -312,7 +312,7 @@ export const any = () => {
 /**
  * Create a s-expression reference matcher, which allows circular references to other matchers.
  *
- * @returns {GrammarMatcher<any>}
+ * @returns {GrammarMatcher<any> & {value: GrammarMatcher<any>}}
  */
 export const reference = () => {
   /**
