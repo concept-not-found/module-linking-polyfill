@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/new-for-builtins, unicorn/prefer-string-slice */
 /**
- * @typedef {import('./builder').Sexp} Sexp
+ * @typedef {import('./builder.mjs').Sexp} Sexp
  */
 
 /**
@@ -14,15 +14,15 @@ export default (wat) => {
      *
      * @param {number} start
      * @param {string[]} sourceTags
-     * @return {import('./builder').Builder<Sexp>}
+     * @return {import('./builder.mjs').Builder<Sexp>}
      */
     SexpBuilder(start, sourceTags = []) {
       /**
-       * @type {import('./builder').Builder<any>[]}
+       * @type {import('./builder.mjs').Builder<any>[]}
        */
       const children = []
       /**
-       * @type {import('./builder').Builder<Sexp>}
+       * @type {import('./builder.mjs').Builder<Sexp>}
        */
       const builder = {
         type: 'sexp',
@@ -95,7 +95,7 @@ export default (wat) => {
      * Create a block comment fragment builder.
      *
      * @param {number} start
-     * @return {import('./builder').Builder<string>}
+     * @return {import('./builder.mjs').Builder<string>}
      */
     BlockCommentFragmentBuilder(start) {
       return {
@@ -109,15 +109,15 @@ export default (wat) => {
     /**
      * Create a block comment builder.
      *
-     * @returns {import('./builder').Builder<string>}
+     * @returns {import('./builder.mjs').Builder<string>}
      */
     BlockCommentBuilder() {
       /**
-       * @type {import('./builder').Builder<any>[]}
+       * @type {import('./builder.mjs').Builder<any>[]}
        */
       const children = []
       /**
-       * @type {import('./builder').Builder<string>}
+       * @type {import('./builder.mjs').Builder<string>}
        */
       const builder = {
         type: 'block comment',
@@ -142,7 +142,7 @@ export default (wat) => {
      * Create a string builder.
      *
      * @param {number} start
-     * @returns {import('./builder').Builder<string>}
+     * @returns {import('./builder.mjs').Builder<string>}
      */
     StringBuilder(start) {
       return {
@@ -159,7 +159,7 @@ export default (wat) => {
      * Create a whitespace builder.
      *
      * @param {number} start
-     * @returns {import('./builder').Builder<string>}
+     * @returns {import('./builder.mjs').Builder<string>}
      */
     WhitespaceBuilder(start) {
       return {
@@ -176,7 +176,7 @@ export default (wat) => {
      * Create a line comment builder.
      *
      * @param {number} start
-     * @returns {import('./builder').Builder<string>}
+     * @returns {import('./builder.mjs').Builder<string>}
      */
     LineCommentBuilder(start) {
       return {
@@ -193,7 +193,7 @@ export default (wat) => {
      * Create a value builder.
      *
      * @param {number} start
-     * @returns {import('./builder').Builder<string>}
+     * @returns {import('./builder.mjs').Builder<string>}
      */
     ValueBuilder(start) {
       return {

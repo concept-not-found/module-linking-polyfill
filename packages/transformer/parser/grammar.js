@@ -1,29 +1,29 @@
 const consumedCache = new WeakMap()
 
 /**
- * @typedef {import('./builder').Sexp} Sexp
- * @typedef {import('./grammar').StringProposition} StringProposition
- * @typedef {import('./grammar').NoMatch} NoMatch
+ * @typedef {import('./builder.mjs').Sexp} Sexp
+ * @typedef {import('./grammar.mjs').StringProposition} StringProposition
+ * @typedef {import('./grammar.mjs').NoMatch} NoMatch
  */
 
 /**
  * @template T
- * @typedef {import('./grammar').GrammarMatcher<T>} GrammarMatcher<T>
+ * @typedef {import('./grammar.mjs').GrammarMatcher<T>} GrammarMatcher<T>
  */
 
 /**
  * @template T,R
- * @typedef {import('./grammar').Matched<T, R>} Matched<T, R>
+ * @typedef {import('./grammar.mjs').Matched<T, R>} Matched<T, R>
  */
 
 /**
  * @template T,R
- * @typedef {import('./grammar').Builder<T, R>} Builder<T, R>
+ * @typedef {import('./grammar.mjs').Builder<T, R>} Builder<T, R>
  */
 
 /**
  * Calculates how many values were consumed in a result.
- * @param {import('./grammar').Matched<any, any> | any} result
+ * @param {Matched<any, any> | any} result
  * @return {number}
  */
 function calculateConsumed(result) {
