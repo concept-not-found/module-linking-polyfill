@@ -143,7 +143,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result.value[0].build()).toEqual()
+      expect(result.value[0].build()).toEqual(undefined)
     })
 
     test('build can be overwritten with builder', () => {

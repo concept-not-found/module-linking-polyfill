@@ -1,68 +1,33 @@
 /* eslint-disable unicorn/new-for-builtins, unicorn/prefer-string-slice */
+/**
+ * @typedef {import('./builder').Sexp} Sexp
+ */
 
+/**
+ * Creates builder with wat source.
+ * @param {string} wat
+ */
 export default (wat) => {
   return {
+    /**
+     * Create a s-expression builder.
+     *
+     * @param {number} start
+     * @param {string[]} sourceTags
+     * @return {import('./builder').Builder<Sexp>}
+     */
     SexpBuilder(start, sourceTags = []) {
+      /**
+       * @type {import('./builder').Builder<any>[]}
+       */
       const children = []
+      /**
+       * @type {import('./builder').Builder<Sexp>}
+       */
       const builder = {
         type: 'sexp',
         add(...builders) {
           children.push(...builders)
-          return builder
-        },
-        addSexp(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'sexp',
-              build() {
-                return value
-              },
-            }))
-          )
-          return builder
-        },
-        addValue(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'value',
-              build() {
-                return String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addString(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'string',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addComment(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'comment',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addWhitespace(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'whitespace',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
           return builder
         },
         build() {
@@ -71,7 +36,42 @@ export default (wat) => {
             builder.type,
           ])
           const types = new WeakMap()
-          const values = []
+
+          /**
+           * @param {any} value
+           * @return string
+           */
+          function typeOf(value) {
+            if (value === undefined) {
+              return
+            }
+            return types.get(value) ?? 'value'
+          }
+          /**
+           * @param {any} value
+           * @return {value is sexp}
+           */
+          function typeOfSexp(value) {
+            return typeOf(value) === 'sexp'
+          }
+          /**
+           * @param {any} value
+           * @return {value is string}
+           */
+          function typeOfStringLike(value) {
+            return ['string', 'value'].includes(typeOf(value))
+          }
+          const values = /** @type {Sexp} */ (
+            /** @type {unknown} */ (
+              Object.defineProperty([], 'meta', {
+                value: {
+                  typeOf,
+                  typeOfSexp,
+                  typeOfStringLike,
+                },
+              })
+            )
+          )
           for (const [value, type] of typedValues) {
             if (type !== 'value') {
               types.set(value, type)
@@ -79,17 +79,10 @@ export default (wat) => {
             values.push(value)
           }
 
-          Object.defineProperty(values, 'meta', {
-            value: {
-              typeOf(value) {
-                if (value === undefined) {
-                  return
-                }
-                return types.get(value) ?? 'value'
-              },
-            },
-          })
-          if (sourceTags.includes(values[0])) {
+          if (
+            sourceTags.includes(/** @type {string} */ (values[0])) &&
+            values.meta
+          ) {
             values.meta.source = wat.slice(start, this.end)
           }
           return values
@@ -98,6 +91,12 @@ export default (wat) => {
       return builder
     },
 
+    /**
+     * Create a block comment fragment builder.
+     *
+     * @param {number} start
+     * @return {import('./builder').Builder<string>}
+     */
     BlockCommentFragmentBuilder(start) {
       return {
         type: 'block comment fragment',
@@ -107,8 +106,19 @@ export default (wat) => {
       }
     },
 
+    /**
+     * Create a block comment builder.
+     *
+     * @returns {import('./builder').Builder<string>}
+     */
     BlockCommentBuilder() {
+      /**
+       * @type {import('./builder').Builder<any>[]}
+       */
       const children = []
+      /**
+       * @type {import('./builder').Builder<string>}
+       */
       const builder = {
         type: 'block comment',
         add(...builders) {
@@ -122,45 +132,69 @@ export default (wat) => {
               : builder.build()
           })
           // new String is required for identity equals
-          return new String(fragments.join(''))
+          return /** @type {string} */ (new String(fragments.join('')))
         },
       }
       return builder
     },
 
+    /**
+     * Create a string builder.
+     *
+     * @param {number} start
+     * @returns {import('./builder').Builder<string>}
+     */
     StringBuilder(start) {
       return {
         type: 'string',
         build() {
           const value = wat.substring(start, this.end)
           // new String is required for identity equals
-          return new String(value)
+          return /** @type {string} */ (new String(value))
         },
       }
     },
 
+    /**
+     * Create a whitespace builder.
+     *
+     * @param {number} start
+     * @returns {import('./builder').Builder<string>}
+     */
     WhitespaceBuilder(start) {
       return {
         type: 'whitespace',
         build() {
           const value = wat.substring(start, this.end)
           // new String is required for identity equals
-          return new String(value)
+          return /** @type {string} */ (new String(value))
         },
       }
     },
 
+    /**
+     * Create a line comment builder.
+     *
+     * @param {number} start
+     * @returns {import('./builder').Builder<string>}
+     */
     LineCommentBuilder(start) {
       return {
         type: 'line comment',
         build() {
           const value = wat.substring(start, this.end)
           // new String is required for identity equals
-          return new String(value)
+          return /** @type {string} */ (new String(value))
         },
       }
     },
 
+    /**
+     * Create a value builder.
+     *
+     * @param {number} start
+     * @returns {import('./builder').Builder<string>}
+     */
     ValueBuilder(start) {
       return {
         type: 'value',

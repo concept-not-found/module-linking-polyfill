@@ -1,4 +1,31 @@
 const consumedCache = new WeakMap()
+
+/**
+ * @typedef {import('./builder').Sexp} Sexp
+ * @typedef {import('./grammar').StringProposition} StringProposition
+ * @typedef {import('./grammar').NoMatch} NoMatch
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar').GrammarMatcher<T>} GrammarMatcher<T>
+ */
+
+/**
+ * @template T,R
+ * @typedef {import('./grammar').Matched<T, R>} Matched<T, R>
+ */
+
+/**
+ * @template T,R
+ * @typedef {import('./grammar').Builder<T, R>} Builder<T, R>
+ */
+
+/**
+ * Calculates how many values were consumed in a result.
+ * @param {import('./grammar').Matched<any, any> | any} result
+ * @return {number}
+ */
 function calculateConsumed(result) {
   if (!Array.isArray(result.value)) {
     return 1
@@ -10,75 +37,108 @@ function calculateConsumed(result) {
   const consumed =
     result.match === 'sexp'
       ? 1
-      : result.value.reduce((total, child) => {
-          return total + calculateConsumed(child)
-        }, 0)
+      : result.value.reduce(
+          /**
+           * @param {number} total
+           * @param {any} child
+           */
+          (total, child) => {
+            return total + calculateConsumed(child)
+          },
+          0
+        )
   consumedCache.set(result, consumed)
   return consumed
 }
 
+/**
+ * Create a s-expression matcher with expected children.
+ *
+ * @param {GrammarMatcher<any>[]} expected
+ * @returns {GrammarMatcher<any>}
+ */
 export const sexp = (...expected) => {
+  /**
+   * @param {string | Sexp | undefined} container
+   */
   function matcher(container) {
-    let [input] = container
-    const originalInput = input
-    const typeOf = container.meta.typeOf(input)
-    if (typeOf !== 'sexp') {
-      matcher.logger(`${matcher} failed to match [${input}]`, {
-        typeOf,
-        expected: expected.map(String),
-        input,
-      })
-      return {
-        match: false,
-      }
-    }
-    const value = []
-    for (const child of expected) {
-      const childResult = child(input)
-      if (!childResult.match) {
-        matcher.logger(`${matcher} failed to match [${originalInput}]`, {
+    if (container !== undefined && typeof container !== 'string') {
+      let [input] = container
+      const originalInput = input
+      if (
+        input === undefined ||
+        typeof input === 'string' ||
+        container.meta.typeOfSexp(input)
+      ) {
+        matcher.logger(`${matcher} failed to match [${input}]`, {
+          typeOf: container.meta.typeOf,
           expected: expected.map(String),
-          input: originalInput,
-          unmatchedExpected: String(child),
-          matched: value,
-          unmatched: input,
+          input,
         })
-        return {
+        return /** @type {NoMatch} */ ({
           match: false,
+        })
+      }
+
+      const value = []
+      for (const child of expected) {
+        const childResult = child(input)
+        if (!childResult.match) {
+          matcher.logger(`${matcher} failed to match [${originalInput}]`, {
+            expected: expected.map(String),
+            input: originalInput,
+            unmatchedExpected: String(child),
+            matched: value,
+            unmatched: input,
+          })
+          return /** @type {NoMatch} */ ({
+            match: false,
+          })
         }
+        value.push(childResult)
+        const { meta } = /** @type {Sexp} */ (input)
+        input = /** @type {Sexp} */ (
+          /** @type {unknown} */ (
+            Object.defineProperty(
+              /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
+              'meta',
+              { value: meta }
+            )
+          )
+        )
       }
-      value.push(childResult)
-      const { meta } = input
-      input = input.slice(calculateConsumed(childResult))
-      Object.defineProperty(input, 'meta', { value: meta })
-    }
-    const match = input.length === 0 && value.length > 0 && 'sexp'
-    if (match) {
-      const result = {
-        match,
-        value,
+      const match = input.length === 0 && value.length > 0 && 'sexp'
+      if (match) {
+        const result = {
+          match,
+          value,
+          build: () => matcher.builder(result.value, input),
+        }
+        Object.defineProperty(result, 'build', {
+          value: result.build,
+          enumerable: false,
+        })
+        return result
       }
-      Object.defineProperty(result, 'build', {
-        value: () => matcher.builder(result.value, input),
+      matcher.logger(`${matcher} failed to match [${originalInput}]`, {
+        expected: expected.map(String),
+        input: originalInput,
+        matched: value,
+        unmatched: input,
       })
-      return result
     }
-    matcher.logger(`${matcher} failed to match [${originalInput}]`, {
-      expected: expected.map(String),
-      input: originalInput,
-      matched: value,
-      unmatched: input,
-    })
-    return {
+    return /** @type {NoMatch} */ ({
       match: false,
-    }
+    })
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: (value) => value.map(({ build }) => build()),
+    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
+      (value) => value.map(({ build }) => build())
+    ),
     writable: true,
   })
 
@@ -87,6 +147,13 @@ export const sexp = (...expected) => {
   return matcher
 }
 
+/**
+ * Equals with polymorphic expected parameter.
+ *
+ * @param {StringProposition} expected
+ * @param {any} value
+ * @return boolean
+ */
 function equals(expected, value) {
   switch (typeof expected) {
     case 'string':
@@ -100,40 +167,55 @@ function equals(expected, value) {
   }
 }
 
+/**
+ * Create a s-expression value matcher
+ *
+ * @param {StringProposition} expected
+ * @returns {GrammarMatcher<string>}
+ */
 export const value = (expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
-    const [value] = input
-    const match =
-      value !== undefined &&
-      input.meta.typeOf(value) === 'value' &&
-      equals(expected, value) &&
-      'value'
-    if (match) {
-      const result = {
-        match,
-        value: [value],
-      }
-      Object.defineProperty(result, 'build', {
-        value: () => matcher.builder(result.value),
-      })
-      return result
-    } else {
-      matcher.logger(`${matcher} failed to match [${input}]`, {
-        typeOf: input.meta.typeOf(value),
-        expected,
-        input: [String(value)],
-      })
-      return {
-        match: false,
+    if (input !== undefined && typeof input !== 'string') {
+      const [value] = input
+      const match =
+        value !== undefined &&
+        input.meta.typeOfStringLike(value) &&
+        input.meta.typeOf(value) === 'value' &&
+        equals(expected, value) &&
+        'value'
+      if (match) {
+        const result = {
+          match,
+          value: [value],
+          build: () => matcher.builder(result.value),
+        }
+        Object.defineProperty(result, 'build', {
+          value: result.build,
+          enumerable: false,
+        })
+        return result
       }
     }
+    if (typeof input !== 'string') {
+      matcher.logger(`${matcher} failed to match [${input}]`, {
+        typeOf: input?.meta.typeOf(input[0]),
+        expected,
+        input: input?.map(String),
+      })
+    }
+    return /** @type {NoMatch} */ ({
+      match: false,
+    })
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: ([value]) => value,
+    value: /** @type {Builder<string[], string>} */ (([value]) => value),
     writable: true,
   })
 
@@ -141,40 +223,55 @@ export const value = (expected) => {
   return matcher
 }
 
+/**
+ * Create a s-expression string matcher
+ *
+ * @param {StringProposition} expected
+ * @returns {GrammarMatcher<string>}
+ */
 export const string = (expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
-    const [value] = input
-    const match =
-      value !== undefined &&
-      input.meta.typeOf(value) === 'string' &&
-      equals(expected, String(value)) &&
-      'string'
-    if (match) {
-      const result = {
-        match,
-        value: [String(value)],
-      }
-      Object.defineProperty(result, 'build', {
-        value: () => matcher.builder(result.value),
-      })
-      return result
-    } else {
-      matcher.logger(`${matcher} failed to match [${input}]`, {
-        typeOf: input.meta.typeOf(value),
-        expected,
-        input: [String(value)],
-      })
-      return {
-        match: false,
+    if (input !== undefined && typeof input !== 'string') {
+      const [value] = input
+      const match =
+        value !== undefined &&
+        input.meta.typeOfStringLike(value) &&
+        input.meta.typeOf(value) === 'string' &&
+        equals(expected, String(value)) &&
+        'string'
+      if (match) {
+        const result = {
+          match,
+          value: [String(value)],
+          build: () => matcher.builder(result.value),
+        }
+        Object.defineProperty(result, 'build', {
+          value: result.build,
+          enumerable: false,
+        })
+        return result
       }
     }
+    if (typeof input !== 'string') {
+      matcher.logger(`${matcher} failed to match [${input}]`, {
+        typeOf: input?.meta.typeOf(input[0]),
+        expected,
+        input: input?.map(String),
+      })
+    }
+    return /** @type {NoMatch} */ ({
+      match: false,
+    })
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: ([value]) => value,
+    value: /** @type {Builder<string[], string>} */ (([value]) => value),
     writable: true,
   })
 
@@ -182,27 +279,45 @@ export const string = (expected) => {
   return matcher
 }
 
+/**
+ * Create a s-expression any matcher, which matches anything.
+ *
+ * @returns {GrammarMatcher<any>}
+ */
 export const any = () => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
     const result = {
       match: 'any',
       value: input,
+      build: () => matcher.builder(result.value),
     }
     Object.defineProperty(result, 'build', {
-      value: () => matcher.builder(result.value),
+      value: result.build,
+      enumerable: false,
     })
     return result
   }
   Object.defineProperty(matcher, 'builder', {
-    value: (value) => value,
+    value: /** @type {Builder<any, any>} */ ((value) => value),
     writable: true,
   })
 
   matcher.toString = () => 'any()'
-  return matcher
+  return /** @type {GrammarMatcher<any>} */ (/** @type {unknown} */ (matcher))
 }
 
+/**
+ * Create a s-expression reference matcher, which allows circular references to other matchers.
+ *
+ * @returns {GrammarMatcher<any>}
+ */
 export const reference = () => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
     if (!matcher.value) {
       throw new Error('reference.value has not been set yet')
@@ -210,47 +325,62 @@ export const reference = () => {
     return matcher.value(input)
   }
   Object.defineProperty(matcher, 'logger', {
-    set() {
-      throw new Error(
-        'reference does not support logger. set the logger of the underlying value instead'
-      )
-    },
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    writable: false,
   })
   Object.defineProperty(matcher, 'builder', {
-    set() {
-      throw new Error(
-        'reference does not support builder. set the builder of the underlying value instead'
-      )
-    },
+    value: /** @type {Builder<any[], any>} */ (() => {}),
+    writable: false,
   })
 
   matcher.toString = () => matcher.value?.toString() ?? 'reference()'
   Object.defineProperty(matcher, 'value', {
-    value: undefined,
+    value: /** @type {GrammarMatcher<any>} */ (
+      /** @type {unknown} */ (undefined)
+    ),
     writable: true,
   })
   return matcher
 }
 
+/**
+ * Create a s-expression matcher that optionally matches an expected.
+ *
+ * @param {GrammarMatcher<any>} expected
+ * @returns {GrammarMatcher<any>}
+ */
 export const maybe = (expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
     const childResult = expected(input)
+    /** @type {Matched<any[], any>} */
     const result = childResult.match
       ? {
           match: 'maybe',
           value: [childResult],
+          build: () => matcher.builder(result.value),
         }
       : {
           match: 'maybe',
           value: [],
+          build: () => matcher.builder(result.value),
         }
     Object.defineProperty(result, 'build', {
-      value: () => matcher.builder(result.value),
+      value: result.build,
+      enumerable: false,
     })
     return result
   }
+  Object.defineProperty(matcher, 'logger', {
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    writable: true,
+  })
   Object.defineProperty(matcher, 'builder', {
-    value: ([value]) => value?.build(),
+    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
+      ([value]) => value?.build()
+    ),
     writable: true,
   })
 
@@ -258,7 +388,16 @@ export const maybe = (expected) => {
   return matcher
 }
 
+/**
+ * Create a s-expression matcher that the first expected child.
+ *
+ * @param {GrammarMatcher<any>[]} expected
+ * @returns {GrammarMatcher<any>}
+ */
 export const one = (...expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
     for (const child of expected) {
       const childResult = child(input)
@@ -266,9 +405,11 @@ export const one = (...expected) => {
         const result = {
           match: 'one',
           value: [childResult],
+          build: () => matcher.builder(result.value),
         }
         Object.defineProperty(result, 'build', {
-          value: () => matcher.builder(result.value),
+          value: result.build,
+          enumerable: false,
         })
         return result
       }
@@ -277,16 +418,18 @@ export const one = (...expected) => {
       expected: expected.map(String),
       input,
     })
-    return {
+    return /** @type {NoMatch} */ ({
       match: false,
-    }
+    })
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: ([value]) => value.build(),
+    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
+      ([value]) => value?.build()
+    ),
     writable: true,
   })
 
@@ -294,7 +437,16 @@ export const one = (...expected) => {
   return matcher
 }
 
+/**
+ * Create a s-expression matcher for a sequence of children.
+ *
+ * @param {GrammarMatcher<any>[]} expected
+ * @returns {GrammarMatcher<any>}
+ */
 export const seq = (...expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
     const originalInput = input
     const value = []
@@ -308,30 +460,41 @@ export const seq = (...expected) => {
           matched: value,
           unmatched: input,
         })
-        return {
+        return /** @type {NoMatch} */ ({
           match: false,
-        }
+        })
       }
       value.push(childResult)
-      const { meta } = input
-      input = input.slice(calculateConsumed(childResult))
-      Object.defineProperty(input, 'meta', { value: meta })
+      const { meta } = /** @type {Sexp} */ (input)
+      input = /** @type {Sexp} */ (
+        /** @type {unknown} */ (
+          Object.defineProperty(
+            /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
+            'meta',
+            { value: meta }
+          )
+        )
+      )
     }
     const result = {
       match: 'seq',
       value,
+      build: () => matcher.builder(result.value),
     }
     Object.defineProperty(result, 'build', {
-      value: () => matcher.builder(result.value),
+      value: result.build,
+      enumerable: false,
     })
     return result
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: (value) => value.map(({ build }) => build()),
+    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
+      (value) => value.map(({ build }) => build())
+    ),
     writable: true,
   })
 
@@ -339,27 +502,43 @@ export const seq = (...expected) => {
   return matcher
 }
 
+/**
+ * Create a s-expression matcher that repeatedly matches an expected.
+ *
+ * @param {GrammarMatcher<any>} expected
+ * @returns {GrammarMatcher<any>}
+ */
 export const some = (expected) => {
+  /**
+   * @param {string | Sexp | undefined} input
+   */
   function matcher(input) {
-    if (input.length === 0) {
+    if (input === undefined || input.length === 0) {
       matcher.logger(`${matcher} failed to match [${input}]`, {
         expected: String(expected),
         input,
       })
-      return {
+      return /** @type {NoMatch} */ ({
         match: false,
-      }
+      })
     }
     const value = []
     let childResult = expected(input)
     while (childResult.match) {
       value.push(childResult)
-      const { meta } = input
-      input = input.slice(calculateConsumed(childResult))
+      const { meta } = /** @type {Sexp} */ (input)
+      input = /** @type {Sexp} */ (
+        /** @type {unknown} */ (
+          Object.defineProperty(
+            /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
+            'meta',
+            { value: meta }
+          )
+        )
+      )
       if (input.length === 0) {
         break
       }
-      Object.defineProperty(input, 'meta', { value: meta })
       childResult = expected(input)
     }
     const match = value.length > 0 && 'some'
@@ -367,9 +546,11 @@ export const some = (expected) => {
       const result = {
         match,
         value,
+        build: () => matcher.builder(result.value),
       }
       Object.defineProperty(result, 'build', {
-        value: () => matcher.builder(result.value),
+        value: result.build,
+        enumerable: false,
       })
       return result
     }
@@ -377,16 +558,18 @@ export const some = (expected) => {
       expected: String(expected),
       input,
     })
-    return {
+    return /** @type {NoMatch} */ ({
       match: false,
-    }
+    })
   }
   Object.defineProperty(matcher, 'logger', {
-    value: () => {},
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: true,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: (value) => value.map(({ build }) => build()),
+    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
+      (value) => value.map(({ build }) => build())
+    ),
     writable: true,
   })
 
