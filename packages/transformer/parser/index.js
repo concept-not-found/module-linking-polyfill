@@ -9,7 +9,7 @@
  * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
  */
 
-import Builders, { TypeOfBuilder } from './builders.js'
+import Builders, { forceMeta, TypeOfBuilder } from './builders.js'
 
 /**
  * Creates a parser.
@@ -365,16 +365,14 @@ function trim(node) {
       }
     }
 
-    return /** @type {Sexp} */ (
-      /** @type {unknown} */ (
-        Object.defineProperty(children, 'meta', {
-          value: {
-            ...node.meta,
-            ...TypeOfBuilder(types),
-          },
-        })
-      )
-    )
+    Object.defineProperty(children, 'meta', {
+      value: {
+        ...node.meta,
+        ...TypeOfBuilder(types),
+      },
+    })
+    forceMeta(children)
+    return children
   } else {
     return node
   }

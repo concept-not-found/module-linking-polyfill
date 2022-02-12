@@ -1,7 +1,10 @@
+import { forceMeta } from './builders.js'
+
 const consumedCache = new WeakMap()
 
 /**
  * @typedef {import('./builder.mjs').Sexp} Sexp
+ * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
  * @typedef {import('./grammar.mjs').StringProposition} StringProposition
  * @typedef {import('./grammar.mjs').NoMatch} NoMatch
  */
@@ -96,16 +99,11 @@ export const sexp = (...expected) => {
           })
         }
         value.push(childResult)
-        const { meta } = /** @type {Sexp} */ (input)
-        input = /** @type {Sexp} */ (
-          /** @type {unknown} */ (
-            Object.defineProperty(
-              /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
-              'meta',
-              { value: meta }
-            )
-          )
-        )
+        const { meta } = input
+        const nextInput = input.slice(calculateConsumed(childResult))
+        forceMeta(nextInput)
+        input = nextInput
+        Object.defineProperty(input, 'meta', { value: meta })
       }
       const match = input.length === 0 && value.length > 0 && 'sexp'
       if (match) {
@@ -286,7 +284,7 @@ export const string = (expected) => {
  */
 export const any = () => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {any} input
    */
   function matcher(input) {
     const result = {
@@ -300,19 +298,23 @@ export const any = () => {
     })
     return result
   }
+  Object.defineProperty(matcher, 'logger', {
+    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    writable: true,
+  })
   Object.defineProperty(matcher, 'builder', {
     value: /** @type {Builder<any, any>} */ ((value) => value),
     writable: true,
   })
 
   matcher.toString = () => 'any()'
-  return /** @type {GrammarMatcher<any>} */ (/** @type {unknown} */ (matcher))
+  return matcher
 }
 
 /**
  * Create a s-expression reference matcher, which allows circular references to other matchers.
  *
- * @returns {GrammarMatcher<any> & {value: GrammarMatcher<any>}}
+ * @returns {GrammarMatcher<any> & {value: GrammarMatcher<any> | undefined}}
  */
 export const reference = () => {
   /**
@@ -335,9 +337,8 @@ export const reference = () => {
 
   matcher.toString = () => matcher.value?.toString() ?? 'reference()'
   Object.defineProperty(matcher, 'value', {
-    value: /** @type {GrammarMatcher<any>} */ (
-      /** @type {unknown} */ (undefined)
-    ),
+    /** @type {GrammarMatcher<any> | undefined} */
+    value: undefined,
     writable: true,
   })
   return matcher
@@ -465,16 +466,12 @@ export const seq = (...expected) => {
         })
       }
       value.push(childResult)
-      const { meta } = /** @type {Sexp} */ (input)
-      input = /** @type {Sexp} */ (
-        /** @type {unknown} */ (
-          Object.defineProperty(
-            /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
-            'meta',
-            { value: meta }
-          )
-        )
-      )
+      forceMeta(input)
+      const { meta } = input
+      const nextInput = input.slice(calculateConsumed(childResult))
+      forceMeta(nextInput)
+      input = nextInput
+      Object.defineProperty(input, 'meta', { value: meta })
     }
     const result = {
       match: 'seq',
@@ -526,16 +523,12 @@ export const some = (expected) => {
     let childResult = expected(input)
     while (childResult.match) {
       value.push(childResult)
-      const { meta } = /** @type {Sexp} */ (input)
-      input = /** @type {Sexp} */ (
-        /** @type {unknown} */ (
-          Object.defineProperty(
-            /** @type {Sexp} */ (input).slice(calculateConsumed(childResult)),
-            'meta',
-            { value: meta }
-          )
-        )
-      )
+      forceMeta(input)
+      const { meta } = input
+      const nextInput = input.slice(calculateConsumed(childResult))
+      forceMeta(nextInput)
+      input = nextInput
+      Object.defineProperty(input, 'meta', { value: meta })
       if (input.length === 0) {
         break
       }

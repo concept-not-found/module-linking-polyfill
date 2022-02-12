@@ -16,7 +16,17 @@
 /**
  * @typedef {import('./builder.mjs').TypeOfable} TypeOfable
  * @typedef {import('./builder.mjs').BuilderType} BuilderType
+ * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
  */
+
+/**
+ * Force typescript to believe input is is SexpMeta
+ * @param {any} input
+ * @return {asserts input is SexpMeta}
+ */
+export function forceMeta(input) {
+  input // this is the shortest fake asssertion
+}
 
 /**
  * Build a set of type of functions.
@@ -93,13 +103,12 @@ export default (wat) => {
           /** @type {WeakMap<any, BuilderType>} */
           const types = new WeakMap()
 
-          const values = /** @type {Sexp} */ (
-            /** @type {unknown} */ (
-              Object.defineProperty([], 'meta', {
-                value: TypeOfBuilder(types),
-              })
-            )
-          )
+          /** @type {(string | Sexp)[]} */
+          const values = []
+          Object.defineProperty(values, 'meta', {
+            value: TypeOfBuilder(types),
+          })
+          forceMeta(values)
           for (const [value, type] of typedValues) {
             if (type !== 'value') {
               types.set(value, type)
