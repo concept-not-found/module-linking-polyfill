@@ -24,6 +24,11 @@ const consumedCache = new WeakMap()
  * @typedef {import('./grammar.mjs').Builder<T, R>} Builder<T, R>
  */
 
+/** @type {NoMatch} */
+const NoMatch = {
+  match: false,
+}
+
 /**
  * Calculates how many values were consumed in a result.
  * @param {Matched<any, any> | any} result
@@ -78,9 +83,7 @@ export const sexp = (...expected) => {
           expected: expected.map(String),
           input,
         })
-        return /** @type {NoMatch} */ ({
-          match: false,
-        })
+        return NoMatch
       }
 
       const value = []
@@ -94,9 +97,7 @@ export const sexp = (...expected) => {
             matched: value,
             unmatched: input,
           })
-          return /** @type {NoMatch} */ ({
-            match: false,
-          })
+          return NoMatch
         }
         value.push(childResult)
         const { meta } = input
@@ -125,9 +126,7 @@ export const sexp = (...expected) => {
         unmatched: input,
       })
     }
-    return /** @type {NoMatch} */ ({
-      match: false,
-    })
+    return NoMatch
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -204,9 +203,7 @@ export const value = (expected) => {
         input: input?.map(String),
       })
     }
-    return /** @type {NoMatch} */ ({
-      match: false,
-    })
+    return NoMatch
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -260,9 +257,7 @@ export const string = (expected) => {
         input: input?.map(String),
       })
     }
-    return /** @type {NoMatch} */ ({
-      match: false,
-    })
+    return NoMatch
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -419,9 +414,7 @@ export const one = (...expected) => {
       expected: expected.map(String),
       input,
     })
-    return /** @type {NoMatch} */ ({
-      match: false,
-    })
+    return NoMatch
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -461,9 +454,7 @@ export const seq = (...expected) => {
           matched: value,
           unmatched: input,
         })
-        return /** @type {NoMatch} */ ({
-          match: false,
-        })
+        return NoMatch
       }
       value.push(childResult)
       forceMeta(input)
@@ -515,9 +506,7 @@ export const some = (expected) => {
         expected: String(expected),
         input,
       })
-      return /** @type {NoMatch} */ ({
-        match: false,
-      })
+      return NoMatch
     }
     const value = []
     let childResult = expected(input)
@@ -551,9 +540,7 @@ export const some = (expected) => {
       expected: String(expected),
       input,
     })
-    return /** @type {NoMatch} */ ({
-      match: false,
-    })
+    return NoMatch
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
