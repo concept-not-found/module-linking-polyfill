@@ -4,11 +4,12 @@
  */
 
 /**
+ * @typedef {import('./builder.mjs').BuilderType} BuilderType
  * @typedef {import('./builder.mjs').Sexp} Sexp
  * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
  */
 
-import Builders from './builders.js'
+import Builders, { TypeOfBuilder } from './builders.js'
 
 /**
  * Creates a parser.
@@ -345,32 +346,8 @@ export const RawParser =
  * @return {string | Sexp}
  */
 function trim(node) {
-  /** @type {WeakMap<any, string>} */
+  /** @type {WeakMap<any, BuilderType>} */
   const types = new WeakMap()
-  /**
-   * @param {any} value
-   * @return string
-   */
-  function typeOf(value) {
-    if (value === undefined) {
-      return 'undefined'
-    }
-    return types.get(value) ?? 'value'
-  }
-  /**
-   * @param {any} value
-   * @return {value is Sexp}
-   */
-  function typeOfSexp(value) {
-    return typeOf(value) === 'sexp'
-  }
-  /**
-   * @param {any} value
-   * @return {value is string}
-   */
-  function typeOfStringLike(value) {
-    return ['string', 'value'].includes(typeOf(value))
-  }
 
   if (Array.isArray(node)) {
     const children = node
@@ -393,9 +370,7 @@ function trim(node) {
         Object.defineProperty(children, 'meta', {
           value: {
             ...node.meta,
-            typeOf,
-            typeOfSexp,
-            typeOfStringLike,
+            ...TypeOfBuilder(types),
           },
         })
       )

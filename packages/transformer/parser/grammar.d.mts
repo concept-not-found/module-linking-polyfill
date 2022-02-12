@@ -1,12 +1,11 @@
-import type { Sexp } from './builder.mjs'
+import type { Sexp, Buildable } from './builder.mjs'
 
 export type MatchResult<T, R> = Matched<T, R> | NoMatch
 
 export type Matched<T, R> = {
   match: string
   value: T
-  build: () => R
-}
+} & Buildable<R>
 
 export type NoMatch = {
   match: false

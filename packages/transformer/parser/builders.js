@@ -9,6 +9,55 @@
  */
 
 /**
+ * @template T
+ * @typedef {import('./builder.mjs').Buildable<T>} Buildable<T>
+ */
+
+/**
+ * @typedef {import('./builder.mjs').TypeOfable} TypeOfable
+ * @typedef {import('./builder.mjs').BuilderType} BuilderType
+ */
+
+/**
+ * Build a set of type of functions.
+ *
+ * @param {WeakMap<any, BuilderType>} types
+ * @return {TypeOfable}
+ */
+export function TypeOfBuilder(types) {
+  /**
+   * @param {any} value
+   * @return {BuilderType}
+   */
+  function typeOf(value) {
+    if (value === undefined) {
+      return 'undefined'
+    }
+    return types.get(value) ?? 'value'
+  }
+  /**
+   * @param {any} value
+   * @return {value is Sexp}
+   */
+  function typeOfSexp(value) {
+    return typeOf(value) === 'sexp'
+  }
+  /**
+   * @param {any} value
+   * @return {value is string}
+   */
+  function typeOfStringLike(value) {
+    return ['string', 'value'].includes(typeOf(value))
+  }
+
+  return {
+    typeOf,
+    typeOfSexp,
+    typeOfStringLike,
+  }
+}
+
+/**
  * Creates builder with wat source.
  * @param {string} wat
  */
@@ -40,40 +89,14 @@ export default (wat) => {
             builder.build(),
             builder.type,
           ])
+
+          /** @type {WeakMap<any, BuilderType>} */
           const types = new WeakMap()
 
-          /**
-           * @param {any} value
-           * @return string
-           */
-          function typeOf(value) {
-            if (value === undefined) {
-              return 'undefined'
-            }
-            return types.get(value) ?? 'value'
-          }
-          /**
-           * @param {any} value
-           * @return {value is Sexp}
-           */
-          function typeOfSexp(value) {
-            return typeOf(value) === 'sexp'
-          }
-          /**
-           * @param {any} value
-           * @return {value is string}
-           */
-          function typeOfStringLike(value) {
-            return ['string', 'value'].includes(typeOf(value))
-          }
           const values = /** @type {Sexp} */ (
             /** @type {unknown} */ (
               Object.defineProperty([], 'meta', {
-                value: {
-                  typeOf,
-                  typeOfSexp,
-                  typeOfStringLike,
-                },
+                value: TypeOfBuilder(types),
               })
             )
           )
