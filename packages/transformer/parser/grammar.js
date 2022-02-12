@@ -68,10 +68,10 @@ export const sexp = (...expected) => {
       if (
         input === undefined ||
         typeof input === 'string' ||
-        container.meta.typeOfSexp(input)
+        !container.meta.typeOfSexp(input)
       ) {
         matcher.logger(`${matcher} failed to match [${input}]`, {
-          typeOf: container.meta.typeOf,
+          typeOf: container.meta.typeOf(input),
           expected: expected.map(String),
           input,
         })

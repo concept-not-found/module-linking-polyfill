@@ -11,7 +11,7 @@ export type Builder<T> = {
   build(): T
 }
 
-type SexpMeta = {
+export type SexpMeta = {
   meta: {
     typeOf(value: any): BuilderType,
     typeOfSexp(value: any): value is Sexp,

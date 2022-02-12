@@ -1,9 +1,25 @@
-import pipe from '../pipe.js'
+/**
+ * @template T
+ * @typedef {import('./builder.mjs').Builder<T>} Builder<T>
+ */
+
+/**
+ * @typedef {import('./builder.mjs').Sexp} Sexp
+ * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
+ */
 
 import Builders from './builders.js'
 
+/**
+ * Creates a parser.
+ * @param {Object} options
+ * @param {string[]} [options.sourceTags]
+ */
 export const RawParser =
   ({ sourceTags = [] } = {}) =>
+  /**
+   * @param {string} wat
+   */
   (wat) => {
     const {
       SexpBuilder,
@@ -17,16 +33,38 @@ export const RawParser =
 
     let index = 0
     const root = SexpBuilder(index)
+    /** @type {Builder<?>[]} */
     const stack = [root]
 
+    /**
+     * Adds a new builder to stack.
+     *
+     * @param {Builder<?>} next
+     */
     function create(next) {
-      stack[stack.length - 1].add(next)
+      const last = stack[stack.length - 1]
+      if (last === undefined) {
+        throw new Error('unexpected empty stack')
+      }
+      last.add?.(next)
       stack.push(next)
     }
 
-    function endLiteral() {
-      stack[stack.length - 1].end = index
+    function endLiteral(offset = 0) {
+      const last = stack[stack.length - 1]
+      if (last === undefined) {
+        throw new Error('unexpected empty stack')
+      }
+      last.end = index + offset
       stack.pop()
+    }
+
+    function currentType() {
+      const last = stack[stack.length - 1]
+      if (last === undefined) {
+        throw new Error('unexpected empty stack')
+      }
+      return last.type
     }
 
     while (index < wat.length) {
@@ -35,9 +73,9 @@ export const RawParser =
           const blockComment =
             index < wat.length - 1 &&
             wat[index + 1] === ';' &&
-            !['string', 'line comment'].includes(stack[stack.length - 1].type)
+            !['string', 'line comment'].includes(currentType())
           if (blockComment) {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
               case 'value':
               case 'block comment fragment':
@@ -54,7 +92,7 @@ export const RawParser =
                 break
             }
           } else {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
               case 'value':
                 endLiteral()
@@ -73,14 +111,13 @@ export const RawParser =
           break
         }
         case ')':
-          switch (stack[stack.length - 1].type) {
+          switch (currentType()) {
             case 'whitespace':
             case 'value':
               endLiteral()
             // falls through
             case 'sexp':
-              stack[stack.length - 1].end = index + 1
-              stack.pop()
+              endLiteral(1)
               break
             case 'string':
             case 'line comment':
@@ -92,11 +129,9 @@ export const RawParser =
           break
         case '"': {
           const escaped =
-            index > 0 &&
-            wat[index - 1] === '\\' &&
-            stack[stack.length - 1].type === 'string'
+            index > 0 && wat[index - 1] === '\\' && currentType() === 'string'
           if (escaped) {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
                 endLiteral()
               // falls through
@@ -112,7 +147,7 @@ export const RawParser =
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
               case 'value':
                 endLiteral()
@@ -134,11 +169,9 @@ export const RawParser =
         }
         case ' ': {
           const escaped =
-            index > 0 &&
-            wat[index - 1] === '\\' &&
-            stack[stack.length - 1].type === 'value'
+            index > 0 && wat[index - 1] === '\\' && currentType() === 'value'
           if (escaped) {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
                 endLiteral()
               // falls through
@@ -154,7 +187,7 @@ export const RawParser =
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'value':
                 endLiteral()
               // falls through
@@ -173,7 +206,7 @@ export const RawParser =
           break
         }
         case '\t':
-          switch (stack[stack.length - 1].type) {
+          switch (currentType()) {
             case 'value':
               endLiteral()
             // falls through
@@ -191,7 +224,7 @@ export const RawParser =
           break
         case '\n':
         case '\r':
-          switch (stack[stack.length - 1].type) {
+          switch (currentType()) {
             case 'line comment':
             case 'value':
               endLiteral()
@@ -213,21 +246,21 @@ export const RawParser =
             index < wat.length - 1 &&
             wat[index + 1] === ';' &&
             !['string', 'line comment', 'block comment fragment'].includes(
-              stack[stack.length - 1].type
+              currentType()
             )
           const closingBlockComment =
             index < wat.length - 1 &&
             wat[index + 1] === ')' &&
-            stack[stack.length - 1].type === 'block comment fragment'
+            currentType() === 'block comment fragment'
           if (closingBlockComment) {
             endLiteral()
             stack.pop()
-            if (stack[stack.length - 1].type === 'block comment') {
+            if (currentType() === 'block comment') {
               create(BlockCommentFragmentBuilder(index + 2))
             }
             index++
           } else if (lineComment) {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'value':
               case 'whitespace':
                 endLiteral()
@@ -244,7 +277,7 @@ export const RawParser =
                 throw new Error('missing block comment fragment')
             }
           } else {
-            switch (stack[stack.length - 1].type) {
+            switch (currentType()) {
               case 'whitespace':
                 endLiteral()
               // falls through
@@ -263,7 +296,7 @@ export const RawParser =
           break
         }
         default: {
-          switch (stack[stack.length - 1].type) {
+          switch (currentType()) {
             case 'whitespace':
               endLiteral()
             // falls through
@@ -282,7 +315,7 @@ export const RawParser =
       }
       index++
     }
-    switch (stack[stack.length - 1].type) {
+    switch (currentType()) {
       case 'whitespace':
       case 'string':
       case 'value':
@@ -305,7 +338,40 @@ export const RawParser =
     return root.build()
   }
 
+/**
+ * Trim comments and whitespace out of Sexp.
+ *
+ * @param {string | (Sexp | Sexp[]) & SexpMeta} node
+ * @return {string | Sexp}
+ */
 function trim(node) {
+  /** @type {WeakMap<any, string>} */
+  const types = new WeakMap()
+  /**
+   * @param {any} value
+   * @return string
+   */
+  function typeOf(value) {
+    if (value === undefined) {
+      return 'undefined'
+    }
+    return types.get(value) ?? 'value'
+  }
+  /**
+   * @param {any} value
+   * @return {value is Sexp}
+   */
+  function typeOfSexp(value) {
+    return typeOf(value) === 'sexp'
+  }
+  /**
+   * @param {any} value
+   * @return {value is string}
+   */
+  function typeOfStringLike(value) {
+    return ['string', 'value'].includes(typeOf(value))
+  }
+
   if (Array.isArray(node)) {
     const children = node
       .filter(
@@ -315,25 +381,37 @@ function trim(node) {
           )
       )
       .map(trim)
-    const types = new WeakMap()
     for (const child of children) {
       const type = Array.isArray(child) ? 'sexp' : node.meta.typeOf(child)
       if (type !== 'value') {
         types.set(child, type)
       }
     }
-    Object.defineProperty(children, 'meta', {
-      value: {
-        ...node.meta,
-        typeOf(value) {
-          return types.get(value) ?? 'value'
-        },
-      },
-    })
-    return children
+
+    return /** @type {Sexp} */ (
+      /** @type {unknown} */ (
+        Object.defineProperty(children, 'meta', {
+          value: {
+            ...node.meta,
+            typeOf,
+            typeOfSexp,
+            typeOfStringLike,
+          },
+        })
+      )
+    )
   } else {
     return node
   }
 }
 
-export default (...parameters) => pipe(RawParser(...parameters), trim)
+/**
+ * Creates a parser that removes comments and whitespace.
+ * @param {Object} [options]
+ */
+export default (options) =>
+  /**
+   * @param {string} wat
+   */
+  (wat) =>
+    trim(RawParser(options)(wat))

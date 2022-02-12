@@ -48,13 +48,13 @@ export default (wat) => {
            */
           function typeOf(value) {
             if (value === undefined) {
-              return
+              return 'undefined'
             }
             return types.get(value) ?? 'value'
           }
           /**
            * @param {any} value
-           * @return {value is sexp}
+           * @return {value is Sexp}
            */
           function typeOfSexp(value) {
             return typeOf(value) === 'sexp'
