@@ -20,9 +20,34 @@ const consumedCache = new WeakMap()
  */
 
 /**
+ * @template R
+ * @typedef {import('./builder.mjs').Buildable<R>} Buildable<R>
+ */
+
+/**
  * @template T,R
  * @typedef {import('./grammar.mjs').Builder<T, R>} Builder<T, R>
  */
+
+/**
+ * @template T,R
+ * @param {string} match
+ * @param {T} value
+ * @param {Builder<T, R>} builder
+ * @returns {Matched<T, R> & Buildable<R>}
+ */
+export function Matched(match, value, builder) {
+  const result = {
+    match,
+    value,
+    build: () => builder(result.value),
+  }
+  Object.defineProperty(result, 'build', {
+    value: result.build,
+    enumerable: false,
+  })
+  return result
+}
 
 /** @type {NoMatch} */
 export const NoMatch = {
@@ -108,16 +133,7 @@ export const sexp = (...expected) => {
       }
       const match = input.length === 0 && value.length > 0 && 'sexp'
       if (match) {
-        const result = {
-          match,
-          value,
-          build: () => matcher.builder(result.value, input),
-        }
-        Object.defineProperty(result, 'build', {
-          value: result.build,
-          enumerable: false,
-        })
-        return result
+        return Matched(match, value, (value) => matcher.builder(value, input))
       }
       matcher.logger(`${matcher} failed to match [${originalInput}]`, {
         expected: expected.map(String),
@@ -184,16 +200,7 @@ export const value = (expected) => {
         equals(expected, value) &&
         'value'
       if (match) {
-        const result = {
-          match,
-          value: [value],
-          build: () => matcher.builder(result.value),
-        }
-        Object.defineProperty(result, 'build', {
-          value: result.build,
-          enumerable: false,
-        })
-        return result
+        return Matched(match, [value], matcher.builder)
       }
     }
     if (typeof input !== 'string') {
@@ -238,16 +245,7 @@ export const string = (expected) => {
         equals(expected, String(value)) &&
         'string'
       if (match) {
-        const result = {
-          match,
-          value: [String(value)],
-          build: () => matcher.builder(result.value),
-        }
-        Object.defineProperty(result, 'build', {
-          value: result.build,
-          enumerable: false,
-        })
-        return result
+        return Matched(match, [String(value)], matcher.builder)
       }
     }
     if (typeof input !== 'string') {
@@ -282,16 +280,7 @@ export const any = () => {
    * @param {any} input
    */
   function matcher(input) {
-    const result = {
-      match: 'any',
-      value: input,
-      build: () => matcher.builder(result.value),
-    }
-    Object.defineProperty(result, 'build', {
-      value: result.build,
-      enumerable: false,
-    })
-    return result
+    return Matched('any', input, matcher.builder)
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -351,23 +340,9 @@ export const maybe = (expected) => {
    */
   function matcher(input) {
     const childResult = expected(input)
-    /** @type {Matched<any[], any>} */
-    const result = childResult.match
-      ? {
-          match: 'maybe',
-          value: [childResult],
-          build: () => matcher.builder(result.value),
-        }
-      : {
-          match: 'maybe',
-          value: [],
-          build: () => matcher.builder(result.value),
-        }
-    Object.defineProperty(result, 'build', {
-      value: result.build,
-      enumerable: false,
-    })
-    return result
+    return childResult.match
+      ? Matched('maybe', [childResult], matcher.builder)
+      : Matched('maybe', [], matcher.builder)
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -398,16 +373,7 @@ export const one = (...expected) => {
     for (const child of expected) {
       const childResult = child(input)
       if (childResult.match) {
-        const result = {
-          match: 'one',
-          value: [childResult],
-          build: () => matcher.builder(result.value),
-        }
-        Object.defineProperty(result, 'build', {
-          value: result.build,
-          enumerable: false,
-        })
-        return result
+        return Matched('one', [childResult], matcher.builder)
       }
     }
     matcher.logger(`${matcher} failed to match ${input}`, {
@@ -464,16 +430,7 @@ export const seq = (...expected) => {
       input = nextInput
       Object.defineProperty(input, 'meta', { value: meta })
     }
-    const result = {
-      match: 'seq',
-      value,
-      build: () => matcher.builder(result.value),
-    }
-    Object.defineProperty(result, 'build', {
-      value: result.build,
-      enumerable: false,
-    })
-    return result
+    return Matched('seq', value, matcher.builder)
   }
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
@@ -525,16 +482,7 @@ export const some = (expected) => {
     }
     const match = value.length > 0 && 'some'
     if (match) {
-      const result = {
-        match,
-        value,
-        build: () => matcher.builder(result.value),
-      }
-      Object.defineProperty(result, 'build', {
-        value: result.build,
-        enumerable: false,
-      })
-      return result
+      return Matched(match, value, matcher.builder)
     }
     matcher.logger(`${matcher} failed to match [${input}]`, {
       expected: String(expected),
