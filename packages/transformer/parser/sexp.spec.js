@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import { assertMatched } from './grammar-test-utils.js'
 
-import { sexp, maybe, value } from './grammar.js'
+import { NoMatch, sexp, maybe, value } from './grammar.js'
 
 import Parser from './index.js'
 
@@ -34,9 +34,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('not matching extra value', () => {
@@ -45,9 +43,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('not matching different value', () => {
@@ -56,9 +52,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('matching maybe any value to empty sexp', () => {
@@ -79,9 +73,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('build returns array of matched values', () => {

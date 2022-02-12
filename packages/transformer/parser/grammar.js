@@ -25,7 +25,7 @@ const consumedCache = new WeakMap()
  */
 
 /** @type {NoMatch} */
-const NoMatch = {
+export const NoMatch = {
   match: false,
 }
 

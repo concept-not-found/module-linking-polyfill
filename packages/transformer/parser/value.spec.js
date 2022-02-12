@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import { assertMatched } from './grammar-test-utils.js'
 
-import { sexp, value } from './grammar.js'
+import { NoMatch, sexp, value } from './grammar.js'
 
 import Parser from './index.js'
 
@@ -30,9 +30,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('not matching string in sexp', () => {
@@ -41,9 +39,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('expected can be a predicate function', () => {
@@ -61,9 +57,7 @@ describe('matcher', () => {
       const parser = Parser()
       const input = parser(wat)
       const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      expect(result).toEqual(NoMatch)
     })
 
     test('build returns matched value', () => {
