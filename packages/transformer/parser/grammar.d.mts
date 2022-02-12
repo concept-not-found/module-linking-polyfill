@@ -19,6 +19,6 @@ export type Matcher<I, T, R> = ((input?: I) => MatchResult<T, R>) & {
   builder: Builder<T, R>
 }
 
-export type GrammarMatcher<T> = Matcher<Sexp | string, T[], T>
+export type GrammarMatcher<T> = Matcher<Sexp | string, [T] | T[], T>
 
 export type StringProposition = string | ((value: string) => boolean)

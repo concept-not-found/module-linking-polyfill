@@ -144,15 +144,19 @@ export const sexp = (...expected) => {
     }
     return NoMatch
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<Matched<any[], any>[], any>} */
+  matcher.builder = (value) => value.map(({ build }) => build())
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
-      (value) => value.map(({ build }) => build())
-    ),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `sexp(${expected.join(', ')})`
@@ -212,12 +216,17 @@ export const value = (expected) => {
     }
     return NoMatch
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<[string] | string[], string>} */
+  matcher.builder = ([value]) => value
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<string[], string>} */ (([value]) => value),
+    value: matcher.builder,
     writable: true,
   })
 
@@ -257,13 +266,19 @@ export const string = (expected) => {
     }
     return NoMatch
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<[string] | string[], string>} */
+  matcher.builder = ([value]) => value
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<string[], string>} */ (([value]) => value),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `string("${expected}")`
@@ -282,13 +297,19 @@ export const any = () => {
   function matcher(input) {
     return Matched('any', input, matcher.builder)
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<any, any>} */
+  matcher.builder = (value) => value
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<any, any>} */ ((value) => value),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => 'any()'
@@ -310,13 +331,16 @@ export const reference = () => {
     }
     return matcher.value(input)
   }
+
   Object.defineProperty(matcher, 'logger', {
     value: /** @type {(...messages: any[]) => void} */ (() => {}),
     writable: false,
+    enumerable: false,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<any[], any>} */ (() => {}),
+    value: /** @type {Builder<[any] | any[], any>} */ (() => {}),
     writable: false,
+    enumerable: false,
   })
 
   matcher.toString = () => matcher.value?.toString() ?? 'reference()'
@@ -344,15 +368,19 @@ export const maybe = (expected) => {
       ? Matched('maybe', [childResult], matcher.builder)
       : Matched('maybe', [], matcher.builder)
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<Matched<any[], any>[], any>} */
+  matcher.builder = ([value]) => value?.build()
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
-      ([value]) => value?.build()
-    ),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `maybe(${expected})`
@@ -382,15 +410,19 @@ export const one = (...expected) => {
     })
     return NoMatch
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<Matched<any[], any>[], any>} */
+  matcher.builder = ([value]) => value?.build()
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
-      ([value]) => value?.build()
-    ),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `one(${expected.join(', ')})`
@@ -432,15 +464,19 @@ export const seq = (...expected) => {
     }
     return Matched('seq', value, matcher.builder)
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
+    enumerable: false,
   })
+  /** @type {Builder<Matched<any[], any>[], any>} */
+  matcher.builder = (value) => value.map(({ build }) => build())
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
-      (value) => value.map(({ build }) => build())
-    ),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `seq(${expected.join(', ')})`
@@ -490,15 +526,18 @@ export const some = (expected) => {
     })
     return NoMatch
   }
+  /** @type {(...messages: any[]) => void} */
+  matcher.logger = () => {}
   Object.defineProperty(matcher, 'logger', {
-    value: /** @type {(...messages: any[]) => void} */ (() => {}),
+    value: matcher.logger,
     writable: true,
   })
+  /** @type {Builder<Matched<any[], any>[], any>} */
+  matcher.builder = (value) => value.map(({ build }) => build())
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<Matched<any[], any>[], any>} */ (
-      (value) => value.map(({ build }) => build())
-    ),
+    value: matcher.builder,
     writable: true,
+    enumerable: false,
   })
 
   matcher.toString = () => `some(${expected})`
