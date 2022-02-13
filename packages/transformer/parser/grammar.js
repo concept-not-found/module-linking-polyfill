@@ -3,8 +3,8 @@ import { forceMeta } from './builders.js'
 const consumedCache = new WeakMap()
 
 /**
- * @typedef {import('./builder.mjs').Sexp} Sexp
- * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
+ * @typedef {import('./builders.mjs').Sexp} Sexp
+ * @typedef {import('./builders.mjs').SexpMeta} SexpMeta
  * @typedef {import('./grammar.mjs').StringProposition} StringProposition
  * @typedef {import('./grammar.mjs').NoMatch} NoMatch
  */
@@ -30,11 +30,6 @@ const consumedCache = new WeakMap()
  */
 
 /**
- * @template R
- * @typedef {import('./builder.mjs').Buildable<R>} Buildable<R>
- */
-
-/**
  * @template T,R
  * @typedef {import('./grammar.mjs').Builder<T, R>} Builder<T, R>
  */
@@ -44,7 +39,7 @@ const consumedCache = new WeakMap()
  * @param {string} match
  * @param {T} value
  * @param {Builder<T, R>} builder
- * @returns {Matched<T, R> & Buildable<R>}
+ * @returns {Matched<T, R>}
  */
 export function Matched(match, value, builder) {
   const result = {
@@ -56,6 +51,7 @@ export function Matched(match, value, builder) {
     value: result.build,
     enumerable: false,
   })
+
   return result
 }
 
@@ -84,7 +80,7 @@ function enableMetaFields(matcher) {
 /**
  * Calculates how many values were consumed in a result.
  * @param {Matched<any, any> | any} result
- * @return {number}
+ * @returns {number}
  */
 function calculateConsumed(result) {
   if (!Array.isArray(result.value)) {
@@ -122,8 +118,9 @@ function calculateConsumed(result) {
 function consumeInput(input, matchResult) {
   forceMeta(input)
   const nextInput = input.slice(calculateConsumed(matchResult))
-  forceMeta(nextInput)
   Object.defineProperty(nextInput, 'meta', { value: input.meta })
+  forceMeta(nextInput)
+
   return nextInput
 }
 
@@ -200,7 +197,7 @@ export const sexp = (...expected) => {
  *
  * @param {StringProposition} expected
  * @param {any} value
- * @return boolean
+ * @returns boolean
  */
 function equals(expected, value) {
   switch (typeof expected) {
@@ -252,6 +249,7 @@ export const value = (expected) => {
   /** @type {Builder<[string] | string[], string>} */
   matcher.builder = ([value]) => value
   enableMetaFields(matcher)
+
   matcher.toString = () => `value("${expected}")`
   return matcher
 }

@@ -13,7 +13,7 @@
  *
  * @template T,R
  * @param {MatchResult<T, R>} result
- * @return {asserts result is Matched<T, R>}
+ * @returns {asserts result is Matched<T, R>}
  */
 export function assertMatched(result) {
   if (!result.match) {

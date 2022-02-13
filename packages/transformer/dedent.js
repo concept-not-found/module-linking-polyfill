@@ -1,3 +1,4 @@
+// @ts-nocheck
 // authored by https://github.com/sudo-suhas
 // https://github.com/dmnd/dedent/pull/14
 // https://github.com/sudo-suhas/dedent/blob/4b33fe11379e028b675d235ce071186d98f5b2b0/dedent.js

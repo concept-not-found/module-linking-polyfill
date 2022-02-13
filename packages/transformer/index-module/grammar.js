@@ -8,6 +8,12 @@ import {
   any,
 } from '../parser/grammar.js'
 
+/**
+ * Parsers index to number if it doesn't start with a $.
+ *
+ * @param {string} index
+ * @returns {string | number}
+ */
 function parseIndex(index) {
   if (index.startsWith('$')) {
     return index
@@ -26,6 +32,7 @@ const kind = one(
   value('global')
 )
 const kindName = [kind, maybe(name)]
+
 const kindDefinition = sexp(...kindName)
 kindDefinition.builder = ([kind, name]) => {
   return {

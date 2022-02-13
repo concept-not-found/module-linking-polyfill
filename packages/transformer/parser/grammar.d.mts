@@ -1,4 +1,4 @@
-import type { Sexp, Buildable } from './builder.mjs'
+import type { Sexp, Buildable } from './builders.mjs'
 
 export type MatchResult<T, R> = Matched<T, R> | NoMatch
 

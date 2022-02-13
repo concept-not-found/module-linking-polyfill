@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import matchers from 'expect/build/matchers.js' // eslint-disable-line node/no-extraneous-import
 
 function stripMetaAndMemoizeStrings(node, index, parent) {

@@ -1,12 +1,12 @@
 /**
  * @template T
- * @typedef {import('./builder.mjs').Builder<T>} Builder<T>
+ * @typedef {import('./builders.mjs').Builder<T>} Builder<T>
  */
 
 /**
- * @typedef {import('./builder.mjs').BuilderType} BuilderType
- * @typedef {import('./builder.mjs').Sexp} Sexp
- * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
+ * @typedef {import('./builders.mjs').BuilderType} BuilderType
+ * @typedef {import('./builders.mjs').Sexp} Sexp
+ * @typedef {import('./builders.mjs').SexpMeta} SexpMeta
  */
 
 import Builders, { forceMeta, TypeOfBuilder } from './builders.js'
@@ -343,7 +343,7 @@ export const RawParser =
  * Trim comments and whitespace out of Sexp.
  *
  * @param {string | (Sexp | Sexp[]) & SexpMeta} node
- * @return {string | Sexp}
+ * @returns {string | Sexp}
  */
 function trim(node) {
   /** @type {WeakMap<any, BuilderType>} */

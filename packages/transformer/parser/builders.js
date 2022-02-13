@@ -1,28 +1,28 @@
 /* eslint-disable unicorn/new-for-builtins, unicorn/prefer-string-slice */
 /**
- * @typedef {import('./builder.mjs').Sexp} Sexp
+ * @typedef {import('./builders.mjs').Sexp} Sexp
  */
 
 /**
  * @template T
- * @typedef {import('./builder.mjs').Builder<T>} Builder<T>
+ * @typedef {import('./builders.mjs').Builder<T>} Builder<T>
  */
 
 /**
  * @template T
- * @typedef {import('./builder.mjs').Buildable<T>} Buildable<T>
+ * @typedef {import('./builders.mjs').Buildable<T>} Buildable<T>
  */
 
 /**
- * @typedef {import('./builder.mjs').TypeOfable} TypeOfable
- * @typedef {import('./builder.mjs').BuilderType} BuilderType
- * @typedef {import('./builder.mjs').SexpMeta} SexpMeta
+ * @typedef {import('./builders.mjs').TypeOfable} TypeOfable
+ * @typedef {import('./builders.mjs').BuilderType} BuilderType
+ * @typedef {import('./builders.mjs').SexpMeta} SexpMeta
  */
 
 /**
  * Force typescript to believe input is is SexpMeta
  * @param {any} input
- * @return {asserts input is SexpMeta}
+ * @returns {asserts input is SexpMeta}
  */
 export function forceMeta(input) {
   input // this is the shortest fake asssertion
@@ -32,12 +32,12 @@ export function forceMeta(input) {
  * Build a set of type of functions.
  *
  * @param {WeakMap<any, BuilderType>} types
- * @return {TypeOfable}
+ * @returns {TypeOfable}
  */
 export function TypeOfBuilder(types) {
   /**
    * @param {any} value
-   * @return {BuilderType}
+   * @returns {BuilderType}
    */
   function typeOf(value) {
     if (value === undefined) {
@@ -47,14 +47,14 @@ export function TypeOfBuilder(types) {
   }
   /**
    * @param {any} value
-   * @return {value is Sexp}
+   * @returns {value is Sexp}
    */
   function typeOfSexp(value) {
     return typeOf(value) === 'sexp'
   }
   /**
    * @param {any} value
-   * @return {value is string}
+   * @returns {value is string}
    */
   function typeOfStringLike(value) {
     return ['string', 'value'].includes(typeOf(value))
@@ -78,7 +78,7 @@ export default (wat) => {
      *
      * @param {number} start
      * @param {string[]} sourceTags
-     * @return {Builder<Sexp>}
+     * @returns {Builder<Sexp>}
      */
     SexpBuilder(start, sourceTags = []) {
       /**
@@ -132,7 +132,7 @@ export default (wat) => {
      * Create a block comment fragment builder.
      *
      * @param {number} start
-     * @return {Builder<string>}
+     * @returns {Builder<string>}
      */
     BlockCommentFragmentBuilder(start) {
       return {

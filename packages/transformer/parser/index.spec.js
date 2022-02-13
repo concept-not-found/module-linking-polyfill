@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { toMatchTree } from './matchers.js'
 
 import { RawParser as Parser } from './index.js'
