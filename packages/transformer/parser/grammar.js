@@ -21,6 +21,11 @@ const consumedCache = new WeakMap()
 
 /**
  * @template T,R
+ * @typedef {import('./grammar.mjs').MatchResult<T, R>} MatchResult<T, R>
+ */
+
+/**
+ * @template T,R
  * @typedef {import('./grammar.mjs').Matched<T, R>} Matched<T, R>
  */
 
@@ -75,6 +80,7 @@ function enableMetaFields(matcher) {
     },
   })
 }
+
 /**
  * Calculates how many values were consumed in a result.
  * @param {Matched<any, any> | any} result
@@ -106,6 +112,22 @@ function calculateConsumed(result) {
 }
 
 /**
+ * Returns input less what was consmed by match result.
+ *
+ * @template T,R
+ * @param {string | Sexp | undefined} input
+ * @param {Matched<T, R>} matchResult
+ * @returns {Sexp}
+ */
+function consumeInput(input, matchResult) {
+  forceMeta(input)
+  const nextInput = input.slice(calculateConsumed(matchResult))
+  forceMeta(nextInput)
+  Object.defineProperty(nextInput, 'meta', { value: input.meta })
+  return nextInput
+}
+
+/**
  * Create a s-expression matcher with expected children.
  *
  * @param {GrammarMatcher<any>[]} expected
@@ -134,6 +156,7 @@ export const sexp = (...expected) => {
 
       const value = []
       for (const child of expected) {
+        /** @type {MatchResult<any[], any>} */
         const childResult = child(input)
         if (!childResult.match) {
           matcher.logger(`${matcher} failed to match [${originalInput}]`, {
@@ -146,11 +169,7 @@ export const sexp = (...expected) => {
           return NoMatch
         }
         value.push(childResult)
-        const { meta } = input
-        const nextInput = input.slice(calculateConsumed(childResult))
-        forceMeta(nextInput)
-        input = nextInput
-        Object.defineProperty(input, 'meta', { value: meta })
+        input = consumeInput(input, childResult)
       }
       const match = input.length === 0 && value.length > 0 && 'sexp'
       if (match) {
@@ -422,12 +441,7 @@ export const seq = (...expected) => {
         return NoMatch
       }
       value.push(childResult)
-      forceMeta(input)
-      const { meta } = input
-      const nextInput = input.slice(calculateConsumed(childResult))
-      forceMeta(nextInput)
-      input = nextInput
-      Object.defineProperty(input, 'meta', { value: meta })
+      input = consumeInput(input, childResult)
     }
     return Matched('seq', value, matcher.builder)
   }
@@ -463,12 +477,7 @@ export const some = (expected) => {
     let childResult = expected(input)
     while (childResult.match) {
       value.push(childResult)
-      forceMeta(input)
-      const { meta } = input
-      const nextInput = input.slice(calculateConsumed(childResult))
-      forceMeta(nextInput)
-      input = nextInput
-      Object.defineProperty(input, 'meta', { value: meta })
+      input = consumeInput(input, childResult)
       if (input.length === 0) {
         break
       }
