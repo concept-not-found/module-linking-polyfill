@@ -13,8 +13,10 @@ export type NoMatch = {
 
 export type Builder<T, R> = (value: T, context?: any) => R
 
+export type Logger = (...messages: any[]) => void
+
 export type Matcher<I, T, R> = ((input?: I) => MatchResult<T, R>) & {
-  logger: (...messages: any[]) => void
+  logger: Logger
 } & {
   builder: Builder<T, R>
 }

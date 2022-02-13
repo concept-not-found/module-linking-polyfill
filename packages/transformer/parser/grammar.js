@@ -15,6 +15,11 @@ const consumedCache = new WeakMap()
  */
 
 /**
+ * @template I,T,R
+ * @typedef {import('./grammar.mjs').Matcher<I, T, R>} Matcher<I, T, R>
+ */
+
+/**
  * @template T,R
  * @typedef {import('./grammar.mjs').Matched<T, R>} Matched<T, R>
  */
@@ -54,6 +59,22 @@ export const NoMatch = {
   match: false,
 }
 
+/**
+ * @template I, T, R
+ * @param {Matcher<I, T, R>} matcher
+ */
+function enableMetaFields(matcher) {
+  Object.defineProperties(matcher, {
+    logger: {
+      value: matcher.logger,
+      writable: true,
+    },
+    builder: {
+      value: matcher.builder,
+      writable: true,
+    },
+  })
+}
 /**
  * Calculates how many values were consumed in a result.
  * @param {Matched<any, any> | any} result
@@ -146,18 +167,9 @@ export const sexp = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<Matched<any[], any>[], any>} */
   matcher.builder = (value) => value.map(({ build }) => build())
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `sexp(${expected.join(', ')})`
 
@@ -218,18 +230,9 @@ export const value = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<[string] | string[], string>} */
   matcher.builder = ([value]) => value
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-  })
-
+  enableMetaFields(matcher)
   matcher.toString = () => `value("${expected}")`
   return matcher
 }
@@ -268,18 +271,9 @@ export const string = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<[string] | string[], string>} */
   matcher.builder = ([value]) => value
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `string("${expected}")`
   return matcher
@@ -299,18 +293,9 @@ export const any = () => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<any, any>} */
   matcher.builder = (value) => value
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => 'any()'
   return matcher
@@ -370,18 +355,9 @@ export const maybe = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<Matched<any[], any>[], any>} */
   matcher.builder = ([value]) => value?.build()
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `maybe(${expected})`
   return matcher
@@ -412,18 +388,9 @@ export const one = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<Matched<any[], any>[], any>} */
   matcher.builder = ([value]) => value?.build()
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `one(${expected.join(', ')})`
   return matcher
@@ -466,18 +433,9 @@ export const seq = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-    enumerable: false,
-  })
   /** @type {Builder<Matched<any[], any>[], any>} */
   matcher.builder = (value) => value.map(({ build }) => build())
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `seq(${expected.join(', ')})`
   return matcher
@@ -528,17 +486,9 @@ export const some = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  Object.defineProperty(matcher, 'logger', {
-    value: matcher.logger,
-    writable: true,
-  })
   /** @type {Builder<Matched<any[], any>[], any>} */
   matcher.builder = (value) => value.map(({ build }) => build())
-  Object.defineProperty(matcher, 'builder', {
-    value: matcher.builder,
-    writable: true,
-    enumerable: false,
-  })
+  enableMetaFields(matcher)
 
   matcher.toString = () => `some(${expected})`
   return matcher
