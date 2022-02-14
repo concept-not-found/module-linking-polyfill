@@ -15,12 +15,26 @@ export type Builder<T, R> = (value: T, context?: any) => R
 
 export type Logger = (...messages: any[]) => void
 
-export type Matcher<I, T, R> = ((input?: I) => MatchResult<T, R>) & {
+export type Matcher<I, T, R> = ((input: I) => MatchResult<T, R>) & {
   logger: Logger
 } & {
   builder: Builder<T, R>
 }
 
-export type GrammarMatcher<T> = Matcher<Sexp | string, [T] | T[], T>
+export type GrammarMatcher<T, R> = Matcher<Sexp | string, T, R>
 
 export type StringProposition = string | ((value: string) => boolean)
+
+type MatcherToMatched<T> = T extends Matcher<Sexp, infer T, infer R> ? Matched<T, R> : T
+export type MatchedArray<M extends any[]> = M extends [
+  infer Head,
+  ...infer Tail
+] ? [MatcherToMatched<Head>, ...MatchedArray<Tail>]
+  : []
+
+type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
+export type BuiltArray<M extends any[]> = M extends [
+  infer Head,
+  ...infer Tail
+] ? [MatcherToBuilt<Head>, ...BuiltArray<Tail>]
+  : []

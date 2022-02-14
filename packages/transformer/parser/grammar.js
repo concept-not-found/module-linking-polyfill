@@ -10,8 +10,8 @@ const consumedCache = new WeakMap()
  */
 
 /**
- * @template T
- * @typedef {import('./grammar.mjs').GrammarMatcher<T>} GrammarMatcher<T>
+ * @template T,R
+ * @typedef {import('./grammar.mjs').GrammarMatcher<T,R>} GrammarMatcher<T,R>
  */
 
 /**
@@ -30,8 +30,23 @@ const consumedCache = new WeakMap()
  */
 
 /**
+ * @template T
+ * @typedef {import('./builders.mjs').Buildable<T>} Buildable<T>
+ */
+
+/**
  * @template T,R
  * @typedef {import('./grammar.mjs').Builder<T, R>} Builder<T, R>
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar.mjs').MatchedArray<T>} MatchedArray<T>
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar.mjs').BuiltArray<T>} BuiltArray<T>
  */
 
 /**
@@ -127,12 +142,13 @@ function consumeInput(input, matchResult) {
 /**
  * Create a s-expression matcher with expected children.
  *
- * @param {GrammarMatcher<any>[]} expected
- * @returns {GrammarMatcher<any>}
+ * @template {any[]} T
+ * @param {T} expected
+ * @returns {Matcher<Sexp, MatchedArray<T>, BuiltArray<T>>}
  */
 export const sexp = (...expected) => {
   /**
-   * @param {string | Sexp | undefined} container
+   * @param {Sexp} container
    */
   function matcher(container) {
     if (container !== undefined && typeof container !== 'string') {
@@ -151,9 +167,9 @@ export const sexp = (...expected) => {
         return NoMatch
       }
 
-      const value = []
+      const value = /** @type {MatchedArray<T>} */ (/** @type {unknown} */ ([]))
       for (const child of expected) {
-        /** @type {MatchResult<any[], any>} */
+        /** @type {MatchResult<MT, MR>} */
         const childResult = child(input)
         if (!childResult.match) {
           matcher.logger(`${matcher} failed to match [${originalInput}]`, {
@@ -183,7 +199,9 @@ export const sexp = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<Matched<any[], any>[], any>} */
+  /**
+   * @type {Builder<MatchedArray<T>, BuiltArray<T>>}
+   */
   matcher.builder = (value) => value.map(({ build }) => build())
   enableMetaFields(matcher)
 
@@ -216,25 +234,25 @@ function equals(expected, value) {
  * Create a s-expression value matcher
  *
  * @param {StringProposition} expected
- * @returns {GrammarMatcher<string>}
+ * @returns {Matcher<Sexp, [string], string>}
  */
 export const value = (expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
-    if (input !== undefined && typeof input !== 'string') {
-      const [value] = input
-      const match =
-        value !== undefined &&
-        input.meta.typeOfStringLike(value) &&
-        input.meta.typeOf(value) === 'value' &&
-        equals(expected, value) &&
-        'value'
-      if (match) {
-        return Matched(match, [value], matcher.builder)
-      }
+    // if (input !== undefined && typeof input !== 'string') {
+    const [value] = input
+    const match =
+      value !== undefined &&
+      input.meta.typeOfStringLike(value) &&
+      input.meta.typeOf(value) === 'value' &&
+      equals(expected, value) &&
+      'value'
+    if (match) {
+      return Matched(match, [value], matcher.builder)
     }
+    // }
     if (typeof input !== 'string') {
       matcher.logger(`${matcher} failed to match [${input}]`, {
         typeOf: input?.meta.typeOf(input[0]),
@@ -246,7 +264,10 @@ export const value = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<[string] | string[], string>} */
+  // /** @type {Builder<[string], string>} */
+  /**
+   * @param {[string]} value
+   */
   matcher.builder = ([value]) => value
   enableMetaFields(matcher)
 

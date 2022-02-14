@@ -9,6 +9,21 @@ import {
 } from '../parser/grammar.js'
 
 /**
+ * @template T
+ * @typedef {import('../parser/builders.mjs').Buildable<T>} Buildable<T>
+ */
+
+/**
+ * @template T,R
+ * @typedef {import('../parser/grammar.mjs').Builder<T, R>} Builder<T, R>
+ */
+
+/**
+ * @template T,R
+ * @typedef {import('../parser/grammar.mjs').GrammarMatcher<T, R>} GrammarMatcher<T, R>
+ */
+
+/**
  * Parsers index to number if it doesn't start with a $.
  *
  * @param {string} index
@@ -33,7 +48,10 @@ const kind = one(
 )
 const kindName = [kind, maybe(name)]
 
+/** @typedef {{type: string, name: string}} KindDefinition */
+
 const kindDefinition = sexp(...kindName)
+/** @type {Builder<[Buildable<string>, Buildable<string>], KindDefinition>} */
 kindDefinition.builder = ([kind, name]) => {
   return {
     type: kind.build(),
