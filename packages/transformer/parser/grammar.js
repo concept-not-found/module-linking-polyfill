@@ -41,12 +41,12 @@ const consumedCache = new WeakMap()
 
 /**
  * @template T
- * @typedef {import('./grammar.mjs').MatchedArray<T>} MatchedArray<T>
+ * @typedef {import('./grammar.mjs').MatchersToMatched<T>} MatchersToMatched<T>
  */
 
 /**
  * @template T
- * @typedef {import('./grammar.mjs').BuiltArray<T>} BuiltArray<T>
+ * @typedef {import('./grammar.mjs').MatchersToBuilt<T>} MatchersToBuilt<T>
  */
 
 /**
@@ -144,7 +144,7 @@ function consumeInput(input, matchResult) {
  *
  * @template {any[]} T
  * @param {T} expected
- * @returns {Matcher<Sexp, MatchedArray<T>, BuiltArray<T>>}
+ * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
  */
 export const sexp = (...expected) => {
   /**
@@ -167,23 +167,26 @@ export const sexp = (...expected) => {
         return NoMatch
       }
 
-      const value = /** @type {MatchedArray<T>} */ (/** @type {unknown} */ ([]))
+      const childResults = []
       for (const child of expected) {
-        /** @type {MatchResult<MT, MR>} */
+        /** @type {MatchResult<unknown, unknown>} */
         const childResult = child(input)
         if (!childResult.match) {
           matcher.logger(`${matcher} failed to match [${originalInput}]`, {
             expected: expected.map(String),
             input: originalInput,
             unmatchedExpected: String(child),
-            matched: value,
+            matched: childResults,
             unmatched: input,
           })
           return NoMatch
         }
-        value.push(childResult)
+        childResults.push(childResult)
         input = consumeInput(input, childResult)
       }
+      const value = /** @type {MatchersToMatched<T>} */ (
+        /** @type {unknown} */ (childResults)
+      )
       const match = input.length === 0 && value.length > 0 && 'sexp'
       if (match) {
         return Matched(match, value, (value) => matcher.builder(value, input))
@@ -199,10 +202,14 @@ export const sexp = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /**
-   * @type {Builder<MatchedArray<T>, BuiltArray<T>>}
-   */
-  matcher.builder = (value) => value.map(({ build }) => build())
+  /** @type {Builder<MatchersToMatched<T>, MatchersToBuilt<T>>} */
+  matcher.builder = /** @param {MatchersToMatched<T>} value */ (value) => {
+    /** @type {Buildable<unknown>[]} */
+    const buildable = value
+    return /** @type {MatchersToBuilt<T>} */ (
+      buildable.map(({ build }) => build())
+    )
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `sexp(${expected.join(', ')})`

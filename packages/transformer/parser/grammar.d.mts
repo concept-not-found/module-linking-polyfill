@@ -26,15 +26,15 @@ export type GrammarMatcher<T, R> = Matcher<Sexp | string, T, R>
 export type StringProposition = string | ((value: string) => boolean)
 
 type MatcherToMatched<T> = T extends Matcher<Sexp, infer T, infer R> ? Matched<T, R> : T
-export type MatchedArray<M extends any[]> = M extends [
+export type MatchersToMatched<M extends any[]> = M extends [
   infer Head,
   ...infer Tail
-] ? [MatcherToMatched<Head>, ...MatchedArray<Tail>]
+] ? [MatcherToMatched<Head>, ...MatchersToMatched<Tail>]
   : []
 
 type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
-export type BuiltArray<M extends any[]> = M extends [
+export type MatchersToBuilt<M extends any[]> = M extends [
   infer Head,
   ...infer Tail
-] ? [MatcherToBuilt<Head>, ...BuiltArray<Tail>]
+] ? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
   : []
