@@ -12,46 +12,77 @@ import type {
   MatcherToMatched,
   MatcherToBuilt,
 } from './grammar.mjs'
-import { sexp, value, any, reference, maybe } from './grammar.js'
-
-expectType<Matcher<Sexp, [string], string>>(value('alice'))
-
-expectType<Matcher<Sexp, [Matched<[string], string>], [string]>>(
-  sexp(value('alice'))
-)
-expectType<
-  Matcher<Sexp, [Matched<[Matched<[string], string>], [string]>], [[string]]>
->(sexp(sexp(value('alice'))))
-expectType<
-  Matcher<
-    Sexp,
-    [Matched<[string], string>, Matched<[string], string>],
-    [string, string]
-  >
->(sexp(value('alice'), value('alice')))
-
-expectType<Matcher<Sexp, any[], any>>(any())
-
-const referenceValue: ReferenceMatcher<Matcher<Sexp, [string], string>> =
-  reference()
-expectType<Matcher<Sexp, [string], string>>(referenceValue)
-referenceValue.value = value('alice')
+import { sexp, value, any, reference, maybe, one } from './grammar.js'
 
 type valueMatcher = Matcher<Sexp, [string], string>
 expectType<valueMatcher>(value('alice'))
+type matchedValue = Matched<[string], string>
+expectType<
+TypeEqual<MatcherToMatched<valueMatcher>, matchedValue>
+>(true)
+type builtValue = string
+expectType<TypeEqual<MatcherToBuilt<valueMatcher>, builtValue>>(true)
+
+type sexpMatcher = Matcher<Sexp, [matchedValue], [builtValue]>
+expectType<sexpMatcher>(
+  sexp(value('alice'))
+)
+type matchedSexp = Matched<[matchedValue], [builtValue]>
+expectType<
+TypeEqual<MatcherToMatched<sexpMatcher>, matchedSexp>
+>(true)
+type builtSexp = [string]
+expectType<
+TypeEqual<MatcherToBuilt<sexpMatcher>, builtSexp>
+>(true)
+expectType<
+  Matcher<Sexp, [matchedSexp], [builtSexp]>
+>(sexp(sexp(value('alice'))))
 
 expectType<
-  TypeEqual<MatcherToMatched<valueMatcher>, Matched<[string], string>>
->(true)
-expectType<TypeEqual<MatcherToBuilt<valueMatcher>, string>>(true)
+  Matcher<
+    Sexp,
+    [matchedValue, matchedValue],
+    [builtValue, builtValue]
+  >
+>(sexp(value('alice'), value('alice')))
+
+expectType<
+  Matcher<
+    Sexp,
+    [matchedValue, matchedSexp],
+    [builtValue, builtSexp]
+  >
+>(sexp(value('alice'), sexp(value('bob'))))
+
+const referenceValue: ReferenceMatcher<valueMatcher> =
+  reference()
+expectType<valueMatcher>(referenceValue)
+referenceValue.value = value('alice')
 
 type maybeMatcher = Matcher<
   Sexp,
-  [MatcherToMatched<valueMatcher>] | [],
-  MatcherToBuilt<valueMatcher> | undefined
+  [matchedValue] | [],
+  builtValue | undefined
 >
 expectType<maybeMatcher>(maybe(value('alice')))
 
+type oneMatcher = Matcher<
+  Sexp,
+  [matchedValue],
+  builtValue
+>
+expectType<oneMatcher>(one(value('alice')))
+
+type doubleOneMatcher = Matcher<
+  Sexp,
+  [matchedValue | matchedSexp],
+  builtValue | builtSexp
+>
+expectType<doubleOneMatcher>(one(value('alice'), sexp(value('bob'))))
+
+
+// worksheet
 function passThroughTupleTypes<T extends any[]>(...types: T): T {
   return types
 }
