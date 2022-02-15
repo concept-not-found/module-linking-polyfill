@@ -27,13 +27,6 @@
   },
   "rules": {
     "quotes": ["error", "single"],
-    "no-unused-vars": [
-      "error",
-      {
-        "args": "none"
-      }
-    ],
-
     "array-callback-return": "error",
     "no-await-in-loop": "error",
     "no-promise-executor-return": "error",
@@ -69,6 +62,12 @@
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": "error",
 
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "varsIgnorePattern": "^_unused_" }
+    ],
+
     "node/file-extension-in-import": "error",
     "node/no-extraneous-import": [
       "error",
@@ -76,6 +75,7 @@
         "allowModules": ["@jest/globals"]
       }
     ],
+    "node/no-missing-import": "off",
     "node/no-unpublished-import": [
       "error",
       {

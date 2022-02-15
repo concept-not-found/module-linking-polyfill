@@ -394,10 +394,9 @@ export const reference = () => {
 /**
  * Create a s-expression matcher that optionally matches an expected.
  *
- * @template MT,MR
- * @template {Matcher<Sexp, MT, MR>} T
- * @param {T} expected
- * @returns {Matcher<Sexp, [MatcherToMatched<T>] | [], MatcherToBuilt<T>>}
+ * @template MT, MR
+ * @param {Matcher<Sexp, MT, MR>} expected
+ * @returns {Matcher<Sexp, [Matched<MT, MR>] | [], MR | undefined>}
  */
 export const maybe = (expected) => {
   /**
@@ -406,17 +405,15 @@ export const maybe = (expected) => {
   function matcher(input) {
     /** @type {MatchResult<MT, MR>} */
     const childResult = expected(input)
-    /** @type {[MatcherToMatched<T>] | []} */
-    const value = childResult.match
-      ? [/** @type {MatcherToMatched<T>} */ (childResult)]
-      : []
+    const value = /** @type {[Matched<MT, MR>] | []} */ (
+      childResult.match ? [childResult] : []
+    )
     return Matched('maybe', value, matcher.builder)
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<[MatcherToMatched<T>] | [], MatcherToBuilt<T>>} */
-  matcher.builder = ([value]) =>
-    /** @type {MatcherToBuilt<T>} */ (value?.build())
+  /** @type {Builder<[Matched<MT, MR>] | [], MR | undefined>} */
+  matcher.builder = ([value]) => value?.build()
   enableMetaFields(matcher)
 
   matcher.toString = () => `maybe(${expected})`

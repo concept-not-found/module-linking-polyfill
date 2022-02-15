@@ -21,11 +21,19 @@ export type Matcher<I, T, R> = ((input: I) => MatchResult<T, R>) & {
   builder: Builder<T, R>
 }
 
+export type ReferenceMatcher<M> = M extends Matcher<
+  infer _unused_I,
+  infer _unused_T,
+  infer _unused_R
+>
+  ? M & { value: M }
+  : never
+
 export type StringProposition = string | ((value: string) => boolean)
 
-export type MatcherToMatched<T> = T extends Matcher<Sexp, infer T, infer R>
+export type MatcherToMatched<M> = M extends Matcher<Sexp, infer T, infer R>
   ? Matched<T, R>
-  : T
+  : M
 export type MatchersToMatched<M extends any[]> = M extends [
   infer Head,
   ...infer Tail
@@ -33,13 +41,19 @@ export type MatchersToMatched<M extends any[]> = M extends [
   ? [MatcherToMatched<Head>, ...MatchersToMatched<Tail>]
   : []
 
-export type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
+export type MatcherToBuilt<M> = M extends Matcher<
+  Sexp,
+  infer _unused_T,
+  infer R
+>
+  ? R
+  : M
 export type MatchersToBuilt<M extends any[]> = M extends [
   infer Head,
-...infer Tail
+  ...infer Tail
 ]
-? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
-: []
+  ? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
+  : []
 
 export type MatchersToMatchedUnion<M extends any[]> = M extends [
   infer Head,
@@ -50,10 +64,10 @@ export type MatchersToMatchedUnion<M extends any[]> = M extends [
 
 export type MatchersToBuiltUnion<M extends any[]> = M extends [
   infer Head,
-...infer Tail
+  ...infer Tail
 ]
-? MatcherToBuilt<Head> | MatchersToBuiltUnion<Tail>
-: never
+  ? MatcherToBuilt<Head> | MatchersToBuiltUnion<Tail>
+  : never
 
 export type GrammarMultiMatcher<T extends any[]> = Matcher<
   Sexp,

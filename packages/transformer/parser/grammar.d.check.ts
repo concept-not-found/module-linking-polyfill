@@ -2,11 +2,17 @@
 // it works some of the time.
 // this file is checked using npx tsc --project test-types.json
 
-import { TypeOf, expectType } from 'ts-expect'
+import { TypeOf, TypeEqual, expectType } from 'ts-expect'
 
-import type { Sexp } from './builders.js'
-import type { Matched, Matcher } from './grammar.js'
-import { sexp, value } from './grammar.js'
+import type { Sexp } from './builders.mjs'
+import type {
+  Matched,
+  Matcher,
+  ReferenceMatcher,
+  MatcherToMatched,
+  MatcherToBuilt,
+} from './grammar.mjs'
+import { sexp, value, any, reference, maybe } from './grammar.js'
 
 expectType<Matcher<Sexp, [string], string>>(value('alice'))
 
@@ -23,6 +29,28 @@ expectType<
     [string, string]
   >
 >(sexp(value('alice'), value('alice')))
+
+expectType<Matcher<Sexp, any[], any>>(any())
+
+const referenceValue: ReferenceMatcher<Matcher<Sexp, [string], string>> =
+  reference()
+expectType<Matcher<Sexp, [string], string>>(referenceValue)
+referenceValue.value = value('alice')
+
+type valueMatcher = Matcher<Sexp, [string], string>
+expectType<valueMatcher>(value('alice'))
+
+expectType<
+  TypeEqual<MatcherToMatched<valueMatcher>, Matched<[string], string>>
+>(true)
+expectType<TypeEqual<MatcherToBuilt<valueMatcher>, string>>(true)
+
+type maybeMatcher = Matcher<
+  Sexp,
+  [MatcherToMatched<valueMatcher>] | [],
+  MatcherToBuilt<valueMatcher> | undefined
+>
+expectType<maybeMatcher>(maybe(value('alice')))
 
 function passThroughTupleTypes<T extends any[]>(...types: T): T {
   return types
