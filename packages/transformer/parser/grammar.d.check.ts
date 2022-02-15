@@ -2,7 +2,7 @@
 // it works some of the time.
 // this file is checked using npx tsc --project test-types.json
 
-import { expectType } from 'ts-expect'
+import { TypeOf, expectType } from 'ts-expect'
 
 import type { Sexp } from './builders.js'
 import type { Matched, Matcher } from './grammar.js'
@@ -60,3 +60,15 @@ function boxToDox<T extends any[]>(...boxes: [...T]): BoxyToDoxy<T> {
 }
 
 expectType<[Doxy<number>, Doxy<string>]>(boxToDox(Box(123), Box('hello')))
+
+type OneOf<T extends any[]> = T extends [infer Head, ...infer Tail]
+  ? Head | OneOf<Tail>
+  : never
+
+function picker<T extends any[]>(index: number, ...values: T): OneOf<T> {
+  return values[index]
+}
+
+expectType<string | number>(picker(0, 123, 'hello'))
+expectType<TypeOf<OneOf<[number, string]>, number>>(true)
+expectType<TypeOf<OneOf<[number, string]>, string>>(true)

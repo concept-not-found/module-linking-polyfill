@@ -56,6 +56,16 @@ const consumedCache = new WeakMap()
 
 /**
  * @template T
+ * @typedef {import('./grammar.mjs').MatchersToMatchedUnion<T>} MatchersToMatchedUnion<T>
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar.mjs').MatchersToBuiltUnion<T>} MatchersToBuiltUnion<T>
+ */
+
+/**
+ * @template T
  * @typedef {import('./grammar.mjs').MatcherToMatched<T>} MatcherToMatched<T>
  */
 
@@ -414,18 +424,23 @@ export const maybe = (expected) => {
 /**
  * Create a s-expression matcher that the first expected child.
  *
- * @param {GrammarMatcher<any>[]} expected
- * @returns {GrammarMatcher<any>}
+ * @template {any[]} T
+ * @param {T} expected
+ * @returns {Matcher<Sexp, [MatchersToMatchedUnion<T>], MatchersToBuiltUnion<T>>}
  */
 export const one = (...expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
     for (const child of expected) {
       const childResult = child(input)
       if (childResult.match) {
-        return Matched('one', [childResult], matcher.builder)
+        return Matched(
+          'one',
+          [/** @type {MatchersToMatchedUnion<T>} */ (childResult)],
+          matcher.builder
+        )
       }
     }
     matcher.logger(`${matcher} failed to match ${input}`, {
@@ -436,8 +451,11 @@ export const one = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<Matched<any[], any>[], any>} */
-  matcher.builder = ([value]) => value?.build()
+  /** @type {Builder<[MatchersToMatchedUnion<T>], MatchersToBuiltUnion<T>>} */
+  matcher.builder = ([value]) => {
+    const builder = /** @type {Buildable<unknown>} */ (value)
+    return /** @type {MatchersToBuiltUnion<T>} */ (builder?.build())
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `one(${expected.join(', ')})`

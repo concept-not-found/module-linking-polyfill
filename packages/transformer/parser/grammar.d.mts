@@ -36,10 +36,24 @@ export type MatchersToMatched<M extends any[]> = M extends [
 export type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
 export type MatchersToBuilt<M extends any[]> = M extends [
   infer Head,
+...infer Tail
+]
+? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
+: []
+
+export type MatchersToMatchedUnion<M extends any[]> = M extends [
+  infer Head,
   ...infer Tail
 ]
-  ? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
-  : []
+  ? MatcherToMatched<Head> | MatchersToMatchedUnion<Tail>
+  : never
+
+export type MatchersToBuiltUnion<M extends any[]> = M extends [
+  infer Head,
+...infer Tail
+]
+? MatcherToBuilt<Head> | MatchersToBuiltUnion<Tail>
+: never
 
 export type GrammarMultiMatcher<T extends any[]> = Matcher<
   Sexp,
