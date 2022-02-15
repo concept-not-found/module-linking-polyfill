@@ -68,15 +68,3 @@ export type MatchersToBuiltUnion<M extends any[]> = M extends [
 ]
   ? MatcherToBuilt<Head> | MatchersToBuiltUnion<Tail>
   : never
-
-export type GrammarMultiMatcher<T extends any[]> = Matcher<
-  Sexp,
-  MatchersToMatched<T>,
-  MatchersToBuilt<T>
->
-
-export type GrammarMatcher<T> = Matcher<
-  Sexp,
-  MatcherToMatched<T>,
-  MatcherToBuilt<T>
->

@@ -15,11 +15,6 @@ const consumedCache = new WeakMap()
  */
 
 /**
- * @template T
- * @typedef {import('./grammar.mjs').GrammarMultiMatcher<T>} GrammarMultiMatcher<T>
- */
-
-/**
  * @template I,T,R
  * @typedef {import('./grammar.mjs').Matcher<I, T, R>} Matcher<I, T, R>
  */
@@ -169,7 +164,7 @@ function consumeInput(input, matchResult) {
  *
  * @template {any[]} T
  * @param {T} expected
- * @returns {GrammarMultiMatcher<T>}
+ * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
  */
 export const sexp = (...expected) => {
   /**
@@ -334,7 +329,7 @@ export const string = (expected) => {
 /**
  * Create a s-expression any matcher, which matches anything.
  *
- * @returns {GrammarMatcher<any>}
+ * @returns {Matcher<Sexp, any[], any>}
  */
 export const any = () => {
   /**
@@ -466,7 +461,7 @@ export const one = (...expected) => {
  *
  * @template {any[]} T
  * @param {T} expected
- * @returns {GrammarMultiMatcher<T>}
+ * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
  */
 export const seq = (...expected) => {
   /**
