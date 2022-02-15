@@ -23,7 +23,7 @@ export type Matcher<I, T, R> = ((input: I) => MatchResult<T, R>) & {
 
 export type StringProposition = string | ((value: string) => boolean)
 
-type MatcherToMatched<T> = T extends Matcher<Sexp, infer T, infer R>
+export type MatcherToMatched<T> = T extends Matcher<Sexp, infer T, infer R>
   ? Matched<T, R>
   : T
 export type MatchersToMatched<M extends any[]> = M extends [
@@ -33,7 +33,7 @@ export type MatchersToMatched<M extends any[]> = M extends [
   ? [MatcherToMatched<Head>, ...MatchersToMatched<Tail>]
   : []
 
-type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
+export type MatcherToBuilt<T> = T extends Matcher<Sexp, infer T, infer R> ? R : T
 export type MatchersToBuilt<M extends any[]> = M extends [
   infer Head,
   ...infer Tail
@@ -41,8 +41,14 @@ export type MatchersToBuilt<M extends any[]> = M extends [
   ? [MatcherToBuilt<Head>, ...MatchersToBuilt<Tail>]
   : []
 
-export type GrammarMatcher<T extends any[]> = Matcher<
+export type GrammarMultiMatcher<T extends any[]> = Matcher<
   Sexp,
   MatchersToMatched<T>,
   MatchersToBuilt<T>
+>
+
+export type GrammarMatcher<T> = Matcher<
+  Sexp,
+  MatcherToMatched<T>,
+  MatcherToBuilt<T>
 >

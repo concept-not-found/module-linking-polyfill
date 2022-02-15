@@ -15,6 +15,11 @@ const consumedCache = new WeakMap()
  */
 
 /**
+ * @template T
+ * @typedef {import('./grammar.mjs').GrammarMultiMatcher<T>} GrammarMultiMatcher<T>
+ */
+
+/**
  * @template I,T,R
  * @typedef {import('./grammar.mjs').Matcher<I, T, R>} Matcher<I, T, R>
  */
@@ -47,6 +52,16 @@ const consumedCache = new WeakMap()
 /**
  * @template T
  * @typedef {import('./grammar.mjs').MatchersToBuilt<T>} MatchersToBuilt<T>
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar.mjs').MatcherToMatched<T>} MatcherToMatched<T>
+ */
+
+/**
+ * @template T
+ * @typedef {import('./grammar.mjs').MatcherToBuilt<T>} MatcherToBuilt<T>
  */
 
 /**
@@ -144,7 +159,7 @@ function consumeInput(input, matchResult) {
  *
  * @template {any[]} T
  * @param {T} expected
- * @returns {GrammarMatcher<T>}
+ * @returns {GrammarMultiMatcher<T>}
  */
 export const sexp = (...expected) => {
   /**
@@ -367,23 +382,29 @@ export const reference = () => {
 /**
  * Create a s-expression matcher that optionally matches an expected.
  *
- * @param {GrammarMatcher<any>} expected
- * @returns {GrammarMatcher<any>}
+ * @template MT,MR
+ * @template {Matcher<Sexp, MT, MR>} T
+ * @param {T} expected
+ * @returns {Matcher<Sexp, [MatcherToMatched<T>] | [], MatcherToBuilt<T>>}
  */
 export const maybe = (expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
+    /** @type {MatchResult<MT, MR>} */
     const childResult = expected(input)
-    return childResult.match
-      ? Matched('maybe', [childResult], matcher.builder)
-      : Matched('maybe', [], matcher.builder)
+    /** @type {[MatcherToMatched<T>] | []} */
+    const value = childResult.match
+      ? [/** @type {MatcherToMatched<T>} */ (childResult)]
+      : []
+    return Matched('maybe', value, matcher.builder)
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<Matched<any[], any>[], any>} */
-  matcher.builder = ([value]) => value?.build()
+  /** @type {Builder<[MatcherToMatched<T>] | [], MatcherToBuilt<T>>} */
+  matcher.builder = ([value]) =>
+    /** @type {MatcherToBuilt<T>} */ (value?.build())
   enableMetaFields(matcher)
 
   matcher.toString = () => `maybe(${expected})`
