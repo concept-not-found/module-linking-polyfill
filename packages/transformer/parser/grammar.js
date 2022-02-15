@@ -153,11 +153,7 @@ export const sexp = (...expected) => {
   function matcher(container) {
     let [input] = container
     const originalInput = input
-    if (
-      input === undefined ||
-      typeof input === 'string' ||
-      !container.meta.typeOfSexp(input)
-    ) {
+    if (!container.meta.typeOfSexp(input)) {
       matcher.logger(`${matcher} failed to match [${input}]`, {
         typeOf: container.meta.typeOf(input),
         expected: expected.map(String),
@@ -247,10 +243,8 @@ export const value = (expected) => {
    * @param {Sexp} input
    */
   function matcher(input) {
-    // if (input !== undefined && typeof input !== 'string') {
     const [value] = input
     const match =
-      value !== undefined &&
       input.meta.typeOfStringLike(value) &&
       input.meta.typeOf(value) === 'value' &&
       equals(expected, value) &&
@@ -258,22 +252,16 @@ export const value = (expected) => {
     if (match) {
       return Matched(match, [value], matcher.builder)
     }
-    // }
-    if (typeof input !== 'string') {
-      matcher.logger(`${matcher} failed to match [${input}]`, {
-        typeOf: input?.meta.typeOf(input[0]),
-        expected,
-        input: input?.map(String),
-      })
-    }
+    matcher.logger(`${matcher} failed to match [${input}]`, {
+      typeOf: input?.meta.typeOf(input[0]),
+      expected,
+      input: input?.map(String),
+    })
     return NoMatch
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  // /** @type {Builder<[string], string>} */
-  /**
-   * @param {[string]} value
-   */
+  /** @type {Builder<[string], string>} */
   matcher.builder = ([value]) => value
   enableMetaFields(matcher)
 
@@ -292,30 +280,25 @@ export const string = (expected) => {
    * @param {Sexp} input
    */
   function matcher(input) {
-    if (input !== undefined && typeof input !== 'string') {
-      const [value] = input
-      const match =
-        value !== undefined &&
-        input.meta.typeOfStringLike(value) &&
-        input.meta.typeOf(value) === 'string' &&
-        equals(expected, String(value)) &&
-        'string'
-      if (match) {
-        return Matched(match, [String(value)], matcher.builder)
-      }
+    const [value] = input
+    const match =
+      input.meta.typeOfStringLike(value) &&
+      input.meta.typeOf(value) === 'string' &&
+      equals(expected, String(value)) &&
+      'string'
+    if (match) {
+      return Matched(match, [String(value)], matcher.builder)
     }
-    if (typeof input !== 'string') {
-      matcher.logger(`${matcher} failed to match [${input}]`, {
-        typeOf: input?.meta.typeOf(input[0]),
-        expected,
-        input: input?.map(String),
-      })
-    }
+    matcher.logger(`${matcher} failed to match [${input}]`, {
+      typeOf: input?.meta.typeOf(input[0]),
+      expected,
+      input: input?.map(String),
+    })
     return NoMatch
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<[string] | string[], string>} */
+  /** @type {Builder<[string], string>} */
   matcher.builder = ([value]) => value
   enableMetaFields(matcher)
 
