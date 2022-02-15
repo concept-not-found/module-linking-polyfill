@@ -21,7 +21,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "lint:type": "tsc --project ./test-types.json && tsc",
+    "lint:type": "tsc --checkJs false && tsc",
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "author": "Ronald Chen <pyrogx1133@gmail.com>",

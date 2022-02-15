@@ -10,11 +10,6 @@ const consumedCache = new WeakMap()
  */
 
 /**
- * @template T
- * @typedef {import('./grammar.mjs').GrammarMatcher<T>} GrammarMatcher<T>
- */
-
-/**
  * @template I,T,R
  * @typedef {import('./grammar.mjs').Matcher<I, T, R>} Matcher<I, T, R>
  */
@@ -57,16 +52,6 @@ const consumedCache = new WeakMap()
 /**
  * @template T
  * @typedef {import('./grammar.mjs').MatchersToBuiltUnion<T>} MatchersToBuiltUnion<T>
- */
-
-/**
- * @template T
- * @typedef {import('./grammar.mjs').MatcherToMatched<T>} MatcherToMatched<T>
- */
-
-/**
- * @template T
- * @typedef {import('./grammar.mjs').MatcherToBuilt<T>} MatcherToBuilt<T>
  */
 
 /**
@@ -162,9 +147,9 @@ function consumeInput(input, matchResult) {
 /**
  * Create a s-expression matcher with expected children.
  *
- * @template {any[]} T
- * @param {T} expected
- * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
+ * @template {any[]} E
+ * @param {E} expected
+ * @returns {Matcher<Sexp, MatchersToMatched<E>, MatchersToBuilt<E>>}
  */
 export const sexp = (...expected) => {
   /**
@@ -199,9 +184,7 @@ export const sexp = (...expected) => {
       childResults.push(childResult)
       input = consumeInput(input, childResult)
     }
-    const value = /** @type {MatchersToMatched<T>} */ (
-      /** @type {unknown} */ (childResults)
-    )
+    const value = /** @type {MatchersToMatched<E>} */ (childResults)
     const match = input.length === 0 && value.length > 0 && 'sexp'
     if (match) {
       return Matched(match, value, (value) => matcher.builder(value, input))
@@ -217,14 +200,13 @@ export const sexp = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<MatchersToMatched<T>, MatchersToBuilt<T>>} */
-  matcher.builder = /** @param {MatchersToMatched<T>} value */ (value) => {
-    /** @type {Buildable<unknown>[]} */
-    const buildable = value
-    return /** @type {MatchersToBuilt<T>} */ (
-      buildable.map(({ build }) => build())
-    )
-  }
+  /**
+   * @param {Buildable<unknown>[]} value
+   * @param {any} context
+   * */
+  matcher.builder = (value, context) =>
+    /** @type {MatchersToBuilt<E>} */ (value.map(({ build }) => build()))
+
   enableMetaFields(matcher)
 
   matcher.toString = () => `sexp(${expected.join(', ')})`
@@ -418,9 +400,9 @@ export const maybe = (expected) => {
 /**
  * Create a s-expression matcher that the first expected child.
  *
- * @template {any[]} T
- * @param {T} expected
- * @returns {Matcher<Sexp, [MatchersToMatchedUnion<T>], MatchersToBuiltUnion<T>>}
+ * @template {[...any[]]} E
+ * @param {E} expected
+ * @returns {Matcher<Sexp, [MatchersToMatchedUnion<E>], MatchersToBuiltUnion<E>>}
  */
 export const one = (...expected) => {
   /**
@@ -432,7 +414,7 @@ export const one = (...expected) => {
       if (childResult.match) {
         return Matched(
           'one',
-          [/** @type {MatchersToMatchedUnion<T>} */ (childResult)],
+          [/** @type {MatchersToMatchedUnion<E>} */ (childResult)],
           matcher.builder
         )
       }
@@ -445,11 +427,11 @@ export const one = (...expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<[MatchersToMatchedUnion<T>], MatchersToBuiltUnion<T>>} */
-  matcher.builder = ([value]) => {
-    const builder = /** @type {Buildable<unknown>} */ (value)
-    return /** @type {MatchersToBuiltUnion<T>} */ (builder?.build())
-  }
+  /** @type {Builder<[MatchersToMatchedUnion<E>], MatchersToBuiltUnion<E>>} */
+  matcher.builder = ([value]) =>
+    /** @type {MatchersToBuiltUnion<E>} */ (
+      /** @type {Buildable<unknown>} */ (value).build()
+    )
   enableMetaFields(matcher)
 
   matcher.toString = () => `one(${expected.join(', ')})`
@@ -459,9 +441,9 @@ export const one = (...expected) => {
 /**
  * Create a s-expression matcher for a sequence of children.
  *
- * @template {any[]} T
- * @param {T} expected
- * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
+ * @template {any[]} E
+ * @param {E} expected
+ * @returns {Matcher<Sexp, MatchersToMatched<E>, MatchersToBuilt<E>>}
  */
 export const seq = (...expected) => {
   /**
@@ -487,21 +469,14 @@ export const seq = (...expected) => {
       childResults.push(childResult)
       input = consumeInput(input, childResult)
     }
-    const value = /** @type {MatchersToMatched<T>} */ (
-      /** @type {unknown} */ (childResults)
-    )
+    const value = /** @type {MatchersToMatched<E>} */ (childResults)
     return Matched('seq', value, matcher.builder)
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<MatchersToMatched<T>, MatchersToBuilt<T>>} */
-  matcher.builder = /** @param {MatchersToMatched<T>} value */ (value) => {
-    /** @type {Buildable<unknown>[]} */
-    const buildable = value
-    return /** @type {MatchersToBuilt<T>} */ (
-      buildable.map(({ build }) => build())
-    )
-  }
+  /** @param {Buildable<unknown>[]} value */
+  matcher.builder = (value) =>
+    /** @type {MatchersToBuilt<E>} */ (value.map(({ build }) => build()))
   enableMetaFields(matcher)
 
   matcher.toString = () => `seq(${expected.join(', ')})`
@@ -511,10 +486,9 @@ export const seq = (...expected) => {
 /**
  * Create a s-expression matcher that repeatedly matches an expected.
  *
- * @template MT,MR
- * @template {Matcher<Sexp, MT, MR>} T
- * @param {T} expected
- * @returns {Matcher<Sexp, MatcherToMatched<T>[], MatcherToBuilt<T>[]>}
+ * @template T,R
+ * @param {Matcher<Sexp, T, R>} expected
+ * @returns {Matcher<Sexp, Matched<T, R>[], R[]>}
  */
 export const some = (expected) => {
   /**
@@ -540,9 +514,7 @@ export const some = (expected) => {
     }
     const match = childResults.length > 0 && 'some'
     if (match) {
-      const value = /** @type {MatcherToMatched<T>[]} */ (
-        /** @type {unknown} */ (childResults)
-      )
+      const value = /** @type {Matched<T, R>[]} */ (childResults)
       return Matched(match, value, matcher.builder)
     }
     matcher.logger(`${matcher} failed to match [${input}]`, {
@@ -553,14 +525,8 @@ export const some = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<MatcherToMatched<T>[], MatcherToBuilt<T>[]>} */
-  matcher.builder = /** @param {MatcherToMatched<T>[]} value */ (value) => {
-    /** @type {Buildable<unknown>[]} */
-    const buildable = value
-    return /** @type {MatcherToBuilt<T>[]} */ (
-      buildable.map(({ build }) => build())
-    )
-  }
+  /** @type {Builder<Matched<T, R>[], R[]>} */
+  matcher.builder = (value) => value.map(({ build }) => build())
   enableMetaFields(matcher)
 
   matcher.toString = () => `some(${expected})`

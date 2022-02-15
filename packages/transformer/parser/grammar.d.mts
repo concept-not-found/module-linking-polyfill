@@ -1,4 +1,4 @@
-import type { Sexp, Buildable } from './builders.js'
+import type { Sexp, Buildable } from './builders.mjs'
 
 export type Matched<T, R> = {
   match: string
@@ -33,7 +33,7 @@ export type StringProposition = string | ((value: string) => boolean)
 
 export type MatcherToMatched<M> = M extends Matcher<Sexp, infer T, infer R>
   ? Matched<T, R>
-  : M
+  : never
 export type MatchersToMatched<M extends any[]> = M extends [
   infer Head,
   ...infer Tail
@@ -47,7 +47,8 @@ export type MatcherToBuilt<M> = M extends Matcher<
   infer R
 >
   ? R
-  : M
+  : never
+
 export type MatchersToBuilt<M extends any[]> = M extends [
   infer Head,
   ...infer Tail

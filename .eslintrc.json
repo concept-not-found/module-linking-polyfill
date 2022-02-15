@@ -65,7 +65,10 @@
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { "varsIgnorePattern": "^_unused_" }
+      {
+        "args": "none",
+        "varsIgnorePattern": "^_unused_"
+      }
     ],
 
     "node/file-extension-in-import": "error",
