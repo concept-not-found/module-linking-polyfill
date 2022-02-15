@@ -356,11 +356,13 @@ export const any = () => {
 /**
  * Create a s-expression reference matcher, which allows circular references to other matchers.
  *
- * @returns {GrammarMatcher<any> & {value: GrammarMatcher<any> | undefined}}
+ * @template MT,MR
+ * @template {Matcher<Sexp, MT, MR>} T
+ * @returns {Matcher<Sexp, MT, MR> & {value: T}}
  */
 export const reference = () => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
     if (!matcher.value) {
@@ -375,18 +377,18 @@ export const reference = () => {
     enumerable: false,
   })
   Object.defineProperty(matcher, 'builder', {
-    value: /** @type {Builder<[any] | any[], any>} */ (() => {}),
+    value: /** @type {Builder<MT, MR>} */ (/** @type {unknown} */ (() => {})),
     writable: false,
     enumerable: false,
   })
 
   matcher.toString = () => matcher.value?.toString() ?? 'reference()'
   Object.defineProperty(matcher, 'value', {
-    /** @type {GrammarMatcher<any> | undefined} */
+    /** @type {T | undefined} */
     value: undefined,
     writable: true,
   })
-  return matcher
+  return /** @type {Matcher<Sexp, MT, MR> & {value: T}} */ (matcher)
 }
 
 /**
