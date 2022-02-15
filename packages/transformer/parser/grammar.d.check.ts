@@ -4,15 +4,25 @@
 
 import { expectType } from 'ts-expect'
 
-import type { Sexp } from './builders.mjs'
-import type { Matched, Matcher } from './grammar.mjs'
+import type { Sexp } from './builders.js'
+import type { Matched, Matcher } from './grammar.js'
 import { sexp, value } from './grammar.js'
 
 expectType<Matcher<Sexp, [string], string>>(value('alice'))
 
-expectType<Matcher<Sexp, [Matched<[string], string>], [string]>>(sexp(value('alice')));
-expectType<Matcher<Sexp, [Matched<[Matched<[string], string>], [string]>], [[string]]>>(sexp(sexp(value('alice'))));
-expectType<Matcher<Sexp, [Matched<[string], string>, Matched<[string], string>], [string, string]>>(sexp(value('alice'), value('alice')));
+expectType<Matcher<Sexp, [Matched<[string], string>], [string]>>(
+  sexp(value('alice'))
+)
+expectType<
+  Matcher<Sexp, [Matched<[Matched<[string], string>], [string]>], [[string]]>
+>(sexp(sexp(value('alice'))))
+expectType<
+  Matcher<
+    Sexp,
+    [Matched<[string], string>, Matched<[string], string>],
+    [string, string]
+  >
+>(sexp(value('alice'), value('alice')))
 
 function passThroughTupleTypes<T extends any[]>(...types: T): T {
   return types
@@ -20,54 +30,33 @@ function passThroughTupleTypes<T extends any[]>(...types: T): T {
 
 expectType<[number, string]>(passThroughTupleTypes(123, 'hello'))
 
-type Box<T> = (value: T) => T
+type Boxy<T> = (value: T) => T
 function Box<T>(value: T): T {
   return value
 }
 
-type Unbox<T> = T extends Box<infer U> ? U : T
-type UnboxBoxes<T extends [...any[]]> = T extends [
-  infer Head,
-  ...infer Tail
-]
-  ? [Unbox<Head>, ...UnboxBoxes<Tail>]
+type Unboxy<T> = T extends Boxy<infer U> ? U : T
+type UnboxyBoxes<T extends [...any[]]> = T extends [infer Head, ...infer Tail]
+  ? [Unboxy<Head>, ...UnboxyBoxes<Tail>]
   : []
 
-function unbox<T extends [...any[]]>(
-  ...boxes: [...T]
-): UnboxBoxes<T> {
-  return boxes.map((box) => box()) as UnboxBoxes<T>
+function unbox<T extends [...any[]]>(...boxes: [...T]): UnboxyBoxes<T> {
+  return boxes.map((box) => box()) as UnboxyBoxes<T>
 }
 
-expectType<[number, string]>(
-  unbox(
-    Box(123),
-    Box('hello'),
-  )
-)
+expectType<[number, string]>(unbox(Box(123), Box('hello')))
 
-type Dox<T> = (value: T) => T
+type Doxy<T> = (value: T) => T
 function Dox<T>(value: T): T {
   return value
 }
 
-type BoxToDox<T extends any[]> = T extends [
-  infer Head,
-  ...infer Tail
-]
-  ? [Dox<Unbox<Head>>, ...BoxToDox<Tail>]
+type BoxyToDoxy<T extends any[]> = T extends [infer Head, ...infer Tail]
+  ? [Doxy<Unboxy<Head>>, ...BoxyToDoxy<Tail>]
   : []
 
-
-function boxToDox<T extends any[]>(
-  ...boxes: [...T]
-): BoxToDox<T> {
-  return boxes.map((box) => Dox(box())) as BoxToDox<T>
+function boxToDox<T extends any[]>(...boxes: [...T]): BoxyToDoxy<T> {
+  return boxes.map((box) => Dox(box())) as BoxyToDoxy<T>
 }
 
-expectType<[Dox<number>, Dox<string>]>(
-  boxToDox(
-    Box(123),
-    Box('hello'),
-  )
-)
+expectType<[Doxy<number>, Doxy<string>]>(boxToDox(Box(123), Box('hello')))

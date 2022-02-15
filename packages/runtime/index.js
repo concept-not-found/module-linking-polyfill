@@ -21,7 +21,7 @@ const createAdapterModuleInstance = (config, imports = {}, parent) => {
     '..': parent,
     modules: config.modules,
     imports: Object.fromEntries(
-      Object.entries(config.imports).map(([moduleName, imp]) => {
+      Object.entries(config.imports).map(([moduleName]) => {
         return [moduleName, imports[moduleName]]
       })
     ),

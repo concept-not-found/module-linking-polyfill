@@ -10,8 +10,8 @@ const consumedCache = new WeakMap()
  */
 
 /**
- * @template T,R
- * @typedef {import('./grammar.mjs').GrammarMatcher<T,R>} GrammarMatcher<T,R>
+ * @template T
+ * @typedef {import('./grammar.mjs').GrammarMatcher<T>} GrammarMatcher<T>
  */
 
 /**
@@ -144,60 +144,59 @@ function consumeInput(input, matchResult) {
  *
  * @template {any[]} T
  * @param {T} expected
- * @returns {Matcher<Sexp, MatchersToMatched<T>, MatchersToBuilt<T>>}
+ * @returns {GrammarMatcher<T>}
  */
 export const sexp = (...expected) => {
   /**
    * @param {Sexp} container
    */
   function matcher(container) {
-    if (container !== undefined && typeof container !== 'string') {
-      let [input] = container
-      const originalInput = input
-      if (
-        input === undefined ||
-        typeof input === 'string' ||
-        !container.meta.typeOfSexp(input)
-      ) {
-        matcher.logger(`${matcher} failed to match [${input}]`, {
-          typeOf: container.meta.typeOf(input),
+    let [input] = container
+    const originalInput = input
+    if (
+      input === undefined ||
+      typeof input === 'string' ||
+      !container.meta.typeOfSexp(input)
+    ) {
+      matcher.logger(`${matcher} failed to match [${input}]`, {
+        typeOf: container.meta.typeOf(input),
+        expected: expected.map(String),
+        input,
+      })
+      return NoMatch
+    }
+
+    const childResults = []
+    for (const child of expected) {
+      /** @type {MatchResult<unknown, unknown>} */
+      const childResult = child(input)
+      if (!childResult.match) {
+        matcher.logger(`${matcher} failed to match [${originalInput}]`, {
           expected: expected.map(String),
-          input,
+          input: originalInput,
+          unmatchedExpected: String(child),
+          matched: childResults,
+          unmatched: input,
         })
         return NoMatch
       }
-
-      const childResults = []
-      for (const child of expected) {
-        /** @type {MatchResult<unknown, unknown>} */
-        const childResult = child(input)
-        if (!childResult.match) {
-          matcher.logger(`${matcher} failed to match [${originalInput}]`, {
-            expected: expected.map(String),
-            input: originalInput,
-            unmatchedExpected: String(child),
-            matched: childResults,
-            unmatched: input,
-          })
-          return NoMatch
-        }
-        childResults.push(childResult)
-        input = consumeInput(input, childResult)
-      }
-      const value = /** @type {MatchersToMatched<T>} */ (
-        /** @type {unknown} */ (childResults)
-      )
-      const match = input.length === 0 && value.length > 0 && 'sexp'
-      if (match) {
-        return Matched(match, value, (value) => matcher.builder(value, input))
-      }
-      matcher.logger(`${matcher} failed to match [${originalInput}]`, {
-        expected: expected.map(String),
-        input: originalInput,
-        matched: value,
-        unmatched: input,
-      })
+      childResults.push(childResult)
+      input = consumeInput(input, childResult)
     }
+    const value = /** @type {MatchersToMatched<T>} */ (
+      /** @type {unknown} */ (childResults)
+    )
+    const match = input.length === 0 && value.length > 0 && 'sexp'
+    if (match) {
+      return Matched(match, value, (value) => matcher.builder(value, input))
+    }
+    matcher.logger(`${matcher} failed to match [${originalInput}]`, {
+      expected: expected.map(String),
+      input: originalInput,
+      matched: value,
+      unmatched: input,
+    })
+
     return NoMatch
   }
   /** @type {(...messages: any[]) => void} */
@@ -286,11 +285,11 @@ export const value = (expected) => {
  * Create a s-expression string matcher
  *
  * @param {StringProposition} expected
- * @returns {GrammarMatcher<string>}
+ * @returns {Matcher<Sexp, [string], string>}
  */
 export const string = (expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
     if (input !== undefined && typeof input !== 'string') {

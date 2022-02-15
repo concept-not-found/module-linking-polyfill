@@ -2,7 +2,15 @@ export type Node<T extends string> = {
   type: T
 }
 
-type BuilderType = 'sexp' | 'block comment fragment' | 'block comment' | 'string' | 'whitespace' | 'line comment' | 'value' | 'undefined'
+type BuilderType =
+  | 'sexp'
+  | 'block comment fragment'
+  | 'block comment'
+  | 'string'
+  | 'whitespace'
+  | 'line comment'
+  | 'value'
+  | 'undefined'
 
 export type Buildable<T> = {
   build: () => T
@@ -16,6 +24,7 @@ export type Builder<T> = {
 
 export type TypeOfable = {
   typeOf(value: any): BuilderType
+  // eslint-disable-next-line no-use-before-define
   typeOfSexp(value: any): value is Sexp
   typeOfStringLike(value: any): value is string
 }
@@ -25,4 +34,5 @@ export type SexpMeta = {
     source: string
   } & TypeOfable
 }
+
 export type Sexp = (Sexp | string)[] & SexpMeta
