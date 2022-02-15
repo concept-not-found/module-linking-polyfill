@@ -465,37 +465,49 @@ export const one = (...expected) => {
 /**
  * Create a s-expression matcher for a sequence of children.
  *
- * @param {GrammarMatcher<any>[]} expected
- * @returns {GrammarMatcher<any>}
+ * @template {any[]} T
+ * @param {T} expected
+ * @returns {GrammarMultiMatcher<T>}
  */
 export const seq = (...expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
     const originalInput = input
-    const value = []
+
+    const childResults = []
     for (const child of expected) {
+      /** @type {Matched<unknown, unknown>} */
       const childResult = child(input)
       if (!childResult.match) {
         matcher.logger(`${matcher} failed to match [${originalInput}]`, {
           expected: expected.map(String),
           input: originalInput,
           unmatchedExpected: String(child),
-          matched: value,
+          matched: childResults,
           unmatched: input,
         })
         return NoMatch
       }
-      value.push(childResult)
+      childResults.push(childResult)
       input = consumeInput(input, childResult)
     }
+    const value = /** @type {MatchersToMatched<T>} */ (
+      /** @type {unknown} */ (childResults)
+    )
     return Matched('seq', value, matcher.builder)
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<Matched<any[], any>[], any>} */
-  matcher.builder = (value) => value.map(({ build }) => build())
+  /** @type {Builder<MatchersToMatched<T>, MatchersToBuilt<T>>} */
+  matcher.builder = /** @param {MatchersToMatched<T>} value */ (value) => {
+    /** @type {Buildable<unknown>[]} */
+    const buildable = value
+    return /** @type {MatchersToBuilt<T>} */ (
+      buildable.map(({ build }) => build())
+    )
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `seq(${expected.join(', ')})`
@@ -505,12 +517,14 @@ export const seq = (...expected) => {
 /**
  * Create a s-expression matcher that repeatedly matches an expected.
  *
- * @param {GrammarMatcher<any>} expected
- * @returns {GrammarMatcher<any>}
+ * @template MT,MR
+ * @template {Matcher<Sexp, MT, MR>} T
+ * @param {T} expected
+ * @returns {Matcher<Sexp, MatcherToMatched<T>[], MatcherToBuilt<T>[]>}
  */
 export const some = (expected) => {
   /**
-   * @param {string | Sexp | undefined} input
+   * @param {Sexp} input
    */
   function matcher(input) {
     if (input === undefined || input.length === 0) {
@@ -520,18 +534,21 @@ export const some = (expected) => {
       })
       return NoMatch
     }
-    const value = []
+    const childResults = []
     let childResult = expected(input)
     while (childResult.match) {
-      value.push(childResult)
+      childResults.push(childResult)
       input = consumeInput(input, childResult)
       if (input.length === 0) {
         break
       }
       childResult = expected(input)
     }
-    const match = value.length > 0 && 'some'
+    const match = childResults.length > 0 && 'some'
     if (match) {
+      const value = /** @type {MatcherToMatched<T>[]} */ (
+        /** @type {unknown} */ (childResults)
+      )
       return Matched(match, value, matcher.builder)
     }
     matcher.logger(`${matcher} failed to match [${input}]`, {
@@ -542,8 +559,14 @@ export const some = (expected) => {
   }
   /** @type {(...messages: any[]) => void} */
   matcher.logger = () => {}
-  /** @type {Builder<Matched<any[], any>[], any>} */
-  matcher.builder = (value) => value.map(({ build }) => build())
+  /** @type {Builder<MatcherToMatched<T>[], MatcherToBuilt<T>[]>} */
+  matcher.builder = /** @param {MatcherToMatched<T>[]} value */ (value) => {
+    /** @type {Buildable<unknown>[]} */
+    const buildable = value
+    return /** @type {MatcherToBuilt<T>[]} */ (
+      buildable.map(({ build }) => build())
+    )
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `some(${expected})`
