@@ -1,11 +1,12 @@
 // this file is funky in vs code.
 // it works some of the time.
-// this file is checked using npx tsc --project test-types.json
+// this file is checked using npx tsc --checkJs false
 
 import { TypeOf, TypeEqual, expectType } from 'ts-expect'
 
-import type { Sexp } from './builders.mjs'
+import type { Sexp, Buildable } from './builders.mjs'
 import type {
+  Builder,
   Matched,
   Matcher,
   ReferenceMatcher,
@@ -15,6 +16,7 @@ import type {
   MatchersToBuilt,
   MatchersToMatchedUnion,
   MatchersToBuiltUnion,
+  MatchedToBuildable
 } from './grammar.mjs'
 import {
   sexp,
@@ -27,97 +29,169 @@ import {
   some,
 } from './grammar.js'
 
-type valueMatcher = Matcher<Sexp, [string], string>
-expectType<valueMatcher>(value('alice'))
-type matchedValue = Matched<[string], string>
-type builtValue = string
+type valueResult = [string]
+type valueBuilt = string
+type valueMatcherType = Matcher<Sexp, valueResult, valueBuilt>
+type valueMatched = Matched<valueResult, valueBuilt>
+const valueMatcher = value('alice')
+expectType<valueMatcherType>(valueMatcher)
+expectType<TypeEqual<MatcherToMatched<valueMatcherType>, valueMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<valueMatcherType>, valueBuilt>>(true)
+expectType<TypeOf<Buildable<valueBuilt>, valueMatched>>(true)
 
-type sexpMatcher = Matcher<Sexp, [matchedValue], [builtValue]>
-expectType<sexpMatcher>(sexp(value('alice')))
-type matchedSexp = Matched<[matchedValue], [builtValue]>
-type builtSexp = [string]
+type sexpResult = [valueMatched]
+type sexpBuilt = [valueBuilt]
+type sexpMatcherType = Matcher<Sexp, sexpResult, sexpBuilt>
+type sexpMatched = Matched<sexpResult, sexpBuilt>
+const sexpMatcher = sexp(valueMatcher)
+expectType<sexpMatcherType>(sexpMatcher)
+expectType<TypeEqual<MatcherToMatched<sexpMatcherType>, sexpMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<sexpMatcherType>, sexpBuilt>>(true)
 
-expectType<Matcher<Sexp, [matchedSexp], [builtSexp]>>(
-  sexp(sexp(value('alice')))
+type sexpSexpResult = [sexpMatched]
+type sexpSexpBuilt = [sexpBuilt]
+type sexpSexpMatcherType = Matcher<Sexp, sexpSexpResult, sexpSexpBuilt>
+type sexpSexpMatched = Matched<sexpSexpResult, sexpSexpBuilt>
+const sexpSexpMatcher = sexp(sexpMatcher)
+expectType<sexpSexpMatcherType>(sexpSexpMatcher)
+expectType<TypeEqual<MatcherToMatched<sexpSexpMatcherType>, sexpSexpMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<sexpSexpMatcherType>, sexpSexpBuilt>>(true)
+
+expectType<
+  Matcher<Sexp, [valueMatched, valueMatched], [valueBuilt, valueBuilt]>
+>(sexp(value('alice'), value('alice')))
+expectType<Matcher<Sexp, [valueMatched, sexpMatched], [valueBuilt, sexpBuilt]>>(
+  sexp(value('alice'), sexp(value('bob')))
 )
 
 expectType<TypeEqual<MatcherToMatched<string>, never>>(true)
-expectType<TypeEqual<MatcherToMatched<valueMatcher>, matchedValue>>(true)
-
 expectType<TypeEqual<MatcherToBuilt<string>, never>>(true)
-expectType<TypeEqual<MatcherToBuilt<valueMatcher>, builtValue>>(true)
 
 expectType<TypeEqual<MatchersToMatched<[]>, []>>(true)
 expectType<
   TypeEqual<
-    MatchersToMatched<[valueMatcher, sexpMatcher]>,
-    [matchedValue, matchedSexp]
+    MatchersToMatched<[valueMatcherType, sexpMatcherType]>,
+    [valueMatched, sexpMatched]
   >
 >(true)
 
 expectType<TypeEqual<MatchersToBuilt<[]>, []>>(true)
 expectType<
   TypeEqual<
-    MatchersToBuilt<[valueMatcher, sexpMatcher]>,
-    [builtValue, builtSexp]
+    MatchersToBuilt<[valueMatcherType, sexpMatcherType]>,
+    [valueBuilt, sexpBuilt]
   >
 >(true)
 
 expectType<TypeEqual<MatchersToMatchedUnion<[]>, never>>(true)
 expectType<
   TypeEqual<
-    MatchersToMatchedUnion<[valueMatcher, sexpMatcher]>,
-    matchedValue | matchedSexp
+    MatchersToMatchedUnion<[valueMatcherType, sexpMatcherType]>,
+    valueMatched | sexpMatched
   >
 >(true)
 
 expectType<TypeEqual<MatchersToBuiltUnion<[]>, never>>(true)
 expectType<
   TypeEqual<
-    MatchersToBuiltUnion<[valueMatcher, sexpMatcher]>,
-    builtValue | builtSexp
+    MatchersToBuiltUnion<[valueMatcherType, sexpMatcherType]>,
+    valueBuilt | sexpBuilt
   >
 >(true)
 
-expectType<
-  Matcher<Sexp, [matchedValue, matchedValue], [builtValue, builtValue]>
->(sexp(value('alice'), value('alice')))
-
-expectType<Matcher<Sexp, [matchedValue, matchedSexp], [builtValue, builtSexp]>>(
-  sexp(value('alice'), sexp(value('bob')))
-)
 
 expectType<Matcher<Sexp, any[], any>>(any())
 
-const referenceValue: ReferenceMatcher<valueMatcher> = reference()
-expectType<valueMatcher>(referenceValue)
+const referenceValue: ReferenceMatcher<valueMatcherType> = reference()
+expectType<valueMatcherType>(referenceValue)
 referenceValue.value = value('alice')
 
-type maybeMatcher = Matcher<Sexp, [matchedValue] | [], builtValue | undefined>
-expectType<maybeMatcher>(maybe(value('alice')))
+type maybeResult = [valueMatched] | []
+type maybeBuilt = valueBuilt | undefined
+type maybeMatcherType = Matcher<Sexp, maybeResult, maybeBuilt>
+type maybeMatched = Matched<maybeResult, maybeBuilt>
+const maybeMatcher = maybe(valueMatcher)
+expectType<maybeMatcherType>(maybeMatcher)
+expectType<TypeEqual<MatcherToMatched<maybeMatcherType>, maybeMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<maybeMatcherType>, maybeBuilt>>(true)
+expectType<TypeOf<Buildable<maybeBuilt>, maybeMatched>>(true)
 
-type oneMatcher = Matcher<Sexp, [matchedValue], builtValue>
-expectType<oneMatcher>(one(value('alice')))
+type oneResult = [valueMatched]
+type oneBuilt = valueBuilt
+type oneMatcherType = Matcher<Sexp, oneResult, oneBuilt>
+type oneMatched = Matched<oneResult, oneBuilt>
+const oneMatcher = one(valueMatcher)
+expectType<oneMatcherType>(oneMatcher)
+expectType<TypeEqual<MatcherToMatched<oneMatcherType>, oneMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<oneMatcherType>, oneBuilt>>(true)
+expectType<TypeOf<Buildable<maybeBuilt>, maybeMatched>>(true)
 
-type doubleOneMatcher = Matcher<
-  Sexp,
-  [matchedValue | matchedSexp],
-  builtValue | builtSexp
->
-expectType<doubleOneMatcher>(one(value('alice'), sexp(value('bob'))))
+type doubleOneResult = [valueMatched | sexpMatched]
+type doubleOneBuilt = valueBuilt | sexpBuilt
+type doubleOneMatcherType = Matcher<Sexp, doubleOneResult, doubleOneBuilt>
+type doubleOneMatched = Matched<doubleOneResult, doubleOneBuilt>
+const doubleOneMatcher = one(valueMatcher, sexpMatcher)
+expectType<doubleOneMatcherType>(doubleOneMatcher)
+expectType<TypeEqual<MatcherToMatched<doubleOneMatcherType>, doubleOneMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<doubleOneMatcherType>, doubleOneBuilt>>(true)
 
-type seqMatcher = Matcher<Sexp, [matchedValue], [builtValue]>
-expectType<seqMatcher>(seq(value('alice')))
+type seqResult = [valueMatched]
+type seqBuilt = [valueBuilt]
+type seqMatcherType = Matcher<Sexp, seqResult, seqBuilt>
+type seqMatched = Matched<seqResult, seqBuilt>
+const seqMatcher = seq(valueMatcher)
+expectType<seqMatcherType>(seqMatcher)
+expectType<TypeEqual<MatcherToMatched<seqMatcherType>, seqMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<seqMatcherType>, seqBuilt>>(true)
 
-type doubleSeqMatcher = Matcher<
-  Sexp,
-  [matchedValue, matchedSexp],
-  [builtValue, builtSexp]
->
-expectType<doubleSeqMatcher>(seq(value('alice'), sexp(value('bob'))))
+type doubleSeqResult = [valueMatched, sexpMatched]
+type doubleSeqBuilt = [valueBuilt, sexpBuilt]
+type doubleSeqMatcherType = Matcher<Sexp, doubleSeqResult, doubleSeqBuilt>
+type doubleSeqMatched = Matched<doubleSeqResult, doubleSeqBuilt>
+const doubleSeqMatcher = seq(valueMatcher, sexpMatcher)
+expectType<doubleSeqMatcherType>(doubleSeqMatcher)
+expectType<TypeEqual<MatcherToMatched<doubleSeqMatcherType>, doubleSeqMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<doubleSeqMatcherType>, doubleSeqBuilt>>(true)
 
-type someMatcher = Matcher<Sexp, matchedValue[], builtValue[]>
-expectType<someMatcher>(some(value('alice')))
+type someResult = valueMatched[]
+type someBuilt = valueBuilt[]
+type someMatcherType = Matcher<Sexp, someResult, someBuilt>
+type someMatched = Matched<someResult, someBuilt>
+const someMatcher = some(valueMatcher)
+expectType<someMatcherType>(someMatcher)
+expectType<TypeEqual<MatcherToMatched<someMatcherType>, someMatched>>(true)
+expectType<TypeEqual<MatcherToBuilt<someMatcherType>, someBuilt>>(true)
+
+
+const name = value(() => true)
+
+const kind = one(
+  value('func'),
+  value('global')
+)
+expectType<Matcher<Sexp, [valueMatched], valueBuilt>>(kind)
+expectType<Builder<[valueMatched], valueBuilt>>(kind.builder)
+
+expectType<TypeOf<Buildable<string>, valueMatched>>(true)
+expectType<TypeEqual<Buildable<string>, MatchedToBuildable<valueMatched>>>(true)
+expectType<TypeEqual<Buildable<string>, MatchedToBuildable<oneMatched>>>(true)
+
+const kindName = [kind, maybe(name)] as const
+const kindDefinition = sexp(...kindName)
+expectType<Matcher<Sexp, [oneMatched, maybeMatched], [valueBuilt, maybeBuilt]>>(kindDefinition)
+expectType<Builder<[oneMatched, maybeMatched], [oneBuilt, maybeBuilt]>>(kindDefinition.builder)
+
+type KindDefinition = {
+  type: string
+  name: string
+}
+
+kindDefinition.builder = (([kind, name]) => {
+  return {
+    type: kind.build(),
+    name: name.build(),
+  }
+}) as Builder<[Buildable<string>, Buildable<string>], KindDefinition>
 
 // worksheet
 function passThroughTupleTypes<T extends any[]>(...types: T): T {

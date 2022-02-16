@@ -15,12 +15,7 @@ import {
 
 /**
  * @template T,R
- * @typedef {import('../parser/grammar.mjs').Builder<T, R>} Builder<T, R>
- */
-
-/**
- * @template T,R
- * @typedef {import('../parser/grammar.mjs').GrammarMatcher<T, R>} GrammarMatcher<T, R>
+ * @typedef {import('../parser/grammar.mjs').Builder<T,R>} Builder<T,R>
  */
 
 /**

@@ -15,6 +15,14 @@ export type Builder<T, R> = (value: T, context?: any) => R
 
 export type Logger = (...messages: any[]) => void
 
+export type MatchedToBuildable<M> = M extends Matched<unknown, infer R> ? Buildable<R> : never
+// export type MatchedArrayToBuildableArray<M extends any[]> = M extends [
+//   infer Head,
+//   ...infer Tail
+// ]
+//   ? [MatchedToBuildable<Head>, ...MatchedArrayToBuildableArray<Tail>]
+//   : []
+
 export type Matcher<I, T, R> = ((input: I) => MatchResult<T, R>) & {
   logger: Logger
 } & {
