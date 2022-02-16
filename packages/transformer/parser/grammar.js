@@ -89,10 +89,15 @@ function enableMetaFields(matcher) {
     logger: {
       value: matcher.logger,
       writable: true,
+      enumerable: false,
     },
     builder: {
       value: matcher.builder,
-      writable: true,
+      enumerable: false,
+    },
+    withBuilder: {
+      value: matcher.withBuilder,
+      enumerable: false,
     },
   })
 }
@@ -206,7 +211,18 @@ export const sexp = (...expected) => {
    * */
   matcher.builder = (value, context) =>
     /** @type {MatchersToBuilt<E>} */ (value.map(({ build }) => build()))
-
+  /**
+   * @template RR
+   * @param {Builder<MatchersToMatched<E>, RR>} builder
+   * @returns {Matcher<Sexp, MatchersToMatched<E>, RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, MatchersToMatched<E>, RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `sexp(${expected.join(', ')})`
@@ -265,6 +281,18 @@ export const value = (expected) => {
   matcher.logger = () => {}
   /** @type {Builder<[string], string>} */
   matcher.builder = ([value]) => value
+  /**
+   * @template RR
+   * @param {Builder<[string], RR>} builder
+   * @returns {Matcher<Sexp, [string], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, [string], RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `value("${expected}")`
@@ -302,6 +330,18 @@ export const string = (expected) => {
   matcher.logger = () => {}
   /** @type {Builder<[string], string>} */
   matcher.builder = ([value]) => value
+  /**
+   * @template RR
+   * @param {Builder<[string], RR>} builder
+   * @returns {Matcher<Sexp, [string], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, [string], RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `string("${expected}")`
@@ -324,6 +364,18 @@ export const any = () => {
   matcher.logger = () => {}
   /** @type {Builder<any, any>} */
   matcher.builder = (value) => value
+  /**
+   * @template RR
+   * @param {Builder<any[], RR>} builder
+   * @returns {Matcher<Sexp, any[], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, any[], RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => 'any()'
@@ -391,6 +443,18 @@ export const maybe = (expected) => {
   matcher.logger = () => {}
   /** @type {Builder<[Matched<MT, MR>] | [], MR | undefined>} */
   matcher.builder = ([value]) => value?.build()
+  /**
+   * @template RR
+   * @param {Builder<[Matched<MT, MR>] | [], RR>} builder
+   * @returns {Matcher<Sexp, [Matched<MT, MR>] | [], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, [Matched<MT, MR>] | [], RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `maybe(${expected})`
@@ -432,6 +496,19 @@ export const one = (...expected) => {
     /** @type {MatchersToBuiltUnion<E>} */ (
       /** @type {Buildable<unknown>} */ (value).build()
     )
+  /**
+   * @template RR
+   * @param {Builder<[MatchersToMatchedUnion<E>], RR>} builder
+   * @returns {Matcher<Sexp, [MatchersToMatchedUnion<E>], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result =
+      /** @type {Matcher<Sexp, [MatchersToMatchedUnion<E>], RR>} */ (
+        /** @type {unknown} */ (matcher)
+      )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `one(${expected.join(', ')})`
@@ -477,6 +554,18 @@ export const seq = (...expected) => {
   /** @param {Buildable<unknown>[]} value */
   matcher.builder = (value) =>
     /** @type {MatchersToBuilt<E>} */ (value.map(({ build }) => build()))
+  /**
+   * @template RR
+   * @param {Builder<MatchersToMatched<E>, RR>} builder
+   * @returns {Matcher<Sexp, MatchersToMatched<E>, RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, MatchersToMatched<E>, RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `seq(${expected.join(', ')})`
@@ -527,6 +616,18 @@ export const some = (expected) => {
   matcher.logger = () => {}
   /** @type {Builder<Matched<T, R>[], R[]>} */
   matcher.builder = (value) => value.map(({ build }) => build())
+  /**
+   * @template RR
+   * @param {Builder<Matched<T, R>[], RR>} builder
+   * @returns {Matcher<Sexp, Matched<T, R>[], RR>}
+   */
+  matcher.withBuilder = (builder) => {
+    const result = /** @type {Matcher<Sexp, Matched<T, R>[], RR>} */ (
+      /** @type {unknown} */ (matcher)
+    )
+    result.builder = builder
+    return result
+  }
   enableMetaFields(matcher)
 
   matcher.toString = () => `some(${expected})`

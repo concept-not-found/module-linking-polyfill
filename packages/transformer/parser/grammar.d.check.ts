@@ -186,12 +186,12 @@ type KindDefinition = {
   name: string
 }
 
-kindDefinition.builder = (([kind, name]) => {
+expectType<Builder<[oneMatched, maybeMatched], KindDefinition>>(kindDefinition.withBuilder((([kind, name]) => {
   return {
     type: kind.build(),
     name: name.build(),
   }
-}) as Builder<[Buildable<string>, Buildable<string>], KindDefinition>
+}) as Builder<[Buildable<string>, Buildable<string | undefined>], KindDefinition>).builder)
 
 // worksheet
 function passThroughTupleTypes<T extends any[]>(...types: T): T {

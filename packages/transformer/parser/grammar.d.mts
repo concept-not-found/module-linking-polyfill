@@ -26,7 +26,8 @@ export type MatchedToBuildable<M> = M extends Matched<unknown, infer R> ? Builda
 export type Matcher<I, T, R> = ((input: I) => MatchResult<T, R>) & {
   logger: Logger
 } & {
-  builder: Builder<T, R>
+  builder: Builder<T, R>,
+  withBuilder: <RR>(builder: Builder<T, RR>) => Matcher<I, T, RR>
 }
 
 export type ReferenceMatcher<M> = M extends Matcher<
