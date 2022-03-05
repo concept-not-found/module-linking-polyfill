@@ -1,12 +1,6 @@
-import {
-  sexp,
-  value,
-  string,
-  maybe,
-  one,
-  some,
-  any,
-} from '../parser/grammar.js'
+import { match, maybe, some, any, oneOf, when } from 'patcom'
+
+import { root, sexp, value, string } from '../parser/grammar.js'
 
 function parseIndex(index) {
   if (index.startsWith('$')) {
@@ -15,73 +9,84 @@ function parseIndex(index) {
   return Number.parseInt(index, 10)
 }
 
-const variable = value(() => true)
-const name = value(() => true)
-const anyString = string(() => true)
+const variable = value()
+export const name = value()
+const anyString = string()
 
-const kind = one(
+export const kind = oneOf(
   value('func'),
   value('memory'),
   value('table'),
   value('global')
 )
 const kindName = [kind, maybe(name)]
-const kindDefinition = sexp(...kindName)
-kindDefinition.builder = ([kind, name]) => {
+export const kindDefinition = when(sexp(...kindName), ([kind, name]) => {
   return {
-    type: kind.build(),
-    name: name.build(),
+    type: kind,
+    name,
   }
-}
+})
 
 const importName = [value('import'), anyString, anyString]
-const importDefinition = sexp(...importName, kindDefinition)
-importDefinition.builder = ([, moduleName, importName, kindDefinition]) => {
-  const { type, name } = kindDefinition.build()
-  return {
-    type,
-    name,
-    import: {
-      moduleName: moduleName.build(),
-      name: importName.build(),
-    },
+const importDefinition = when(
+  sexp(...importName, kindDefinition),
+  ([, moduleName, importName, kindDefinition]) => {
+    const { type, name } = kindDefinition
+    return {
+      type,
+      name,
+      import: {
+        moduleName,
+        name: importName,
+      },
+    }
   }
-}
+)
 
-const kindReference = sexp(kind, variable)
-kindReference.builder = ([kind, kindIdx]) => {
+const kindReference = when(sexp(kind, variable), ([kind, kindIdx]) => {
   return {
-    kind: kind.build(),
-    kindIdx: parseIndex(kindIdx.build()),
+    kind,
+    kindIdx: parseIndex(kindIdx),
   }
-}
+})
 
 const exportName = [value('export'), anyString]
-const exportDefinition = sexp(...exportName, kindReference)
-exportDefinition.builder = ([, name, kindReference]) => {
-  return {
-    type: 'export',
-    name: name.build(),
-    kindReference: kindReference.build(),
+const exportDefinition = when(
+  sexp(...exportName, kindReference),
+  ([, name, kindReference]) => {
+    return {
+      type: 'export',
+      name,
+      kindReference,
+    }
   }
-}
+)
 
-const definition = one(
+const definition = oneOf(
   importDefinition,
   kindDefinition,
   exportDefinition,
-  any()
+  any
 )
-export const module = sexp(
-  value('module'),
-  maybe(name),
-  maybe(some(definition))
+export const module = when(
+  sexp(value('module'), maybe(name), maybe(some(definition))),
+  (
+    [, name, definitions],
+    {
+      result: {
+        rest: {
+          value: { source },
+        },
+      },
+    }
+  ) => {
+    return {
+      type: 'module',
+      name,
+      definitions: definitions ?? [],
+      source,
+    }
+  }
 )
-module.builder = ([, name, definitions], { meta: { source } }) => ({
-  type: 'module',
-  name: name.build(),
-  definitions: definitions.build() ?? [],
-  source,
-})
 
-export default (wat) => module(wat).build()
+export default (wat) => match(wat)(root(module))

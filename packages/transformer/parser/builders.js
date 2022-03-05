@@ -10,89 +10,19 @@ export default (wat) => {
           children.push(...builders)
           return builder
         },
-        addSexp(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'sexp',
-              build() {
-                return value
-              },
-            }))
-          )
-          return builder
-        },
-        addValue(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'value',
-              build() {
-                return String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addString(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'string',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addComment(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'comment',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
-          return builder
-        },
-        addWhitespace(...values) {
-          children.push(
-            ...values.map((value) => ({
-              type: 'whitespace',
-              build() {
-                return new String(value)
-              },
-            }))
-          )
-          return builder
-        },
         build() {
-          const typedValues = children.map((builder) => [
-            builder.build(),
-            builder.type,
-          ])
-          const types = new WeakMap()
-          const values = []
-          for (const [value, type] of typedValues) {
-            if (type !== 'value') {
-              types.set(value, type)
+          const value = children.map((builder) => builder.build())
+          if (sourceTags.includes(value?.[0]?.value)) {
+            return {
+              type: 'sexp',
+              value,
+              source: wat.slice(start, this.end),
             }
-            values.push(value)
           }
-
-          Object.defineProperty(values, 'meta', {
-            value: {
-              typeOf(value) {
-                if (value === undefined) {
-                  return
-                }
-                return types.get(value) ?? 'value'
-              },
-            },
-          })
-          if (sourceTags.includes(values[0])) {
-            values.meta.source = wat.slice(start, this.end)
+          return {
+            type: 'sexp',
+            value,
           }
-          return values
         },
       }
       return builder
@@ -102,7 +32,10 @@ export default (wat) => {
       return {
         type: 'block comment fragment',
         build() {
-          return wat.substring(start, this.end)
+          return {
+            type: 'block comment fragment',
+            value: wat.substring(start, this.end),
+          }
         },
       }
     },
@@ -117,12 +50,15 @@ export default (wat) => {
         },
         build() {
           const fragments = children.map((builder) => {
-            return builder.type === 'block comment'
-              ? `(;${builder.build()};)`
-              : builder.build()
+            const result = builder.build()
+            return result.type === 'block comment'
+              ? `(;${result.value};)`
+              : result.value
           })
-          // new String is required for identity equals
-          return new String(fragments.join(''))
+          return {
+            type: 'block comment',
+            value: fragments.join(''),
+          }
         },
       }
       return builder
@@ -133,8 +69,10 @@ export default (wat) => {
         type: 'string',
         build() {
           const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
+          return {
+            type: 'string',
+            value,
+          }
         },
       }
     },
@@ -144,8 +82,10 @@ export default (wat) => {
         type: 'whitespace',
         build() {
           const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
+          return {
+            type: 'whitespace',
+            value,
+          }
         },
       }
     },
@@ -155,8 +95,10 @@ export default (wat) => {
         type: 'line comment',
         build() {
           const value = wat.substring(start, this.end)
-          // new String is required for identity equals
-          return new String(value)
+          return {
+            type: 'line comment',
+            value,
+          }
         },
       }
     },
@@ -166,7 +108,7 @@ export default (wat) => {
         type: 'value',
         build() {
           const value = wat.substring(start, this.end)
-          return value
+          return { type: 'value', value }
         },
       }
     },

@@ -1,9 +1,49 @@
 import Parser from '../parser/index.js'
 
-import parseModule from './grammar.js'
+import parseModule, { name, kind, kindDefinition } from './grammar.js'
 
 describe('core module', () => {
-  describe('parser', () => {
+  describe('grammar', () => {
+    describe('name', () => {
+      test('func', () => {
+        const matcher = name
+        const result = matcher({ type: 'value', value: '$f' })
+        expect(result).toMatchObject({
+          matched: true,
+          value: '$f',
+        })
+      })
+    })
+    describe('kind', () => {
+      test('func', () => {
+        const matcher = kind
+        const result = matcher({ type: 'value', value: 'func' })
+        expect(result).toMatchObject({
+          matched: true,
+          value: 'func',
+        })
+      })
+    })
+    describe('kindDefinition', () => {
+      test('named func', () => {
+        const matcher = kindDefinition
+        const result = matcher({
+          type: 'sexp',
+          value: [
+            { type: 'value', value: 'func' },
+            { type: 'value', value: '$f' },
+          ],
+        })
+        expect(result).toMatchObject({
+          matched: true,
+          value: {
+            type: 'func',
+            name: '$f',
+          },
+        })
+      })
+    })
+
     test('empty module', () => {
       const wat = `
         (module

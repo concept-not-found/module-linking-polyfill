@@ -306,31 +306,17 @@ export const RawParser =
   }
 
 function trim(node) {
-  if (Array.isArray(node)) {
-    const children = node
+  if (node.type === 'sexp') {
+    const children = node.value
       .filter(
-        (child) =>
-          !['block comment', 'line comment', 'whitespace'].includes(
-            node.meta.typeOf(child)
-          )
+        ({ type }) =>
+          !['block comment', 'line comment', 'whitespace'].includes(type)
       )
       .map(trim)
-    const types = new WeakMap()
-    for (const child of children) {
-      const type = Array.isArray(child) ? 'sexp' : node.meta.typeOf(child)
-      if (type !== 'value') {
-        types.set(child, type)
-      }
+    return {
+      ...node,
+      value: children,
     }
-    Object.defineProperty(children, 'meta', {
-      value: {
-        ...node.meta,
-        typeOf(value) {
-          return types.get(value) ?? 'value'
-        },
-      },
-    })
-    return children
   } else {
     return node
   }

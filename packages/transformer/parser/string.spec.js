@@ -1,111 +1,38 @@
-import { jest } from '@jest/globals'
-
-import { sexp, string } from './grammar.js'
-
-import Parser from './index.js'
+import { matchPredicate } from 'patcom'
+import { string } from './grammar.js'
 
 describe('matcher', () => {
   describe('string', () => {
     test('matching string in sexp', () => {
-      const matcher = sexp(string('module'))
-      const wat = '("module")'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
+      const matcher = string('module')
+      const result = matcher({ type: 'string', value: 'module' })
       expect(result).toEqual({
-        match: 'sexp',
-        value: [
-          {
-            match: 'string',
-            value: ['module'],
-          },
-        ],
+        matched: true,
+        value: 'module',
+        result: {
+          type: { matched: true, value: 'string' },
+          value: { matched: true, value: 'module' },
+        },
       })
     })
 
     test('not matching different string in sexp', () => {
-      const matcher = sexp(string('module'))
-      const wat = '("alice")'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      const matcher = string('module')
+      const result = matcher({ type: 'string', value: 'alice' })
+      expect(result.matched).toBe(false)
     })
 
     test('not matching value in sexp', () => {
-      const matcher = sexp(string('module'))
-      const wat = '(module)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      const matcher = string('module')
+      const result = matcher({ type: 'value', value: 'module' })
+      expect(result.matched).toBe(false)
     })
 
     test('expected can be a predicate function', () => {
-      const matcher = sexp(string((value) => value.startsWith('m')))
+      const matcher = string(matchPredicate((value) => value.startsWith('m')))
 
-      const parser = Parser()
-
-      expect(matcher(parser('("module")')).match).toBeTruthy()
-      expect(matcher(parser('("alice")')).match).toBeFalsy()
-    })
-
-    test('not matching any value to empty sexp', () => {
-      const matcher = sexp(string(() => true))
-      const wat = '()'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
-    })
-
-    test('build returns matched string', () => {
-      const matcher = sexp(string('module'))
-      const wat = '("module")'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.value[0].build()).toEqual('module')
-    })
-
-    test('build can be overwritten with builder', () => {
-      const valueMatcher = string('module')
-      valueMatcher.builder = () => 'built'
-      const matcher = sexp(valueMatcher)
-      const wat = '("module")'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.value[0].build()).toEqual('built')
-    })
-
-    test('failures can be logged', () => {
-      const stringMatcher = string('module')
-      stringMatcher.logger = jest.fn()
-      const matcher = sexp(stringMatcher)
-      const wat = '(alice)'
-      const parser = Parser()
-      const input = parser(wat)
-      matcher(input)
-      expect(stringMatcher.logger).toHaveBeenNthCalledWith(
-        1,
-        'string("module") failed to match [alice]',
-        {
-          typeOf: 'value',
-          expected: 'module',
-          input: ['alice'],
-        }
-      )
-    })
-
-    test('stringifies with expected string', () => {
-      expect(String(string('module'))).toEqual('string("module")')
+      expect(matcher({ type: 'string', value: 'module' }).matched).toBe(true)
+      expect(matcher({ type: 'string', value: 'alice' }).matched).toBe(false)
     })
   })
 })

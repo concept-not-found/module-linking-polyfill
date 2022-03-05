@@ -1,8 +1,4 @@
-import { toMatchTree } from './matchers.js'
-
 import { RawParser as Parser } from './index.js'
-
-expect.extend({ toMatchTree })
 
 describe('parser', () => {
   test('output is an array', () => {
@@ -10,7 +6,20 @@ describe('parser', () => {
 
     const parser = Parser()
     const result = parser(wat)
-    expect(result).toMatchTree([['module']])
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'sexp',
+          value: [
+            {
+              type: 'value',
+              value: 'module',
+            },
+          ],
+        },
+      ],
+    })
   })
 
   test('output can have multiple sexp', () => {
@@ -18,66 +27,156 @@ describe('parser', () => {
 
     const parser = Parser()
     const result = parser(wat)
-    expect(result).toMatchTree([['module'], ['module']])
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'sexp',
+          value: [
+            {
+              type: 'value',
+              value: 'module',
+            },
+          ],
+        },
+        {
+          type: 'sexp',
+          value: [
+            {
+              type: 'value',
+              value: 'module',
+            },
+          ],
+        },
+      ],
+    })
   })
 
   test('nested sexp are arrays', () => {
     const wat = '(module(func))'
 
     const parser = Parser()
-    expect(parser(wat)).toMatchTree([['module', ['func']]])
+    const result = parser(wat)
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'sexp',
+          value: [
+            {
+              type: 'value',
+              value: 'module',
+            },
+            {
+              type: 'sexp',
+              value: [
+                {
+                  type: 'value',
+                  value: 'func',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
   })
 
   test('nested block comments collapse', () => {
     const wat = '(;a(;b;)c;)'
 
     const parser = Parser()
-    expect(parser(wat)).toMatchTree(['(;a(;b;)c;)'])
+    const result = parser(wat)
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'block comment',
+          value: 'a(;b;)c',
+        },
+      ],
+    })
   })
 
   test('more nested block comments', () => {
     const wat = '(;(;(;;);)(;;)(;(;;););)'
 
     const parser = Parser()
-    expect(parser(wat)).toMatchTree(['(;(;(;;);)(;;)(;(;;););)'])
+    const result = parser(wat)
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'block comment',
+          value: '(;(;;);)(;;)(;(;;);)',
+        },
+      ],
+    })
   })
 
   test('line comments is just text within a block comment', () => {
     const wat = '(;;;line comment;;;)'
 
     const parser = Parser()
-    expect(parser(wat)).toMatchTree(['(;;;line comment;;;)'])
+    const result = parser(wat)
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'block comment',
+          value: ';;line comment;;',
+        },
+      ],
+    })
   })
 
   test('block comments can contain newlines', () => {
     const wat = '(;\n;)'
 
     const parser = Parser()
-    expect(parser(wat)).toMatchTree(['(;\n;)'])
+    const result = parser(wat)
+    expect(result).toEqual({
+      type: 'sexp',
+      value: [
+        {
+          type: 'block comment',
+          value: '\n',
+        },
+      ],
+    })
   })
 
   test('value, strings and comments are all strings', () => {
     const wat = '(func"func"(;func;);;func\n)'
 
     const parser = Parser()
-    const [[value, string, blockComment, lineComment]] = parser(wat)
-    expect(value).toEqual('func')
-    expect(String(string)).toEqual('func')
-    expect(String(blockComment)).toEqual('func')
-    expect(String(lineComment)).toEqual('func')
+    const {
+      value: [
+        {
+          value: [value, string, blockComment, lineComment],
+        },
+      ],
+    } = parser(wat)
+    expect(value.value).toEqual('func')
+    expect(string.value).toEqual('func')
+    expect(blockComment.value).toEqual('func')
+    expect(lineComment.value).toEqual('func')
   })
 
-  test('value, strings and comments are distinguished by type by container', () => {
+  test('value, strings and comments are distinguished by type', () => {
     const wat = '(func"func"(;func;);;func\n)'
 
     const parser = Parser()
-    const [container] = parser(wat)
-    const [value, string, blockComment, lineComment] = container
-    expect(container.meta.typeOf(undefined)).toBe(undefined) // eslint-disable-line unicorn/no-useless-undefined
-    expect(container.meta.typeOf(value)).toBe('value')
-    expect(container.meta.typeOf(string)).toBe('string')
-    expect(container.meta.typeOf(blockComment)).toBe('block comment')
-    expect(container.meta.typeOf(lineComment)).toBe('line comment')
+    const {
+      value: [container],
+    } = parser(wat)
+    const {
+      value: [value, string, blockComment, lineComment],
+    } = container
+    expect(value.type).toBe('value')
+    expect(string.type).toBe('string')
+    expect(blockComment.type).toBe('block comment')
+    expect(lineComment.type).toBe('line comment')
   })
 
   test('capture an sexp by tag', () => {
@@ -90,8 +189,14 @@ describe('parser', () => {
     const parser = Parser({
       sourceTags: ['module'],
     })
-    const [, adapterModule] = parser(wat)
-    const [, , , , , , module] = adapterModule
-    expect(module.meta.source).toBe('(module (;1;))')
+    const {
+      value: [
+        ,
+        {
+          value: [, , , , , , { source }],
+        },
+      ],
+    } = parser(wat)
+    expect(source).toBe('(module (;1;))')
   })
 })
