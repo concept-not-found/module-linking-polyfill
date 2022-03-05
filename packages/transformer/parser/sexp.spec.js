@@ -1,131 +1,88 @@
-import { jest } from '@jest/globals'
-
-import { sexp, maybe, value } from './grammar.js'
-
-import Parser from './index.js'
+import { sexp, value } from './grammar.js'
 
 describe('matcher', () => {
   describe('sexp', () => {
     test('matching consecutive values', () => {
       const matcher = sexp(value('alice'), value('bob'))
-      const wat = '(alice bob)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: 'sexp',
+      const result = matcher({
+        type: 'sexp',
         value: [
-          {
-            match: 'value',
-            value: ['alice'],
-          },
-          {
-            match: 'value',
-            value: ['bob'],
-          },
+          { type: 'value', value: 'alice' },
+          { type: 'value', value: 'bob' },
         ],
+      })
+      expect(result).toEqual({
+        matched: true,
+        value: ['alice', 'bob'],
+        result: {
+          type: { matched: true, value: 'sexp' },
+          value: {
+            matched: true,
+            value: ['alice', 'bob'],
+            result: [
+              {
+                matched: true,
+                value: 'alice',
+                result: {
+                  type: { matched: true, value: 'value' },
+                  value: { matched: true, value: 'alice' },
+                },
+              },
+              {
+                matched: true,
+                value: 'bob',
+                result: {
+                  type: { matched: true, value: 'value' },
+                  value: { matched: true, value: 'bob' },
+                },
+              },
+            ],
+          },
+          rest: {
+            matched: true,
+            value: {},
+          },
+        },
       })
     })
 
     test('not matching missing value', () => {
       const matcher = sexp(value('alice'), value('bob'))
-      const wat = '(alice)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
+      const result = matcher({
+        type: 'sexp',
+        value: [{ type: 'value', value: 'alice' }],
       })
+      expect(result.matched).toBe(false)
     })
 
     test('not matching extra value', () => {
       const matcher = sexp(value('alice'))
-      const wat = '(alice eve)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
+      const result = matcher({
+        type: 'sexp',
+        value: [
+          { type: 'value', value: 'alice' },
+          { type: 'value', value: 'eve' },
+        ],
       })
+      expect(result.matched).toBe(false)
     })
 
     test('not matching different value', () => {
       const matcher = sexp(value('alice'))
-      const wat = '(eve)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
+      const result = matcher({
+        type: 'sexp',
+        value: [{ type: 'value', value: 'eve' }],
       })
-    })
-
-    test('matching maybe any value to empty sexp', () => {
-      const matcher = sexp(maybe(value(() => true)))
-      const wat = '()'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: 'sexp',
-        value: [{ match: 'maybe', value: [] }],
-      })
+      expect(result.matched).toBe(false)
     })
 
     test('not matching any value to empty sexp', () => {
-      const matcher = sexp(value(() => true))
-      const wat = '()'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
+      const matcher = sexp(value())
+      const result = matcher({
+        type: 'sexp',
+        value: [],
       })
-    })
-
-    test('build returns array of matched values', () => {
-      const matcher = sexp(value('alice'), value('bob'))
-      const wat = '(alice bob)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.build()).toEqual(['alice', 'bob'])
-    })
-
-    test('build can be overwritten with builder', () => {
-      const matcher = sexp(value('alice'), value('bob'))
-      matcher.builder = () => 'built'
-      const wat = '(alice bob)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.build()).toEqual('built')
-    })
-
-    test('failures can be logged', () => {
-      const matcher = sexp(value('alice'), value('bob'))
-      matcher.logger = jest.fn()
-      const wat = '(alice)'
-      const parser = Parser()
-      const input = parser(wat)
-      matcher(input)
-      expect(matcher.logger).toHaveBeenNthCalledWith(
-        1,
-        'sexp(value("alice"), value("bob")) failed to match [alice]',
-        {
-          expected: ['value("alice")', 'value("bob")'],
-          input: ['alice'],
-          unmatchedExpected: 'value("bob")',
-          matched: [{ match: 'value', value: ['alice'] }],
-          unmatched: [],
-        }
-      )
-    })
-
-    test('stringifies with expected values', () => {
-      expect(String(sexp(value('alice'), value('bob')))).toEqual(
-        'sexp(value("alice"), value("bob"))'
-      )
+      expect(result.matched).toBe(false)
     })
   })
 })

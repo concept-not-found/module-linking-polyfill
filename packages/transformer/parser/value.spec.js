@@ -1,110 +1,38 @@
-import { jest } from '@jest/globals'
-import { sexp, value } from './grammar.js'
-
-import Parser from './index.js'
+import { matchPredicate } from 'patcom'
+import { value } from './grammar.js'
 
 describe('matcher', () => {
   describe('value', () => {
     test('matching value in sexp', () => {
-      const matcher = sexp(value('module'))
-      const wat = '(module)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
+      const matcher = value('module')
+      const result = matcher({ type: 'value', value: 'module' })
       expect(result).toEqual({
-        match: 'sexp',
-        value: [
-          {
-            match: 'value',
-            value: ['module'],
-          },
-        ],
+        matched: true,
+        value: 'module',
+        result: {
+          type: { matched: true, value: 'value' },
+          value: { matched: true, value: 'module' },
+        },
       })
     })
 
     test('not matching different value in sexp', () => {
-      const matcher = sexp(value('module'))
-      const wat = '(alice)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      const matcher = value('module')
+      const result = matcher({ type: 'value', value: 'alice' })
+      expect(result.matched).toBe(false)
     })
 
     test('not matching string in sexp', () => {
-      const matcher = sexp(value('module'))
-      const wat = '("module")'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
+      const matcher = value('module')
+      const result = matcher({ type: 'string', value: 'module' })
+      expect(result.matched).toBe(false)
     })
 
     test('expected can be a predicate function', () => {
-      const matcher = sexp(value((value) => value.startsWith('m')))
+      const matcher = value(matchPredicate((value) => value.startsWith('m')))
 
-      const parser = Parser()
-
-      expect(matcher(parser('(module)')).match).toBeTruthy()
-      expect(matcher(parser('(alice)')).match).toBeFalsy()
-    })
-
-    test('not matching any value to empty sexp', () => {
-      const matcher = sexp(value(() => true))
-      const wat = '()'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result).toEqual({
-        match: false,
-      })
-    })
-
-    test('build returns matched value', () => {
-      const matcher = sexp(value('module'))
-      const wat = '(module)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.value[0].build()).toEqual('module')
-    })
-
-    test('build can be overwritten with builder', () => {
-      const valueMatcher = value('module')
-      valueMatcher.builder = () => 'built'
-      const matcher = sexp(valueMatcher)
-      const wat = '(module)'
-      const parser = Parser()
-      const input = parser(wat)
-      const result = matcher(input)
-      expect(result.value[0].build()).toEqual('built')
-    })
-
-    test('failures can be logged', () => {
-      const valueMatcher = value('module')
-      valueMatcher.logger = jest.fn()
-      const matcher = sexp(valueMatcher)
-      const wat = '("alice")'
-      const parser = Parser()
-      const input = parser(wat)
-      matcher(input)
-      expect(valueMatcher.logger).toHaveBeenNthCalledWith(
-        1,
-        'value("module") failed to match [alice]',
-        {
-          typeOf: 'string',
-          expected: 'module',
-          input: ['alice'],
-        }
-      )
-    })
-
-    test('stringifies with expected value', () => {
-      expect(String(value('module'))).toEqual('value("module")')
+      expect(matcher({ type: 'value', value: 'module' }).matched).toBe(true)
+      expect(matcher({ type: 'value', value: 'alice' }).matched).toBe(false)
     })
   })
 })

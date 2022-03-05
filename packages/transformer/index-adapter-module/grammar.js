@@ -1,14 +1,6 @@
-import {
-  sexp,
-  value,
-  string,
-  seq,
-  maybe,
-  one,
-  some,
-  any,
-  reference,
-} from '../parser/grammar.js'
+import { match, group, maybe, some, rest, oneOf, when } from 'patcom'
+
+import { root, sexp, value, string, reference } from '../parser/grammar.js'
 
 import { module } from '../index-module/grammar.js'
 
@@ -19,11 +11,11 @@ function parseIndex(index) {
   return Number.parseInt(index, 10)
 }
 
-const variable = value(() => true)
-const name = value(() => true)
-const anyString = string(() => true)
+const variable = value()
+const name = value()
+const anyString = string()
 
-const kind = one(
+const kind = oneOf(
   value('func'),
   value('memory'),
   value('table'),
@@ -32,277 +24,280 @@ const kind = one(
   value('instance')
 )
 const kindName = [kind, maybe(name)]
-const kindDefinition = sexp(...kindName)
-kindDefinition.builder = ([type, name]) => {
+const kindDefinition = when(sexp(...kindName), ([type, name]) => {
   return {
-    type: type.build(),
-    name: name.build(),
+    type,
+    name,
   }
-}
+})
 
 const kindTypeReference = reference()
-const exportType = sexp(value('export'), anyString, kindTypeReference)
-exportType.builder = ([, name, kindType]) => {
-  return {
-    name: name.build(),
-    kindType: kindType.build(),
+const exportType = when(
+  sexp(value('export'), anyString, kindTypeReference),
+  ([, name, kindType]) => {
+    return {
+      name,
+      kindType,
+    }
   }
-}
-
-const instanceType = sexp(
-  value('instance'),
-  maybe(name),
-  maybe(some(exportType))
 )
-instanceType.builder = ([, name, exports]) => {
-  return {
-    type: 'instance',
-    name: name.build(),
-    instanceExpression: {
-      type: 'tupling',
-      exports: exports.build() ?? [],
-    },
+
+const instanceType = when(
+  sexp(value('instance'), maybe(name), maybe(some(exportType))),
+  ([, name, exports]) => {
+    return {
+      type: 'instance',
+      name,
+      instanceExpression: {
+        type: 'tupling',
+        exports: exports ?? [],
+      },
+    }
   }
-}
+)
 
 const importType = sexp(value('import'), anyString, kindTypeReference)
-const moduleType = sexp(
-  value('module'),
-  maybe(name),
-  maybe(some(importType)),
-  maybe(some(exportType))
-)
-moduleType.builder = ([, name, imports, exports]) => {
-  return {
-    type: 'module',
-    name: name.build(),
-    imports: imports.build() ?? [],
-    exports: exports.build() ?? [],
+const moduleType = when(
+  sexp(
+    value('module'),
+    maybe(name),
+    maybe(some(importType)),
+    maybe(some(exportType))
+  ),
+  ([, name, imports, exports]) => {
+    return {
+      type: 'module',
+      name,
+      imports: imports ?? [],
+      exports: exports ?? [],
+    }
   }
-}
+)
 
-const coreKind = one(
+const coreKind = oneOf(
   value('func'),
   value('memory'),
   value('table'),
   value('global')
 )
 const coreKindName = [coreKind, maybe(name)]
-const coreKindType = sexp(...coreKindName, any())
-coreKindType.builder = ([type, name]) => {
+const coreKindType = when(sexp(...coreKindName, rest), ([type, name]) => {
   return {
-    type: type.build(),
-    name: name.build(),
+    type,
+    name,
   }
-}
+})
 
-const kindType = one(coreKindType, instanceType, moduleType)
-kindTypeReference.value = kindType
+const kindType = oneOf(coreKindType, instanceType, moduleType)
+kindTypeReference.matcher = kindType
 
 const importName = [value('import'), anyString]
-const importFirstForm = sexp(...importName, kindType)
-importFirstForm.builder = ([, name, kindType]) => {
-  return {
-    ...kindType.build(),
-    import: {
-      name: name.build(),
-    },
+const importFirstForm = when(
+  sexp(...importName, kindType),
+  ([, name, kindType]) => {
+    return {
+      ...kindType,
+      import: {
+        name,
+      },
+    }
   }
-}
-
-const inlineImport = sexp(...importName)
-inlineImport.builder = ([, name]) => {
-  return {
-    name: name.build(),
-  }
-}
-
-const coreKindTypeInlineImport = sexp(
-  coreKind,
-  maybe(name),
-  inlineImport,
-  any()
 )
-coreKindTypeInlineImport.builder = ([type, name, imp]) => {
-  return {
-    type: type.build(),
-    name: name.build(),
-    import: imp.build(),
-  }
-}
 
-const instanceTypeInlineImport = sexp(
-  value('instance'),
-  maybe(name),
-  inlineImport,
-  maybe(some(exportType))
+const inlineImport = when(sexp(...importName), ([, name]) => {
+  return {
+    name,
+  }
+})
+
+const coreKindTypeInlineImport = when(
+  sexp(coreKind, maybe(name), inlineImport, rest),
+  ([type, name, imp]) => {
+    return {
+      type,
+      name,
+      import: imp,
+    }
+  }
 )
-instanceTypeInlineImport.builder = ([, name, imp, exports]) => {
-  return {
-    type: 'instance',
-    name: name.build(),
-    import: imp.build(),
-    instanceExpression: {
-      type: 'tupling',
-      exports: exports.build() ?? [],
-    },
-  }
-}
 
-const moduleTypeInlineImport = sexp(
-  value('module'),
-  maybe(name),
-  inlineImport,
-  maybe(some(importType)),
-  maybe(some(exportType))
+const instanceTypeInlineImport = when(
+  sexp(value('instance'), maybe(name), inlineImport, maybe(some(exportType))),
+  ([, name, imp, exports]) => {
+    return {
+      type: 'instance',
+      name,
+      import: imp,
+      instanceExpression: {
+        type: 'tupling',
+        exports: exports ?? [],
+      },
+    }
+  }
 )
-moduleTypeInlineImport.builder = ([, name, imp, imports, exports]) => {
-  return {
-    type: 'module',
-    name: name.build(),
-    import: imp.build(),
-    imports: imports.build() ?? [],
-    exports: exports.build() ?? [],
-  }
-}
 
-const inlineImportForm = one(
+const moduleTypeInlineImport = when(
+  sexp(
+    value('module'),
+    maybe(name),
+    inlineImport,
+    maybe(some(importType)),
+    maybe(some(exportType))
+  ),
+  ([, name, imp, imports, exports]) => {
+    return {
+      type: 'module',
+      name,
+      import: imp,
+      imports: imports ?? [],
+      exports: exports ?? [],
+    }
+  }
+)
+
+const inlineImportForm = oneOf(
   coreKindTypeInlineImport,
   instanceTypeInlineImport,
   moduleTypeInlineImport
 )
-const importDefinition = one(importFirstForm, inlineImportForm)
+const importDefinition = oneOf(importFirstForm, inlineImportForm)
 
-const kindReference = sexp(kind, variable)
-kindReference.builder = ([kind, kindIdx]) => {
+const kindReference = when(sexp(kind, variable), ([kind, kindIdx]) => {
   return {
-    kind: kind.build(),
-    kindIdx: parseIndex(kindIdx.build()),
+    kind,
+    kindIdx: parseIndex(kindIdx),
   }
-}
+})
 
-const instantiateImport = sexp(...importName, kindReference)
-instantiateImport.builder = ([, name, kindReference]) => {
-  return {
-    name: name.build(),
-    kindReference: kindReference.build(),
+const instantiateImport = when(
+  sexp(...importName, kindReference),
+  ([, name, kindReference]) => {
+    return {
+      name,
+      kindReference,
+    }
   }
-}
+)
 
 const exportName = [value('export'), anyString]
-const exportDefinition = sexp(...exportName, kindReference)
-exportDefinition.builder = ([, name, kindReference]) => {
-  return {
-    type: 'export',
-    name: name.build(),
-    kindReference: kindReference.build(),
+const exportDefinition = when(
+  sexp(...exportName, kindReference),
+  ([, name, kindReference]) => {
+    return {
+      type: 'export',
+      name,
+      kindReference,
+    }
   }
-}
-
-const instanceInstantiate = sexp(
-  value('instantiate'),
-  variable,
-  maybe(some(instantiateImport))
 )
-instanceInstantiate.builder = ([, moduleIdx, imports]) => {
-  return {
-    type: 'instantiate',
-    moduleIdx: parseIndex(moduleIdx.build()),
-    imports: imports.build() ?? [],
-  }
-}
 
-const instanceExport = sexp(...exportName, kindReference)
-instanceExport.builder = ([, name, kindReference]) => {
-  return {
-    name: name.build(),
-    kindReference: kindReference.build(),
+const instanceInstantiate = when(
+  sexp(value('instantiate'), variable, maybe(some(instantiateImport))),
+  ([, moduleIdx, imports]) => {
+    return {
+      type: 'instantiate',
+      moduleIdx: parseIndex(moduleIdx),
+      imports: imports ?? [],
+    }
   }
-}
+)
 
-const instanceTupling = maybe(some(instanceExport))
-instanceTupling.builder = ([exports]) => {
+const instanceExport = when(
+  sexp(...exportName, kindReference),
+  ([, name, kindReference]) => {
+    return {
+      name,
+      kindReference,
+    }
+  }
+)
+
+const instanceTupling = when(maybe(some(instanceExport)), (exports) => {
   return {
     type: 'tupling',
-    exports: exports?.build() ?? [],
+    exports: exports ?? [],
   }
-}
+})
 
-const instanceExpression = one(instanceInstantiate, instanceTupling)
-const instanceDefinition = sexp(
-  value('instance'),
-  maybe(name),
-  instanceExpression
+const instanceExpression = oneOf(instanceInstantiate, instanceTupling)
+const instanceDefinition = when(
+  sexp(value('instance'), maybe(name), instanceExpression),
+  ([, name, instanceExpression]) => {
+    return {
+      type: 'instance',
+      name,
+      instanceExpression,
+    }
+  }
 )
-instanceDefinition.builder = ([, name, instanceExpression]) => {
-  return {
-    type: 'instance',
-    name: name.build(),
-    instanceExpression: instanceExpression.build(),
-  }
-}
 
-const instanceExportAlias = seq(variable, anyString)
-instanceExportAlias.builder = ([instanceIdx, name]) => {
-  return {
-    type: 'instance export',
-    instanceIdx: parseIndex(instanceIdx.build()),
-    name: name.build(),
+const instanceExportAlias = when(
+  group(variable, anyString),
+  ([instanceIdx, name]) => {
+    return {
+      type: 'instance export',
+      instanceIdx: parseIndex(instanceIdx),
+      name,
+    }
   }
-}
+)
 
-const outerAlias = seq(variable, variable)
-outerAlias.builder = ([outerIdx, kindIdx]) => {
+const outerAlias = when(group(variable, variable), ([outerIdx, kindIdx]) => {
   return {
     type: 'outer',
-    outerIdx: parseIndex(outerIdx.build()),
-    kindIdx: parseIndex(kindIdx.build()),
+    outerIdx: parseIndex(outerIdx),
+    kindIdx: parseIndex(kindIdx),
   }
-}
+})
 
-const aliasTarget = one(instanceExportAlias, outerAlias)
-const aliasFirstForm = sexp(value('alias'), aliasTarget, kindDefinition)
-aliasFirstForm.builder = ([, aliasTarget, kindDefinition]) => {
-  return {
-    ...kindDefinition.build(),
-    alias: aliasTarget.build(),
+const aliasTarget = oneOf(instanceExportAlias, outerAlias)
+const aliasFirstForm = when(
+  sexp(value('alias'), aliasTarget, kindDefinition),
+  ([, aliasTarget, kindDefinition]) => {
+    return {
+      ...kindDefinition,
+      alias: aliasTarget,
+    }
   }
-}
-const inlineAliasForm = sexp(...kindName, sexp(value('alias'), aliasTarget))
-inlineAliasForm.builder = ([type, name, alias]) => {
-  const [, aliasTarget] = alias.build()
-  return {
-    type: type.build(),
-    name: name.build(),
-    alias: aliasTarget,
+)
+const inlineAliasForm = when(
+  sexp(...kindName, sexp(value('alias'), aliasTarget)),
+  ([type, name, [, aliasTarget]]) => {
+    return {
+      type,
+      name,
+      alias: aliasTarget,
+    }
   }
-}
-const aliasDefinition = one(aliasFirstForm, inlineAliasForm)
+)
+const aliasDefinition = oneOf(aliasFirstForm, inlineAliasForm)
 
 const adapterModuleReference = reference()
-const definition = one(
+const definition = oneOf(
   importDefinition,
   instanceDefinition,
   aliasDefinition,
   exportDefinition,
   module,
   adapterModuleReference,
-  sexp(any())
+  sexp(rest)
 )
-const adapterModule = sexp(
-  value('adapter'),
-  value('module'),
-  maybe(name),
-  maybe(some(definition)),
-  any()
-)
-adapterModule.builder = ([, , name, definitions]) => {
-  return {
-    type: 'adapter module',
-    name: name.build(),
-    definitions: definitions.build() ?? [],
+const adapterModule = when(
+  sexp(
+    value('adapter'),
+    value('module'),
+    maybe(name),
+    maybe(some(definition)),
+    rest
+  ),
+  ([, , name, definitions]) => {
+    return {
+      type: 'adapter module',
+      name,
+      definitions: definitions ?? [],
+    }
   }
-}
-adapterModuleReference.value = adapterModule
+)
+adapterModuleReference.matcher = adapterModule
 
-export default (wat) => adapterModule(wat).build()
+export default (wat) => match(wat)(root(adapterModule))
