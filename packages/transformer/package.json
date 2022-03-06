@@ -32,6 +32,6 @@
     "transform": {}
   },
   "dependencies": {
-    "patcom": "1.0.0"
+    "patcom": "1.1.0"
   }
 }

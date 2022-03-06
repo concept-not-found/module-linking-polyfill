@@ -1,14 +1,101 @@
-import { RawParser as Parser } from './index.js'
+import { some, asInternalIterator } from 'patcom'
+
+import Parser, {
+  valueMatcher,
+  stringMatcher,
+  sexpMatcher,
+  blockCommentMatcher,
+  lineCommentMatcher,
+} from './index.js'
 
 describe('parser', () => {
-  test('output is an array', () => {
-    const wat = '(module)'
+  describe('valueMatcher', () => {
+    test('matched value', () => {
+      const wat = 'module'
+      const matcher = valueMatcher
+      const result = matcher(asInternalIterator(wat))
 
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
+      expect(result.value).toMatchObject({
+        type: 'value',
+        value: 'module',
+      })
+    })
+
+    test('unmatched sexp', () => {
+      const wat = '(module)'
+      const matcher = valueMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.matched).toBe(false)
+    })
+  })
+
+  describe('stringMatcher', () => {
+    test('matched empty string', () => {
+      const wat = '""'
+      const matcher = stringMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'string',
+        value: '',
+      })
+    })
+
+    test('matched string', () => {
+      const wat = '"module"'
+      const matcher = stringMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'string',
+        value: 'module',
+      })
+    })
+
+    test('matched string with escape', () => {
+      const wat = '"\\"module\\""'
+      const matcher = stringMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'string',
+        value: '\\"module\\"',
+      })
+    })
+
+    test('unmatched value', () => {
+      const wat = 'module'
+      const matcher = stringMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.matched).toBe(false)
+    })
+  })
+
+  describe('sexpMatcher', () => {
+    test('matched sexp of value', () => {
+      const wat = '(module)'
+      const matcher = sexpMatcher()
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'sexp',
+        value: [
+          {
+            type: 'value',
+            value: 'module',
+          },
+        ],
+      })
+    })
+
+    test('matched multiple sexps of value', () => {
+      const wat = '(module)(module)'
+      const matcher = some(sexpMatcher())
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject([
         {
           type: 'sexp',
           value: [
@@ -18,18 +105,6 @@ describe('parser', () => {
             },
           ],
         },
-      ],
-    })
-  })
-
-  test('output can have multiple sexp', () => {
-    const wat = '(module)(module)'
-
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
         {
           type: 'sexp',
           value: [
@@ -39,144 +114,233 @@ describe('parser', () => {
             },
           ],
         },
+      ])
+    })
+
+    test('matched nested sexps of value', () => {
+      const wat = '(module(func))'
+      const matcher = sexpMatcher()
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'sexp',
+        value: [
+          {
+            type: 'value',
+            value: 'module',
+          },
+          {
+            type: 'sexp',
+            value: [
+              {
+                type: 'value',
+                value: 'func',
+              },
+            ],
+          },
+        ],
+      })
+    })
+
+    test('matched sexp of multiple values', () => {
+      const wat = '(module $m)'
+      const matcher = sexpMatcher()
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toMatchObject({
+        type: 'sexp',
+        value: [
+          {
+            type: 'value',
+            value: 'module',
+          },
+          {
+            type: 'value',
+            value: '$m',
+          },
+        ],
+      })
+    })
+
+    test('unmatched value', () => {
+      const wat = 'module'
+      const matcher = sexpMatcher()
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.matched).toBe(false)
+    })
+
+    test('value, strings, block comments and line comments are distinguishable', () => {
+      const wat = '(func"func"(;func;);;func\n)'
+      const matcher = sexpMatcher({ trimChildren: [] })
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value.value).toEqual([
         {
-          type: 'sexp',
+          type: 'value',
+          value: 'func',
+        },
+        {
+          type: 'string',
+          value: 'func',
+        },
+        {
+          type: 'block comment',
           value: [
             {
-              type: 'value',
-              value: 'module',
+              type: 'block comment value',
+              value: 'func',
             },
           ],
         },
-      ],
+        {
+          type: 'line comment',
+          value: 'func',
+        },
+      ])
     })
   })
 
-  test('nested sexp are arrays', () => {
-    const wat = '(module(func))'
+  describe('block comments', () => {
+    test('block comment', () => {
+      const wat = '(;;)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
 
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
-        {
-          type: 'sexp',
-          value: [
-            {
-              type: 'value',
-              value: 'module',
-            },
-            {
-              type: 'sexp',
-              value: [
-                {
-                  type: 'value',
-                  value: 'func',
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [],
+      })
+    })
+
+    test('block comment with value', () => {
+      const wat = '(;abc;)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [
+          {
+            type: 'block comment value',
+            value: 'abc',
+          },
+        ],
+      })
+    })
+
+    test('nested block comments', () => {
+      const wat = '(;aa(;bb;)cc;)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [
+          {
+            type: 'block comment value',
+            value: 'aa',
+          },
+          {
+            type: 'block comment',
+            value: [
+              {
+                type: 'block comment value',
+                value: 'bb',
+              },
+            ],
+          },
+          {
+            type: 'block comment value',
+            value: 'cc',
+          },
+        ],
+      })
+    })
+
+    test('more nested block comments', () => {
+      const wat = '(;(;(;;);)(;;)(;(;;););)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [
+          {
+            type: 'block comment',
+            value: [{ type: 'block comment', value: [] }],
+          },
+          { type: 'block comment', value: [] },
+          {
+            type: 'block comment',
+            value: [{ type: 'block comment', value: [] }],
+          },
+        ],
+      })
+    })
+    test('line comments is just text within a block comment', () => {
+      const wat = '(;;;line comment;;;)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [
+          {
+            type: 'block comment value',
+            value: ';;line comment;;',
+          },
+        ],
+      })
+    })
+
+    test('block comments can contain newlines', () => {
+      const wat = '(;\n;)'
+      const matcher = blockCommentMatcher
+      const result = matcher(asInternalIterator(wat))
+
+      expect(result.value).toEqual({
+        type: 'block comment',
+        value: [
+          {
+            type: 'block comment value',
+            value: '\n',
+          },
+        ],
+      })
     })
   })
 
-  test('nested block comments collapse', () => {
-    const wat = '(;a(;b;)c;)'
+  describe('line comment', () => {
+    test('matched empty line comment', () => {
+      const wat = ';;\n'
+      const matcher = lineCommentMatcher
+      const result = matcher(asInternalIterator(wat))
 
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
-        {
-          type: 'block comment',
-          value: 'a(;b;)c',
-        },
-      ],
+      expect(result.value).toEqual({
+        type: 'line comment',
+        value: '',
+      })
     })
-  })
 
-  test('more nested block comments', () => {
-    const wat = '(;(;(;;);)(;;)(;(;;););)'
+    test('matched line comment', () => {
+      const wat = ';;todo write a comment\n'
+      const matcher = lineCommentMatcher
+      const result = matcher(asInternalIterator(wat))
 
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
-        {
-          type: 'block comment',
-          value: '(;(;;);)(;;)(;(;;);)',
-        },
-      ],
+      expect(result.value).toEqual({
+        type: 'line comment',
+        value: 'todo write a comment',
+      })
     })
-  })
 
-  test('line comments is just text within a block comment', () => {
-    const wat = '(;;;line comment;;;)'
+    test('unmatched value', () => {
+      const wat = 'module'
+      const matcher = lineCommentMatcher
+      const result = matcher(asInternalIterator(wat))
 
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
-        {
-          type: 'block comment',
-          value: ';;line comment;;',
-        },
-      ],
+      expect(result.matched).toBe(false)
     })
-  })
-
-  test('block comments can contain newlines', () => {
-    const wat = '(;\n;)'
-
-    const parser = Parser()
-    const result = parser(wat)
-    expect(result).toEqual({
-      type: 'sexp',
-      value: [
-        {
-          type: 'block comment',
-          value: '\n',
-        },
-      ],
-    })
-  })
-
-  test('value, strings and comments are all strings', () => {
-    const wat = '(func"func"(;func;);;func\n)'
-
-    const parser = Parser()
-    const {
-      value: [
-        {
-          value: [value, string, blockComment, lineComment],
-        },
-      ],
-    } = parser(wat)
-    expect(value.value).toEqual('func')
-    expect(string.value).toEqual('func')
-    expect(blockComment.value).toEqual('func')
-    expect(lineComment.value).toEqual('func')
-  })
-
-  test('value, strings and comments are distinguished by type', () => {
-    const wat = '(func"func"(;func;);;func\n)'
-
-    const parser = Parser()
-    const {
-      value: [container],
-    } = parser(wat)
-    const {
-      value: [value, string, blockComment, lineComment],
-    } = container
-    expect(value.type).toBe('value')
-    expect(string.type).toBe('string')
-    expect(blockComment.type).toBe('block comment')
-    expect(lineComment.type).toBe('line comment')
   })
 
   test('capture an sexp by tag', () => {
@@ -185,18 +349,14 @@ describe('parser', () => {
         (module (;1;))
       )
     `
-
     const parser = Parser({
       sourceTags: ['module'],
     })
+    const result = parser(wat)
     const {
-      value: [
-        ,
-        {
-          value: [, , , , , , { source }],
-        },
-      ],
-    } = parser(wat)
+      value: [, , { source }],
+    } = result
+
     expect(source).toBe('(module (;1;))')
   })
 })
