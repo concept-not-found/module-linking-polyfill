@@ -1,4 +1,5 @@
 import {
+  rest,
   match,
   asInternalIterator,
   IteratorMatcher,
@@ -8,6 +9,7 @@ import {
   some,
   not,
   when,
+  otherwise,
 } from 'patcom'
 
 export const reference = () => {
@@ -144,13 +146,26 @@ export const sexpMatcher = ({
         type: 'sexp',
         value: children.filter(({ type }) => !trimChildren.includes(type)),
       }
-      const {
-        value: [{ type, value }],
-      } = result
-      if (type === 'value' && sourceTags.includes(value)) {
-        result.source = sourcable.source
-      }
-      return result
+
+      return match(result)(
+        when(
+          {
+            type: 'sexp',
+            value: [
+              {
+                type: 'value',
+                value: oneOf(...sourceTags),
+              },
+              rest,
+            ],
+          },
+          () => {
+            result.source = sourcable.source
+            return result
+          }
+        ),
+        otherwise(() => result)
+      )
     }
   )
 
