@@ -1,325 +1,179 @@
-import pipe from '../pipe.js'
+import {
+  match,
+  asInternalIterator,
+  IteratorMatcher,
+  maybe,
+  group,
+  oneOf,
+  some,
+  not,
+  when,
+} from 'patcom'
 
-import Builders from './builders.js'
-
-export const RawParser =
-  ({ sourceTags = [] } = {}) =>
-  (wat) => {
-    const {
-      SexpBuilder,
-      BlockCommentFragmentBuilder,
-      BlockCommentBuilder,
-      StringBuilder,
-      WhitespaceBuilder,
-      LineCommentBuilder,
-      ValueBuilder,
-    } = Builders(wat)
-
-    let index = 0
-    const root = SexpBuilder(index)
-    const stack = [root]
-
-    function create(next) {
-      stack[stack.length - 1].add(next)
-      stack.push(next)
+export const reference = () => {
+  const referenceMatcher = IteratorMatcher((iterator) => {
+    if (!referenceMatcher.matcher) {
+      throw new Error('reference.matcher has not been set yet')
     }
+    return referenceMatcher.matcher(iterator)
+  })
 
-    function endLiteral() {
-      stack[stack.length - 1].end = index
-      stack.pop()
-    }
-
-    while (index < wat.length) {
-      switch (wat[index]) {
-        case '(': {
-          const blockComment =
-            index < wat.length - 1 &&
-            wat[index + 1] === ';' &&
-            !['string', 'line comment'].includes(stack[stack.length - 1].type)
-          if (blockComment) {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-              case 'value':
-              case 'block comment fragment':
-                endLiteral()
-              // falls through
-              case 'sexp':
-              case 'block comment':
-                create(BlockCommentBuilder())
-                create(BlockCommentFragmentBuilder(index + 2))
-                index++
-                break
-              case 'string':
-              case 'line comment':
-                break
-            }
-          } else {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-              case 'value':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(SexpBuilder(index, sourceTags))
-                break
-              case 'string':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          }
-          break
-        }
-        case ')':
-          switch (stack[stack.length - 1].type) {
-            case 'whitespace':
-            case 'value':
-              endLiteral()
-            // falls through
-            case 'sexp':
-              stack[stack.length - 1].end = index + 1
-              stack.pop()
-              break
-            case 'string':
-            case 'line comment':
-            case 'block comment fragment':
-              break
-            case 'block comment':
-              throw new Error('missing block comment fragment')
-          }
-          break
-        case '"': {
-          const escaped =
-            index > 0 &&
-            wat[index - 1] === '\\' &&
-            stack[stack.length - 1].type === 'string'
-          if (escaped) {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(ValueBuilder(index))
-                break
-              case 'string':
-              case 'value':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          } else {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-              case 'value':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(StringBuilder(index + 1))
-                break
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-              case 'string':
-                endLiteral()
-                break
-            }
-          }
-          break
-        }
-        case ' ': {
-          const escaped =
-            index > 0 &&
-            wat[index - 1] === '\\' &&
-            stack[stack.length - 1].type === 'value'
-          if (escaped) {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(ValueBuilder(index))
-                break
-              case 'string':
-              case 'value':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          } else {
-            switch (stack[stack.length - 1].type) {
-              case 'value':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(WhitespaceBuilder(index))
-                break
-              case 'whitespace':
-              case 'string':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          }
-          break
-        }
-        case '\t':
-          switch (stack[stack.length - 1].type) {
-            case 'value':
-              endLiteral()
-            // falls through
-            case 'sexp':
-              create(WhitespaceBuilder(index))
-              break
-            case 'string':
-            case 'whitespace':
-            case 'line comment':
-            case 'block comment fragment':
-              break
-            case 'block comment':
-              throw new Error('missing block comment fragment')
-          }
-          break
-        case '\n':
-        case '\r':
-          switch (stack[stack.length - 1].type) {
-            case 'line comment':
-            case 'value':
-              endLiteral()
-            // falls through
-            case 'sexp':
-              create(WhitespaceBuilder(index))
-              break
-            case 'string':
-              throw new Error('unexpected newline in string')
-            case 'whitespace':
-            case 'block comment fragment':
-              break
-            case 'block comment':
-              throw new Error('missing block comment fragment')
-          }
-          break
-        case ';': {
-          const lineComment =
-            index < wat.length - 1 &&
-            wat[index + 1] === ';' &&
-            !['string', 'line comment', 'block comment fragment'].includes(
-              stack[stack.length - 1].type
-            )
-          const closingBlockComment =
-            index < wat.length - 1 &&
-            wat[index + 1] === ')' &&
-            stack[stack.length - 1].type === 'block comment fragment'
-          if (closingBlockComment) {
-            endLiteral()
-            stack.pop()
-            if (stack[stack.length - 1].type === 'block comment') {
-              create(BlockCommentFragmentBuilder(index + 2))
-            }
-            index++
-          } else if (lineComment) {
-            switch (stack[stack.length - 1].type) {
-              case 'value':
-              case 'whitespace':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(LineCommentBuilder(index + 2))
-                index++
-                break
-              case 'string':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          } else {
-            switch (stack[stack.length - 1].type) {
-              case 'whitespace':
-                endLiteral()
-              // falls through
-              case 'sexp':
-                create(ValueBuilder(index))
-                break
-              case 'string':
-              case 'value':
-              case 'line comment':
-              case 'block comment fragment':
-                break
-              case 'block comment':
-                throw new Error('missing block comment fragment')
-            }
-          }
-          break
-        }
-        default: {
-          switch (stack[stack.length - 1].type) {
-            case 'whitespace':
-              endLiteral()
-            // falls through
-            case 'sexp':
-              create(ValueBuilder(index))
-              break
-            case 'string':
-            case 'value':
-            case 'line comment':
-            case 'block comment fragment':
-              break
-            case 'block comment':
-              throw new Error('missing block comment fragment')
-          }
-        }
-      }
-      index++
-    }
-    switch (stack[stack.length - 1].type) {
-      case 'whitespace':
-      case 'string':
-      case 'value':
-      case 'line comment':
-        endLiteral()
-        break
-      case 'sexp':
-        break
-      case 'block comment fragment':
-      case 'block comment':
-        throw new Error('dangling block comment')
-    }
-    if (stack[stack.length - 1] !== root) {
-      throw new Error(
-        `unclosed ast. expected root, but got ${JSON.stringify(
-          stack[stack.length - 1]
-        )}`
-      )
-    }
-    return root.build()
-  }
-
-function trim(node) {
-  if (node.type === 'sexp') {
-    const children = node.value
-      .filter(
-        ({ type }) =>
-          !['block comment', 'line comment', 'whitespace'].includes(type)
-      )
-      .map(trim)
-    return {
-      ...node,
-      value: children,
-    }
-  } else {
-    return node
-  }
+  Object.defineProperty(referenceMatcher, 'matcher', {
+    matcher: undefined,
+    writable: true,
+  })
+  return referenceMatcher
 }
 
-export default (...parameters) => pipe(RawParser(...parameters), trim)
+const lineEnding = oneOf(group('\r', '\n'), '\r', '\n')
+const sexpStart = '('
+const sexpEnd = ')'
+const whitespace = oneOf(' ', '\t', lineEnding)
+const stringDeliminator = '"'
+const blockCommentStart = group('(', ';')
+const blockCommentEnd = group(';', ')')
+const lineCommentStart = group(';', ';')
+const deliminators = oneOf(
+  sexpStart,
+  sexpEnd,
+  whitespace,
+  stringDeliminator,
+  blockCommentStart,
+  blockCommentEnd,
+  lineCommentStart
+)
+export const valueMatcher = when(some(not(deliminators)), (value) => {
+  return {
+    type: 'value',
+    value: value.join(''),
+  }
+})
+
+export const stringMatcher = when(
+  group(
+    stringDeliminator,
+    maybe(some(oneOf(group('\\', '"'), not(stringDeliminator)))),
+    stringDeliminator
+  ),
+  ([, value = []]) => {
+    return {
+      type: 'string',
+      value: value.flat().join(''),
+    }
+  }
+)
+
+const whitespaceMatcher = when(some(whitespace), (value) => {
+  return {
+    type: 'whitespace',
+    value: value.join(''),
+  }
+})
+
+const blockCommentChildrenMatcher = reference()
+export const blockCommentMatcher = when(
+  group(
+    blockCommentStart,
+    maybe(some(blockCommentChildrenMatcher)),
+    blockCommentEnd
+  ),
+  ([, value]) => {
+    return {
+      type: 'block comment',
+      value: value ?? [],
+    }
+  }
+)
+const blockCommentValueMatcher = when(
+  some(not(oneOf(blockCommentStart, blockCommentEnd))),
+  (value) => {
+    return {
+      type: 'block comment value',
+      value: value.join(''),
+    }
+  }
+)
+blockCommentChildrenMatcher.matcher = oneOf(
+  blockCommentMatcher,
+  blockCommentValueMatcher
+)
+
+export const lineCommentMatcher = when(
+  group(lineCommentStart, maybe(some(not(lineEnding))), lineEnding),
+  ([, value = []]) => {
+    return {
+      type: 'line comment',
+      value: value.flat().join(''),
+    }
+  }
+)
+
+const sourceable = (matcher) =>
+  IteratorMatcher((iterator) => {
+    const start = iterator.now
+    const result = matcher(iterator)
+    const end = iterator.now
+    if (result.matched) {
+      return {
+        ...result,
+        get source() {
+          const time = iterator.now
+          const source = []
+          iterator.jump(start)
+          for (let index = start; index < end; index++) {
+            source.push(iterator.next().value)
+          }
+          iterator.jump(time)
+          return source.join('')
+        },
+      }
+    }
+    return result
+  })
+
+export const sexpMatcher = ({
+  sourceTags = [],
+  trimChildren = ['block comment', 'line comment', 'whitespace'],
+} = {}) => {
+  const sexpChildren = reference()
+
+  const sexpMatcherInstance = when(
+    sourceable(group(sexpStart, some(sexpChildren), sexpEnd)),
+    ([, children], sourcable) => {
+      const result = {
+        type: 'sexp',
+        value: children.filter(({ type }) => !trimChildren.includes(type)),
+      }
+      const {
+        value: [{ type, value }],
+      } = result
+      if (type === 'value' && sourceTags.includes(value)) {
+        result.source = sourcable.source
+      }
+      return result
+    }
+  )
+
+  sexpChildren.matcher = oneOf(
+    blockCommentMatcher,
+    sexpMatcherInstance,
+    lineCommentMatcher,
+    stringMatcher,
+    whitespaceMatcher,
+    valueMatcher
+  )
+  return sexpMatcherInstance
+}
+
+export default (...parameters) =>
+  (wat) =>
+    match(asInternalIterator(wat))(
+      when(
+        group(
+          maybe(whitespaceMatcher),
+          maybe(sexpMatcher(...parameters)),
+          maybe(whitespaceMatcher)
+        ),
+        ([, sexp]) => sexp
+      )
+    )

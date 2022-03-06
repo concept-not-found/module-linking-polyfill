@@ -1,6 +1,6 @@
 import { match, maybe, some, any, oneOf, when } from 'patcom'
 
-import { root, sexp, value, string } from '../parser/grammar.js'
+import { sexp, value, string } from '../parser/grammar.js'
 
 function parseIndex(index) {
   if (index.startsWith('$')) {
@@ -89,4 +89,4 @@ export const module = when(
   }
 )
 
-export default (wat) => match(wat)(root(module))
+export default (wat) => match(wat)(module)

@@ -1,6 +1,7 @@
 import { match, group, maybe, some, rest, oneOf, when } from 'patcom'
 
-import { root, sexp, value, string, reference } from '../parser/grammar.js'
+import { reference } from '../parser/index.js'
+import { sexp, value, string } from '../parser/grammar.js'
 
 import { module } from '../index-module/grammar.js'
 
@@ -300,4 +301,4 @@ const adapterModule = when(
 )
 adapterModuleReference.matcher = adapterModule
 
-export default (wat) => match(wat)(root(adapterModule))
+export default (wat) => match(wat)(adapterModule)
