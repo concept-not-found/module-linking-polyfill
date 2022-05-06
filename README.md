@@ -1,3 +1,5 @@
+# MOVED to https://github.com/concept-not-found/component-model-polyfill
+
 # Module linking polyfill
 
 An **incomplete** 🚧 work in progress 🚧 polyfill for [WebAssembly](https://webassembly.org/) [Module linking proposal](https://github.com/WebAssembly/module-linking).
